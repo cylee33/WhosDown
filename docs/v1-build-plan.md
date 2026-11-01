@@ -1,6 +1,6 @@
 # WhosDown V1 Build Plan
 
-**Version:** 0.4 · **Last updated:** 2026-11-01 · **Status:** planning (no code until the owner says "start coding" or "do phase X")
+**Version:** 0.5 · **Last updated:** 2026-11-01 · **Status:** planning (no code until the owner says "start coding" or "do phase X")
 
 ## 1. Goal
 
@@ -72,13 +72,16 @@ The Sprint 3 week-by-week dates (Oct 26 → Nov 16) are replaced by this timelin
 | D10 | GitHub workflow: one issue per V1 feature + project board; one branch per feature; PR template; `main` changed only by PR with one approval | §8 |
 | D11 | Words: **Match** (not Game / activity / event), **Host** (not Organizer), **RSVP** = a Player's record for a Match in any status, **Join request** = a pending RSVP | [GLOSSARY](../GLOSSARY.md) |
 | D12 | Timeline: V1 in about one week, then V1 polish and V2 developed together | §3 |
+| D13 | **Match** and **Host** replace Game and Organizer everywhere: app text ("My Matches", "Match details", "Match chat"), code (`Match`, `MatchRepository`), and Firestore (`matches` collection) | [GLOSSARY](../GLOSSARY.md) |
+| D14 | `main` protection: Chris claims the GitHub Student Developer Pack (free Pro); until then "PR-only to `main`" is a written team rule | §8 |
+| D15 | App target with feature folders + local `WhosDownCore` package + `firebase/` folder | [ADR-0005](adr/0005-app-target-plus-core-package.md) |
+| D16 | Swift: Xcode 27's default settings for new app projects (checked at project creation). Minimum iOS 26 (current minus one) | [architecture §4](architecture.md) |
+| D17 | V1 has no server code: transactions on the device + strict security rules; Cloud Functions in V2 | [ADR-0006](adr/0006-v1-has-no-server-code.md) |
+| D18 | Radius search with GeoFireUtils (Firebase's geohash helper) | [architecture §2](architecture.md) |
+| D19 | GitHub issues, board, labels, and PR template are created when the owner says "start coding" | §8 |
 
 ## 6. Open questions
 
-- How to enforce the PR-only rule on `main` (free GitHub plan cannot protect private branches).
-- How far the rename to **Match** goes (app text, code, Firestore collection names).
-- Xcode project structure, minimum iOS version, Swift language mode.
-- Where server-side rules live in V1 (client transactions + security rules vs. Cloud Functions).
 - Build order of the 26 features, and how the work is split into parallel lanes.
 
 ## 7. Phases and tasks
@@ -97,7 +100,9 @@ The Sprint 3 week-by-week dates (Oct 26 → Nov 16) are replaced by this timelin
 - **Issues:** one issue per V1 feature (1.1–1.26), tracked on a GitHub project board; people assign themselves to claim work.
 - **Branches:** one per feature, for example `feat/1.13-join-open-match`.
 - **Pull requests:** template asks which feature, which screens (H-numbers), and whether docs changed. One teammate approves; squash merge.
-- **`main`:** changed only through pull requests.
+- **`main`:** changed only through pull requests. Enforced by GitHub once the Student Developer Pack is active; until then, a team rule.
+- **Labels:** `V1`, `V2`, `core`, and one per feature area.
+- **Created when:** the owner says "start coding" (D19).
 
 ### Later
 
@@ -111,3 +116,4 @@ The Sprint 3 week-by-week dates (Oct 26 → Nov 16) are replaced by this timelin
 | 0.2 | 2026-11-01 | Chris Lee (with Claude) | Round 1 decisions D1–D7; new timeline (V1 within ~1 week, then V2); moved from `brain/` to `docs/` |
 | 0.3 | 2026-11-01 | Chris Lee (with Claude) | Round 2: native SwiftUI confirmed (D8), Firebase kept (D9, ADR-0004), private GitHub repo created (D3) |
 | 0.4 | 2026-11-01 | Chris Lee (with Claude) | GitHub workflow (D10), Match / Host / RSVP / Join request words (D11), timeline clarified (D12) |
+| 0.5 | 2026-11-01 | Chris Lee (with Claude) | Round 3: Match/Host everywhere (D13), branch protection (D14), repo layout (D15, ADR-0005), Swift/iOS (D16), no server code in V1 (D17, ADR-0006), GeoFireUtils (D18), issue timing (D19) |

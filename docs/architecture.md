@@ -1,19 +1,19 @@
 # WhosDown Architecture
 
-**Version:** 0.2 · **Last updated:** 2026-11-01 · **Status:** draft
+**Version:** 0.3 · **Last updated:** 2026-11-01 · **Status:** draft
 
 Blueprint for building the app. Sections marked _open_ are still being decided in the [build plan](v1-build-plan.md).
 
 ## 1. Layers
 
 ```
-SwiftUI views            (one feature folder per area: Discover, Game, Host, Profile, ...)
+SwiftUI views            (one feature folder per area: Onboarding, Discover, Match, Host, Profile, Notifications)
       │  read state, send user actions
       ▼
 @Observable view models  (one per screen or flow)
       │  call
       ▼
-Repositories             (one per domain: games, RSVPs, users, venues, chat, notifications, reports)
+Repositories             (one per domain: matches, RSVPs, users, venues, chat, notifications, reports)
       │  the ONLY layer that talks to the backend
       ▼
 Firebase SDK + device services (Firebase per ADR-0004; MapKit, Core Location, EventKit, UserNotifications, Open-Meteo)
@@ -32,14 +32,16 @@ The Sprint 3 schema (§2 of the Sprint 3 document) is the starting point; the co
 | `users/{userId}/friends/{friendId}` | Friends (V2) |
 | `users/{userId}/notifications/{id}` | In-app notification inbox |
 | `venues/{venueId}` | Fields, courts, gyms |
-| `games/{gameId}` | Games, with denormalized host/venue names and counters |
-| `games/{gameId}/rsvps/{userId}` | One RSVP per player per game |
+| `matches/{matchId}` | Matches, with denormalized Host/Venue names and counters (was `games` in Sprint 3) |
+| `matches/{matchId}/rsvps/{userId}` | One RSVP per Player per Match |
 | `groups/…`, `members/…` | Groups (V2) |
-| `conversations/{id}`, `messages/{id}` | Game chat (V1); direct and group chat (V2) |
+| `conversations/{id}`, `messages/{id}` | Match chat (V1); direct and group chat (V2) |
 | `reviews/{id}` | Post-game reviews (V2) |
 | `reports/{id}` | Safety reports |
 
-Known patterns from Sprint 3: RSVP document ID = user ID; counters change in the same transaction as the RSVP; geohash for radius search; lowercase name fields for prefix search.
+Known patterns from Sprint 3: RSVP document ID = user ID; counters change in the same transaction as the RSVP; geohash for radius search (computed with GeoFireUtils); lowercase name fields for prefix search.
+
+V1 has no server code: shared writes happen in transactions on the device, and security rules decide who may write what ([ADR-0006](adr/0006-v1-has-no-server-code.md)).
 
 Endpoints: reads R1–R19 and writes W1–W19, listed in Sprint 3 §8.2 and on the Figma data-mapping page.
 
@@ -48,6 +50,7 @@ Endpoints: reads R1–R19 and writes W1–W19, listed in Sprint 3 §8.2 and on t
 | Service | Use | Release |
 |---|---|---|
 | Apple MapKit + Core Location | Map, place search, user location, distance | V1 |
+| GeoFireUtils (`geofire-objc`) | Geohash and radius query ranges | V1 |
 | Open-Meteo | Weather line for outdoor games (free, no key) | V1 |
 | EventKit | Add game to calendar | V1 |
 | UserNotifications (local) | Game reminders | V1 |
@@ -55,7 +58,31 @@ Endpoints: reads R1–R19 and writes W1–W19, listed in Sprint 3 §8.2 and on t
 
 ## 4. Repository layout
 
-_Open — decided in plan §6._
+See [ADR-0005](adr/0005-app-target-plus-core-package.md).
+
+```
+WhosDown/                      ← git repo root
+├── app/
+│   ├── WhosDown.xcodeproj
+│   ├── WhosDown/              ← app target, Xcode synchronized folders
+│   │   ├── App/               ← app entry, tab bar, navigation, dependency setup
+│   │   ├── DesignSystem/      ← colors, type, spacing (8-point grid), shared components
+│   │   ├── Onboarding/
+│   │   ├── Discover/
+│   │   ├── Match/
+│   │   ├── Host/
+│   │   ├── Profile/
+│   │   └── Notifications/
+│   ├── WhosDownTests/
+│   └── Packages/WhosDownCore/ ← models, repository protocols, Firebase repositories, domain rules + tests
+├── firebase/                  ← firestore.rules, firestore.indexes.json, storage.rules, seed data
+├── docs/                      ← plan, architecture, ADRs, lessons
+├── GLOSSARY.md
+├── IdeaDocs/                  ← history
+└── WhosDown (Team 6) Sprint 3/ ← history (reference only, ADR-0002)
+```
+
+- **Minimum iOS:** 26. **Swift:** Xcode 27's defaults for new app projects (record the exact settings here when the project is created).
 
 ## Changelog
 
@@ -63,3 +90,4 @@ _Open — decided in plan §6._
 |---|---|---|---|
 | 0.1 | 2026-11-01 | Chris Lee (with Claude) | Draft: layers, data model starting point, external services; moved from `brain/` |
 | 0.2 | 2026-11-01 | Chris Lee (with Claude) | Backend set to Firebase (ADR-0004) |
+| 0.3 | 2026-11-01 | Chris Lee (with Claude) | Match naming, repository layout (ADR-0005), no server code in V1 (ADR-0006), GeoFireUtils, iOS 26 |

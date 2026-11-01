@@ -27,7 +27,7 @@ _Avoid_: Anonymous user, visitor
 ### Places
 
 **Venue**:
-A real place where games are played, such as a field, court, or gym.
+A real place where Matches are played, such as a field, court, or gym.
 _Avoid_: Location (that is the coordinate), field (too narrow)
 
 ### Joining
