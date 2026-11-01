@@ -1,0 +1,16 @@
+$ swift WhosDownWeather.playground/Contents.swift   # 2026-10-25 21:36 EDT
+WhosDown weather check — Open-Meteo
+==================================
+Pickup Soccer @ CMU Soccer Field
+  Start:  Mon Oct 26, 7:00 PM
+  Decoded 168 hourly rows for (40.4349, -79.93617), America/New_York
+  Hour:   Mon Oct 26, 7:00 PM
+  60°F · Overcast · 1% rain · Outdoor
+  Wind 1 mph
+7v7 at Schenley @ Schenley Oval
+  Start:  Mon Oct 26, 8:15 PM
+  Decoded 168 hourly rows for (40.4349, -79.93617), America/New_York
+  Hour:   Mon Oct 26, 8:00 PM
+  57°F · Overcast · 1% rain · Outdoor
+  Wind 3 mph
+Done.
