@@ -1,6 +1,6 @@
 # WhosDown V1 Build Plan
 
-**Version:** 0.3 · **Last updated:** 2026-11-01 · **Status:** planning (no code until the owner says "start coding" or "do phase X")
+**Version:** 0.4 · **Last updated:** 2026-11-01 · **Status:** planning (no code until the owner says "start coding" or "do phase X")
 
 ## 1. Goal
 
@@ -19,7 +19,7 @@ Build **WhosDown V1**: the native iOS app that delivers all 26 Version 1 feature
 | Phase | When | What |
 |---|---|---|
 | V1 foundation + prototype | Within ~1 week of 2026-11-01 | Foundation and the 26 V1 features, core loop first |
-| V1 polish + V2 | After that, ongoing | Teammates improve V1 features in parallel; V2 features (2.1–2.23) follow |
+| V1 polish + V2 | After that, in parallel | Teammates improve V1 features and build V2 features (2.1–2.23) at the same time |
 
 The Sprint 3 week-by-week dates (Oct 26 → Nov 16) are replaced by this timeline. Exact build order: _open, see §6_.
 
@@ -69,15 +69,17 @@ The Sprint 3 week-by-week dates (Oct 26 → Nov 16) are replaced by this timelin
 | D7 | Local emulator testing is wanted but low priority; move it up only if development needs it | §7 |
 | D8 | Native Xcode SwiftUI app (not Expo / React Native) | [ADR-0001](adr/0001-swiftui-observable-view-models-with-repositories.md) |
 | D9 | Firebase backend, existing project `whosdown-57e99` | [ADR-0004](adr/0004-firebase-backend.md) |
+| D10 | GitHub workflow: one issue per V1 feature + project board; one branch per feature; PR template; `main` changed only by PR with one approval | §8 |
+| D11 | Words: **Match** (not Game / activity / event), **Host** (not Organizer), **RSVP** = a Player's record for a Match in any status, **Join request** = a pending RSVP | [GLOSSARY](../GLOSSARY.md) |
+| D12 | Timeline: V1 in about one week, then V1 polish and V2 developed together | §3 |
 
 ## 6. Open questions
 
-- Branch, issue, and review workflow on GitHub.
+- How to enforce the PR-only rule on `main` (free GitHub plan cannot protect private branches).
+- How far the rename to **Match** goes (app text, code, Firestore collection names).
 - Xcode project structure, minimum iOS version, Swift language mode.
 - Where server-side rules live in V1 (client transactions + security rules vs. Cloud Functions).
-- Meaning of the timeline (V1 in ~1 week, then V1 polish and V2 together?).
 - Build order of the 26 features, and how the work is split into parallel lanes.
-- Domain words: Game vs Activity vs Event; Host vs Organizer; RSVP vs Join request.
 
 ## 7. Phases and tasks
 
@@ -90,6 +92,13 @@ The Sprint 3 week-by-week dates (Oct 26 → Nov 16) are replaced by this timelin
 - [ ] Break V1 into build phases here
 - [ ] Owner approves the plan ("start coding")
 
+## 8. Team workflow on GitHub
+
+- **Issues:** one issue per V1 feature (1.1–1.26), tracked on a GitHub project board; people assign themselves to claim work.
+- **Branches:** one per feature, for example `feat/1.13-join-open-match`.
+- **Pull requests:** template asks which feature, which screens (H-numbers), and whether docs changed. One teammate approves; squash merge.
+- **`main`:** changed only through pull requests.
+
 ### Later
 
 - Local emulator setup (low priority, D7).
@@ -101,3 +110,4 @@ The Sprint 3 week-by-week dates (Oct 26 → Nov 16) are replaced by this timelin
 | 0.1 | 2026-11-01 | Chris Lee (with Claude) | First draft: goal, sources, V1 feature list |
 | 0.2 | 2026-11-01 | Chris Lee (with Claude) | Round 1 decisions D1–D7; new timeline (V1 within ~1 week, then V2); moved from `brain/` to `docs/` |
 | 0.3 | 2026-11-01 | Chris Lee (with Claude) | Round 2: native SwiftUI confirmed (D8), Firebase kept (D9, ADR-0004), private GitHub repo created (D3) |
+| 0.4 | 2026-11-01 | Chris Lee (with Claude) | GitHub workflow (D10), Match / Host / RSVP / Join request words (D11), timeline clarified (D12) |
