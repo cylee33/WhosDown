@@ -1,6 +1,6 @@
 # WhosDown Architecture
 
-**Version:** 0.1 · **Last updated:** 2026-11-01 · **Status:** draft
+**Version:** 0.2 · **Last updated:** 2026-11-01 · **Status:** draft
 
 Blueprint for building the app. Sections marked _open_ are still being decided in the [build plan](v1-build-plan.md).
 
@@ -16,7 +16,7 @@ SwiftUI views            (one feature folder per area: Discover, Game, Host, Pro
 Repositories             (one per domain: games, RSVPs, users, venues, chat, notifications, reports)
       │  the ONLY layer that talks to the backend
       ▼
-Backend SDK + device services (backend: open; MapKit, Core Location, EventKit, UserNotifications, Open-Meteo)
+Firebase SDK + device services (Firebase per ADR-0004; MapKit, Core Location, EventKit, UserNotifications, Open-Meteo)
 ```
 
 Rule: views and view models never call the backend directly ([ADR-0001](adr/0001-swiftui-observable-view-models-with-repositories.md)).
@@ -62,3 +62,4 @@ _Open — decided in plan §6._
 | Version | Date | Author | Change |
 |---|---|---|---|
 | 0.1 | 2026-11-01 | Chris Lee (with Claude) | Draft: layers, data model starting point, external services; moved from `brain/` |
+| 0.2 | 2026-11-01 | Chris Lee (with Claude) | Backend set to Firebase (ADR-0004) |

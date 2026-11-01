@@ -1,6 +1,6 @@
 # WhosDown V1 Build Plan
 
-**Version:** 0.2 · **Last updated:** 2026-11-01 · **Status:** planning (no code until the owner says "start coding" or "do phase X")
+**Version:** 0.3 · **Last updated:** 2026-11-01 · **Status:** planning (no code until the owner says "start coding" or "do phase X")
 
 ## 1. Goal
 
@@ -62,17 +62,20 @@ The Sprint 3 week-by-week dates (Oct 26 → Nov 16) are replaced by this timelin
 |---|---|---|
 | D1 | All 26 V1 features are required and complete; extras only with Chris's approval; core loop first | [ADR-0003](adr/0003-v1-scope-is-the-approved-feature-list.md) |
 | D2 | Chris builds the foundation and first prototype; teammates extend in parallel; repo structured for parallel work | §2 |
-| D3 | One git repo at `WhosDown/` with a GitHub remote | _details open (Q-round 2)_ |
+| D3 | One git repo at `WhosDown/`, private GitHub repo `cylee33/WhosDown`; history folders included; Jaimin and Kurt added later | [repo](https://github.com/cylee33/WhosDown) |
 | D4 | Sprint 3 code is reference only | [ADR-0002](adr/0002-sprint3-code-is-reference-only.md) |
 | D5 | SwiftUI + `@Observable` view models + repositories; no direct backend calls from views or view models without asking | [ADR-0001](adr/0001-swiftui-observable-view-models-with-repositories.md) |
 | D6 | Figma wireframes are the design guide; standard SwiftUI parts as close as possible | §4 |
 | D7 | Local emulator testing is wanted but low priority; move it up only if development needs it | §7 |
+| D8 | Native Xcode SwiftUI app (not Expo / React Native) | [ADR-0001](adr/0001-swiftui-observable-view-models-with-repositories.md) |
+| D9 | Firebase backend, existing project `whosdown-57e99` | [ADR-0004](adr/0004-firebase-backend.md) |
 
 ## 6. Open questions
 
-- Backend: Firebase (`whosdown-57e99`) vs. alternatives — pending owner decision.
-- App framework: owner mentioned an "Expo app"; ADR-0001 says native SwiftUI — pending clarification.
-- GitHub repo name, owner, visibility; branch and review workflow.
+- Branch, issue, and review workflow on GitHub.
+- Xcode project structure, minimum iOS version, Swift language mode.
+- Where server-side rules live in V1 (client transactions + security rules vs. Cloud Functions).
+- Meaning of the timeline (V1 in ~1 week, then V1 polish and V2 together?).
 - Build order of the 26 features, and how the work is split into parallel lanes.
 - Domain words: Game vs Activity vs Event; Host vs Organizer; RSVP vs Join request.
 
@@ -97,3 +100,4 @@ The Sprint 3 week-by-week dates (Oct 26 → Nov 16) are replaced by this timelin
 |---|---|---|---|
 | 0.1 | 2026-11-01 | Chris Lee (with Claude) | First draft: goal, sources, V1 feature list |
 | 0.2 | 2026-11-01 | Chris Lee (with Claude) | Round 1 decisions D1–D7; new timeline (V1 within ~1 week, then V2); moved from `brain/` to `docs/` |
+| 0.3 | 2026-11-01 | Chris Lee (with Claude) | Round 2: native SwiftUI confirmed (D8), Firebase kept (D9, ADR-0004), private GitHub repo created (D3) |
