@@ -1,6 +1,6 @@
 # WhosDown V1 Build Plan
 
-**Version:** 0.18 · **Last updated:** 2026-11-02 · **Status:** planning (no code until the owner says "start coding" or "do phase X")
+**Version:** 0.19 · **Last updated:** 2026-11-02 · **Status:** planning (no code until the owner says "start coding" or "do phase X")
 
 ## 1. Goal
 
@@ -125,6 +125,7 @@ Feature names keep their Sprint 3 numbers; wording follows the glossary (Match, 
 | D49 | Strict MVVM: three top-level folders `Models/`, `Views/`, `ViewModels/` (ViewModels play MVC's Controller role); no separate Swift package; tests in `WhosDownTests` | [ADR-0009](adr/0009-mvvm-three-top-level-folders.md) |
 | D50 | GeoFireUtils (D18) is not used: even its newest version only supports Firebase below 13. 1.5 adds a small `Geohash` helper in `Models/Rules/`, ported from Firebase's `geofire-common` and tested against its output | [architecture §3](architecture.md) |
 | D51 | Firebase project `whosdown-57e99` stays under Chris's personal Google account (a CMU account is deleted after graduation; the Sprint 3 report points at this project). Chris's CMU account (`cylee@andrew.cmu.edu`) was added as a co-Owner on 2026-11-02; teammates are added as members when useful. Project board: https://github.com/users/cylee33/projects/2 | [ADR-0004](adr/0004-firebase-backend.md) |
+| D52 | Repo moved from the iCloud-synced Desktop to `~/Developer/WhosDown` (iCloud made " 2" conflict copies that broke the build); CONTRIBUTING tells teammates to clone outside iCloud | [lessons-learned](lessons-learned.md) |
 
 ## 6. Open questions
 
@@ -159,8 +160,8 @@ Feature names keep their Sprint 3 numbers; wording follows the glossary (Match, 
 
 | Phase | Features | Done when |
 |---|---|---|
-| 0 Foundation | 1.1: Xcode project (MVVM folders), models, repositories, design system, tab bar, security rules v1 + emulator tests, seed data | App launches on the tab bar against the emulator; rules tests pass |
-| 1 Identity | 1.2, 1.3, 1.4, 1.22 | A new Player signs up, finishes onboarding, edits their profile; a Guest browses |
+| 0 Foundation ✅ | 1.1: Xcode project (MVVM folders), models, repositories, design system, tab bar, security rules v1 + emulator tests, seed data | App launches on the tab bar against the emulator; rules tests pass |
+| 1 Identity ✅ | 1.2, 1.3, 1.4, 1.22 | A new Player signs up, finishes onboarding, edits their profile; a Guest browses. **Done 2026-11-02** (PRs #31–#34) |
 | 2 Hosting | 1.12, 1.11 | A Host publishes a Match at a searched Venue |
 | 3 Discover | 1.5, 1.6, 1.7, 1.8, 1.9, 1.10 | A Player finds that Match on the map and list and opens its details |
 | 4 Joining | 1.13, 1.14, 1.15, 1.16 | Open join, Join request, approve/decline, leave all work across two devices |
@@ -205,3 +206,4 @@ Recorded here so they are not lost while V1 is built. The full V2 list is featur
 | 0.16 | 2026-11-02 | Chris Lee (with Claude) | Phase 0 built (1.1 in review: board and plist left) |
 | 0.17 | 2026-11-02 | Chris Lee (with Claude) | D51: Firebase project stays on personal account; project board created |
 | 0.18 | 2026-11-02 | Chris Lee (with Claude) | Phase 0 done (1.1); CMU account co-Owner |
+| 0.19 | 2026-11-02 | Chris Lee (with Claude) | Phase 0 and Phase 1 done; D52 repo location |

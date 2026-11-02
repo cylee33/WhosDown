@@ -29,7 +29,7 @@ The status column here is a snapshot; the brief itself is the truth. Update this
 | 1.19 | [My Matches](1.19-my-matches.md) | C Joining & Lifecycle | 5 Follow-through | Not started | 0 |
 | 1.20 | [Match chat](1.20-match-chat.md) | C Joining & Lifecycle | 5 Follow-through | Not started | 0 |
 | 1.21 | [In-app notifications](1.21-in-app-notifications.md) | C Joining & Lifecycle | 6 Lifecycle | Not started | 0 |
-| 1.22 | [Profile](1.22-profile.md) | A Identity & Profile | 1 Identity | Not started | 0 |
+| 1.22 | [Profile](1.22-profile.md) | A Identity & Profile | 1 Identity | Done | 0 |
 | 1.23 | [Add to calendar](1.23-add-to-calendar.md) | C Joining & Lifecycle | 7 Device + safety | Not started | 0 |
 | 1.24 | [Match reminders](1.24-match-reminders.md) | C Joining & Lifecycle | 7 Device + safety | Not started | 0 |
 | 1.25 | [Report a Player or Match](1.25-report.md) | A Identity & Profile | 7 Device + safety | Not started | 0 |

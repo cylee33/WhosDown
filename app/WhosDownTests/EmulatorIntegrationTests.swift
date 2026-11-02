@@ -109,6 +109,17 @@ struct EmulatorIntegrationTests {
         }
     }
 
+    /// Uses the seeded past Match "Sunday 7v7", checked in with Alex attended and Mina not (firebase/seed).
+    @Test func reliabilityIsCountedFromCheckedInRSVPs() async throws {
+        try await auth.signIn(email: "alex@whosdown.test", password: "whosdown123")
+        defer { try? auth.signOut() }
+        let reliability = FirebaseReliabilityRepository()
+        #expect(try await reliability.reliability(userId: "seed_alex") == Reliability(checkedIn: 1, attended: 1))
+        #expect(try await reliability.reliability(userId: "seed_mina") == Reliability(checkedIn: 1, attended: 0))
+        #expect(try await reliability.reliability(userId: "seed_sam").label == "New player")
+        #expect(try await users.profile(userId: "seed_jamie")?.displayName == "Jamie Morales")
+    }
+
     @Test func passwordResetForUnknownEmailDoesNotThrowANetworkError() async {
         do {
             try await auth.sendPasswordReset(email: uniqueEmail())

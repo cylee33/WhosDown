@@ -29,6 +29,8 @@ protocol UserRepository {
     func createProfile(userId: String, displayName: String, email: String) async throws
     /// The profile now and on every change; nil while it doesn't exist yet.
     func profileChanges(userId: String) -> AsyncThrowingStream<UserProfile?, Error>
+    /// R7: another Player's profile, read once (H10). Nil if it doesn't exist.
+    func profile(userId: String) async throws -> UserProfile?
     /// Saves every editable profile field (1.4, 1.22).
     func updateProfile(userId: String, fields: ProfileFields) async throws
     /// Uploads a JPEG to `users/{userId}/avatar.jpg` and returns its download URL.
@@ -62,6 +64,11 @@ final class FirebaseUserRepository: UserRepository {
             "searchRadiusMiles": 3,
         ], forDocument: db.document("users/\(userId)/private/settings"))
         try await batch.commit()
+    }
+
+    func profile(userId: String) async throws -> UserProfile? {
+        let snapshot = try await db.document("users/\(userId)").getDocument()
+        return snapshot.exists ? try snapshot.decoded(as: UserProfile.self) : nil
     }
 
     func updateProfile(userId: String, fields: ProfileFields) async throws {
