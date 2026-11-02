@@ -49,10 +49,17 @@ The ordered queue of Players who want a spot in a full Match.
 **Spot offer**:
 A time-limited (10-minute) offer of an open spot, given to the first Player on the Waitlist.
 
+**Full**:
+A Match whose joined count has reached its player limit; new Players can only join the Waitlist.
+
 ### Trust
 
+**Check-in**:
+The Host's record of which approved Players actually attended a Match.
+_Avoid_: Attendance marking, roll call
+
 **Reliability**:
-The share of a Player's RSVPs where they actually attended; it measures showing up, not skill.
+The share of a Player's checked-in Matches where they attended; it measures showing up, not skill.
 _Avoid_: Rating, score
 
 **Skill level**:
@@ -64,7 +71,7 @@ A Player's complaint about another Player or a Match, sent for review.
 ### Releases
 
 **V1 / V2**:
-V1 is the first release (the 26 approved features); V2 is the final release (features 2.1–2.23).
+V1 is the first release (the 26 approved features plus approved extras 1.27–1.28); V2 is the final release (features 2.1–2.23 and Private Matches).
 
 ---
 
@@ -74,3 +81,4 @@ V1 is the first release (the 26 approved features); V2 is the final release (fea
 |---|---|---|
 | 2026-11-01 | Chris Lee (with Claude) | First terms from the Sprint 3 documents. |
 | 2026-11-01 | Chris Lee | Added Match (replaces Game), Host (replaces Organizer), RSVP, Join request. |
+| 2026-11-01 | Chris Lee | Added Check-in and Full; Reliability now based on Check-ins; V1/V2 updated for ADR-0007. |
