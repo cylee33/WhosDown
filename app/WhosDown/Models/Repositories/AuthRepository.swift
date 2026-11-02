@@ -24,7 +24,7 @@ nonisolated enum AuthError: Error, Equatable {
     }
 }
 
-/// Sign-in state and actions. 1.3 adds Guest sign-in and linking.
+/// Sign-in state and actions.
 protocol AuthRepository {
     var currentUser: AuthUser? { get }
     /// Emits the signed-in account, or nil when signed out, now and on every change.
@@ -36,6 +36,10 @@ protocol AuthRepository {
     /// Throws `AuthError` (only `.network` matters to callers, 1.2 rule 5).
     func sendPasswordReset(email: String) async throws
     func signOut() throws
+    /// Anonymous sign-in for browsing without an account (1.3). Throws `AuthError`.
+    func signInAsGuest() async throws
+    /// Turns the current Guest into an email account, keeping the same user ID (1.3 rule 3). Throws `AuthError`.
+    func linkGuestAccount(email: String, password: String) async throws -> AuthUser
 }
 
 final class FirebaseAuthRepository: AuthRepository {
@@ -43,11 +47,12 @@ final class FirebaseAuthRepository: AuthRepository {
 
     func authStateChanges() -> AsyncStream<AuthUser?> {
         AsyncStream { continuation in
-            let handle = Auth.auth().addStateDidChangeListener { _, user in
+            // The ID-token listener also fires when a Guest links an email account (same user, new provider).
+            let handle = Auth.auth().addIDTokenDidChangeListener { _, user in
                 continuation.yield(user.map(Self.authUser))
             }
             continuation.onTermination = { _ in
-                Task { @MainActor in Auth.auth().removeStateDidChangeListener(handle) }
+                Task { @MainActor in Auth.auth().removeIDTokenDidChangeListener(handle) }
             }
         }
     }
@@ -79,6 +84,26 @@ final class FirebaseAuthRepository: AuthRepository {
 
     func signOut() throws {
         try Auth.auth().signOut()
+    }
+
+    func signInAsGuest() async throws {
+        do {
+            try await Auth.auth().signInAnonymously()
+        } catch {
+            throw Self.authError(error)
+        }
+    }
+
+    func linkGuestAccount(email: String, password: String) async throws -> AuthUser {
+        guard let user = Auth.auth().currentUser, user.isAnonymous else { throw AuthError.unknown }
+        do {
+            let result = try await user.link(with: EmailAuthProvider.credential(withEmail: email, password: password))
+            // Refresh the token so security rules see the password provider, not "anonymous", on the next write.
+            _ = try await result.user.getIDTokenResult(forcingRefresh: true)
+            return Self.authUser(result.user)
+        } catch {
+            throw Self.authError(error)
+        }
     }
 
     nonisolated private static func authUser(_ user: User) -> AuthUser {

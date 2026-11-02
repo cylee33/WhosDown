@@ -43,6 +43,21 @@ final class FakeAuthRepository: AuthRepository {
         setUser(nil)
     }
 
+    func signInAsGuest() async throws {
+        calls.append("signInAsGuest")
+        try throwIfNeeded()
+        setUser(AuthUser(id: "guest_1", isGuest: true))
+    }
+
+    func linkGuestAccount(email: String, password: String) async throws -> AuthUser {
+        calls.append("linkGuestAccount")
+        try throwIfNeeded()
+        guard let current = currentUser, current.isGuest else { throw AuthError.unknown }
+        let user = AuthUser(id: current.id, isGuest: false)
+        setUser(user)
+        return user
+    }
+
     private func throwIfNeeded() throws {
         if let error = nextError {
             nextError = nil

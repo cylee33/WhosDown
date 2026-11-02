@@ -1,11 +1,10 @@
 import SwiftUI
 
-/// H01 Welcome (1.2). 1.3 adds "Explore as guest".
+/// H01 Welcome (1.2, 1.3).
 struct WelcomeView: View {
-    enum Route: Hashable { case createAccount, signIn }
-
     @Environment(AppEnvironment.self) private var environment
-    @State private var path: [Route] = []
+    @State private var path: [Session.GateRoute] = []
+    @State private var viewModel: WelcomeViewModel?
 
     var body: some View {
         NavigationStack(path: $path) {
@@ -30,42 +29,55 @@ struct WelcomeView: View {
                         .buttonStyle(.primary)
                     Button("Sign in") { path.append(.signIn) }
                         .buttonStyle(.secondary)
+                    Button("Explore as guest") { Task { await viewModel?.exploreAsGuest() } }
+                        .font(.subheadline.weight(.semibold))
+                        .disabled(viewModel?.isWorking ?? true)
                     Text("Guests can browse Matches. Sign in only when you join, post, or message.")
                         .font(.footnote)
                         .foregroundStyle(Color.textSecondary)
                         .multilineTextAlignment(.center)
+                    if let message = viewModel?.errorMessage {
+                        Text(message).font(.footnote).foregroundStyle(Color.destructive)
+                    }
                     #if DEBUG
-                    developerSignIn
+                    Button("Developer sign-in (Alex, emulator)") { Task { await viewModel?.developerSignIn() } }
+                        .font(.footnote)
                     #endif
                 }
             }
             .padding(Spacing.m)
             .background(Color.background)
-            .navigationDestination(for: Route.self) { route in
-                switch route {
-                case .createAccount:
-                    CreateAccountView(onSignInInstead: { path = [.signIn] })
-                case .signIn:
-                    SignInView(onCreateAccountInstead: { path = [.createAccount] })
-                }
+            .navigationDestination(for: Session.GateRoute.self) { route in
+                AccountFormView(route: route, onSwitch: { path = [$0] })
             }
         }
-    }
-
-    #if DEBUG
-    /// Debug-only shortcut to the seeded test Player. Launch with WHOSDOWN_DEV_SIGNIN=1 to skip the tap.
-    private var developerSignIn: some View {
-        Button("Developer sign-in (Alex, emulator)") { Task { await signInAsAlex() } }
-            .font(.footnote)
-            .task {
-                if ProcessInfo.processInfo.environment["WHOSDOWN_DEV_SIGNIN"] == "1" { await signInAsAlex() }
+        .task {
+            if viewModel == nil { viewModel = WelcomeViewModel(auth: environment.auth) }
+            #if DEBUG
+            // Launch with WHOSDOWN_DEV_SIGNIN=1 (Alex) or =guest (Guest) to skip the tap.
+            switch ProcessInfo.processInfo.environment["WHOSDOWN_DEV_SIGNIN"] {
+            case "1": await viewModel?.developerSignIn()
+            case "guest": await viewModel?.exploreAsGuest()
+            default: break
             }
+            #endif
+        }
     }
+}
 
-    private func signInAsAlex() async {
-        try? await environment.auth.signIn(email: "alex@whosdown.test", password: "whosdown123")
+/// H02 or H41, with a link to switch to the other. Used by H01 and by the Guest gate (H34).
+struct AccountFormView: View {
+    let route: Session.GateRoute
+    let onSwitch: (Session.GateRoute) -> Void
+
+    var body: some View {
+        switch route {
+        case .createAccount, .choose:
+            CreateAccountView(onSignInInstead: { onSwitch(.signIn) })
+        case .signIn:
+            SignInView(onCreateAccountInstead: { onSwitch(.createAccount) })
+        }
     }
-    #endif
 }
 
 #Preview {
