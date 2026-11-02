@@ -89,7 +89,7 @@ describe('deny by default', () => {
     const db = player('mina');
     await assertFails(setDoc(doc(db, 'matches/m2'), { title: 'x', hostId: 'mina' }));
     await assertFails(setDoc(doc(db, 'matches/m1/rsvps/mina'), { status: 'approved' }));
-    await assertFails(setDoc(doc(db, 'venues/v1'), { name: 'x' }));
+    await assertFails(setDoc(doc(db, 'venues/v1'), { name: 'x' })); // fails validation (1.12)
     await assertFails(setDoc(doc(db, 'reports/r1'), { reason: 'other' }));
   });
 });

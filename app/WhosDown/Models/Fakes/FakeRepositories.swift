@@ -171,6 +171,79 @@ final class FakeReliabilityRepository: ReliabilityRepository {
     }
 }
 
+final class FakeVenueRepository: VenueRepository {
+    var venues: [Venue]
+    private(set) var created: [Venue] = []
+    var nextError: Error?
+
+    init(venues: [Venue] = Venue.samples) {
+        self.venues = venues
+    }
+
+    func nearby(center: Coordinate, radiusMeters: Double) async throws -> [Venue] {
+        if let error = nextError { nextError = nil; throw error }
+        return VenueRules.sortedByDistance(venues, from: center, within: radiusMeters)
+    }
+
+    func search(namePrefix: String) async throws -> [Venue] {
+        if let error = nextError { nextError = nil; throw error }
+        let prefix = namePrefix.lowercased()
+        return venues.filter { $0.nameLowercase.hasPrefix(prefix) }
+    }
+
+    func create(_ draft: VenueDraft, createdBy userId: String) async throws -> Venue {
+        if let error = nextError { nextError = nil; throw error }
+        let venue = Venue(
+            id: "v_new_\(created.count + 1)", name: draft.name, nameLowercase: draft.name.lowercased(), address: draft.address,
+            location: draft.location, geohash: Geohash.encode(latitude: draft.location.latitude, longitude: draft.location.longitude),
+            isIndoor: draft.isIndoor, surface: draft.surface.rawValue, hasLights: draft.hasLights, sports: [], createdBy: userId
+        )
+        created.append(venue)
+        venues.append(venue)
+        return venue
+    }
+}
+
+final class FakePlaceSearchService: PlaceSearchService {
+    var places: [Place]
+    var nextError: Error?
+
+    init(places: [Place] = [
+        Place(name: "Schenley Oval Sports Complex", address: "Schenley Dr, Pittsburgh", location: Coordinate(latitude: 40.43642, longitude: -79.94538)),
+        Place(name: "Schenley Park Tennis Courts", address: "Overlook Dr, Pittsburgh", location: Coordinate(latitude: 40.4317, longitude: -79.9440)),
+    ]) {
+        self.places = places
+    }
+
+    func search(_ text: String, near center: Coordinate) async throws -> [Place] {
+        if let error = nextError { nextError = nil; throw error }
+        return places.filter { $0.name.localizedCaseInsensitiveContains(text) }
+    }
+}
+
+final class FakeLocationService: LocationService {
+    var location: Coordinate?
+    init(location: Coordinate? = .cmu) { self.location = location }
+    func currentLocation() async -> Coordinate? { location }
+}
+
+extension Venue {
+    static func sample(_ id: String, _ name: String, _ latitude: Double, _ longitude: Double, indoor: Bool = false, surface: String = "turf", lights: Bool = true) -> Venue {
+        Venue(
+            id: id, name: name, nameLowercase: name.lowercased(), address: "Pittsburgh, PA",
+            location: Coordinate(latitude: latitude, longitude: longitude),
+            geohash: Geohash.encode(latitude: latitude, longitude: longitude),
+            isIndoor: indoor, surface: surface, hasLights: lights, sports: [], createdBy: "seed_jamie"
+        )
+    }
+
+    static let samples: [Venue] = [
+        .sample("v_cmu_soccer", "CMU Soccer Field", 40.4433, -79.9436),
+        .sample("v_schenley_oval", "Schenley Oval", 40.4364, -79.9454, surface: "grass", lights: false),
+        .sample("v_cmu_gym", "CMU Wiegand Gym", 40.4436, -79.9424, indoor: true, surface: "hardwood"),
+    ]
+}
+
 final class FakeMatchRepository: MatchRepository {
     var matches: [Match]
     var error: Error?

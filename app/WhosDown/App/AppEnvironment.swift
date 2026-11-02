@@ -9,23 +9,31 @@ final class AppEnvironment {
     let matches: MatchRepository
     let permissions: PermissionsService
     let reliability: ReliabilityRepository
+    let venues: VenueRepository
+    let placeSearch: PlaceSearchService
+    let location: LocationService
 
     init(
         auth: AuthRepository, users: UserRepository, matches: MatchRepository,
-        permissions: PermissionsService, reliability: ReliabilityRepository
+        permissions: PermissionsService, reliability: ReliabilityRepository,
+        venues: VenueRepository, placeSearch: PlaceSearchService, location: LocationService
     ) {
         self.auth = auth
         self.users = users
         self.matches = matches
         self.permissions = permissions
         self.reliability = reliability
+        self.venues = venues
+        self.placeSearch = placeSearch
+        self.location = location
     }
 
     static func live() -> AppEnvironment {
         AppEnvironment(
             auth: FirebaseAuthRepository(), users: FirebaseUserRepository(),
             matches: FirebaseMatchRepository(), permissions: SystemPermissionsService(),
-            reliability: FirebaseReliabilityRepository()
+            reliability: FirebaseReliabilityRepository(), venues: FirebaseVenueRepository(),
+            placeSearch: MapKitPlaceSearchService(), location: SystemLocationService()
         )
     }
 
@@ -33,7 +41,8 @@ final class AppEnvironment {
         AppEnvironment(
             auth: FakeAuthRepository(signedInAs: userId), users: FakeUserRepository(),
             matches: FakeMatchRepository(), permissions: FakePermissionsService(),
-            reliability: FakeReliabilityRepository()
+            reliability: FakeReliabilityRepository(), venues: FakeVenueRepository(),
+            placeSearch: FakePlaceSearchService(), location: FakeLocationService()
         )
     }
 }

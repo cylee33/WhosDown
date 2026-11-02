@@ -67,8 +67,27 @@ service cloud.firestore {
       }
     }
 
+    function validVenue(d) {
+      return d.keys().hasOnly(['name', 'nameLowercase', 'address', 'location', 'geohash', 'isIndoor',
+                               'surface', 'hasLights', 'sports', 'createdBy'])
+        && d.name is string && d.name.size() >= 1 && d.name.size() <= 80
+        && d.nameLowercase == d.name.lower()
+        && d.address is string && d.address.size() <= 200
+        && d.location.keys().hasOnly(['latitude', 'longitude'])
+        && d.location.latitude is number && d.location.latitude >= -90 && d.location.latitude <= 90
+        && d.location.longitude is number && d.location.longitude >= -180 && d.location.longitude <= 180
+        && d.geohash is string && d.geohash.size() >= 5 && d.geohash.size() <= 12
+        && d.isIndoor is bool && d.hasLights is bool
+        && d.surface in ['turf', 'grass', 'hardwood', 'court', 'sand', 'other']
+        && d.sports is list;
+    }
+
     match /venues/{venueId} {
       allow read: if signedIn();
+      // W18 (1.12): any Player (not a Guest) saves a new Venue as themselves; only its creator edits it; nobody deletes.
+      allow create: if isPlayer() && request.resource.data.createdBy == request.auth.uid && validVenue(request.resource.data);
+      allow update: if isPlayer() && resource.data.createdBy == request.auth.uid
+        && request.resource.data.createdBy == resource.data.createdBy && validVenue(request.resource.data);
     }
 
     match /matches/{matchId} {

@@ -120,6 +120,25 @@ struct EmulatorIntegrationTests {
         #expect(try await users.profile(userId: "seed_jamie")?.displayName == "Jamie Morales")
     }
 
+    @Test func venuesNearbySearchAndCreate() async throws {
+        try await auth.signIn(email: "alex@whosdown.test", password: "whosdown123")
+        defer { try? auth.signOut() }
+        let venues = FirebaseVenueRepository()
+        let nearby = try await venues.nearby(center: .cmu, radiusMeters: VenueRules.suggestionRadiusMeters)
+        #expect(nearby.first?.name == "CMU Soccer Field")
+        #expect(Set(nearby.map(\.name)).isSuperset(of: ["Schenley Oval", "Gesling Stadium", "CMU Wiegand Gym", "CMU Tennis Courts"]))
+        #expect(try await venues.search(namePrefix: "schen").map(\.name) == ["Schenley Oval"])
+
+        let name = "Test Field \(UUID().uuidString.prefix(6))"
+        let created = try await venues.create(
+            VenueDraft(name: name, address: "Pittsburgh", location: Coordinate(latitude: 40.4342, longitude: -79.9058),
+                       isIndoor: false, surface: .grass, hasLights: false),
+            createdBy: "seed_alex"
+        )
+        #expect(created.id != nil)
+        #expect(try await venues.search(namePrefix: name.lowercased()).first?.id == created.id)
+    }
+
     @Test func passwordResetForUnknownEmailDoesNotThrowANetworkError() async {
         do {
             try await auth.sendPasswordReset(email: uniqueEmail())
