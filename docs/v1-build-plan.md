@@ -1,6 +1,6 @@
 # WhosDown V1 Build Plan
 
-**Version:** 0.11 · **Last updated:** 2026-11-02 · **Status:** planning (no code until the owner says "start coding" or "do phase X")
+**Version:** 0.12 · **Last updated:** 2026-11-02 · **Status:** planning (no code until the owner says "start coding" or "do phase X")
 
 ## 1. Goal
 
@@ -119,6 +119,8 @@ Feature names keep their Sprint 3 numbers; wording follows the glossary (Match, 
 | D43 | Briefs: `CONTRIBUTING.md`, template, and samples 1.14 and 1.27 first for owner review; the other 26 follow in the same format | [features/](features/) |
 | D44 | Reports (1.25) are only written in V1; Chris reviews them in the Firebase console; no admin screen | §4 (1.25) |
 | D45 | Brief format approved (template + samples 1.14, 1.27); each brief keeps its own "Open questions", brought to Chris in batches | [features/](features/) |
+| D46 | Round 8 brief answers: four tabs (no Friends tab in V1); Sign out row on H36; no profile document for Guests, Guest Profile tab shows an empty "+" profile with sign-in buttons; no level block on H04; one custom sport; stale names on old copies accepted; Discover re-queries after every pan; time filter presets plus custom days and time of day; the Host counts toward the player limit; optional Match title; "Waitlist when full" switch; three-question new Venue sheet; pending requests stay pending on join type change; Note to Players on edits; chat row preview without unread count; one notifications list with a bell; calendar events not updated; basic accessibility check | [features/](features/) |
+| D47 | **No 10-minute Spot offer.** The waitlist is managed by approving people off it; details in round 9 | _pending ADR-0008_ |
 
 ## 6. Open questions
 
@@ -136,7 +138,8 @@ Feature names keep their Sprint 3 numbers; wording follows the glossary (Match, 
 - [x] Break V1 into build phases here (D20)
 - [x] Write `CONTRIBUTING.md` and the brief template (D29)
 - [x] Write all 28 feature briefs in `docs/features/` (D30); index: [features/README.md](features/README.md)
-- [ ] Settle the briefs' open questions (round 8)
+- [x] Settle the briefs' open questions (round 8)
+- [ ] Round 9: waitlist without spot offers (1.17), reminder permission (1.24)
 - [ ] Owner approves the plan ("start coding")
 
 ## 8. Team workflow on GitHub
@@ -171,6 +174,7 @@ Feature names keep their Sprint 3 numbers; wording follows the glossary (Match, 
 Recorded here so they are not lost while V1 is built. The full V2 list is features 2.1–2.23 in the Sprint 3 document.
 
 - **Dark mode** across every screen (D35). Needs dark versions of the design colors first.
+- **Accessibility** beyond V1's basic check: full VoiceOver flow, contrast, Reduce Motion (D46).
 - **Private Matches** with invites and share links (ADR-0007).
 - **Push notifications** with Cloud Functions (ADR-0006); needs the paid Apple Developer Program, to be decided before this work starts (D36).
 
@@ -190,3 +194,4 @@ Recorded here so they are not lost while V1 is built. The full V2 list is featur
 | 0.9 | 2026-11-02 | Chris Lee (with Claude) | Round 6: Reliability counted on read (D37), notification write rule (D38), Match chat (D39), bundle ID + plist (D40), seed data (D41), time zone (D42), brief rollout (D43) |
 | 0.10 | 2026-11-02 | Chris Lee (with Claude) | Round 7: reports reviewed in console (D44), brief format approved (D45) |
 | 0.11 | 2026-11-02 | Chris Lee (with Claude) | All 28 feature briefs written; feature index |
+| 0.12 | 2026-11-02 | Chris Lee (with Claude) | Round 8 answers (D46), spot offers dropped (D47), accessibility added to V2 objectives |
