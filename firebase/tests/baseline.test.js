@@ -74,6 +74,14 @@ describe('Guests', () => {
     await assertFails(setDoc(doc(db, 'users/g1'), { displayName: 'Guest' }));
     await assertFails(setDoc(doc(db, 'matches/m2'), { title: 'x' }));
   });
+
+  it('can read Matches but cannot RSVP, report, or write notifications (1.3)', async () => {
+    const db = guest('g1');
+    await assertSucceeds(getDoc(doc(db, 'matches/m1')));
+    await assertFails(setDoc(doc(db, 'matches/m1/rsvps/g1'), { status: 'pending' }));
+    await assertFails(setDoc(doc(db, 'reports/r1'), { reporterId: 'g1', reason: 'other' }));
+    await assertFails(setDoc(doc(db, 'users/alex/notifications/n1'), { fromUserId: 'g1' }));
+  });
 });
 
 describe('deny by default', () => {

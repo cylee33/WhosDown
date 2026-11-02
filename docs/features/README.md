@@ -10,7 +10,7 @@ The status column here is a snapshot; the brief itself is the truth. Update this
 |---|---|---|---|---|---|
 | 1.1 | [Project setup](1.1-project-setup.md) | Core | 0 Foundation | Done | 0 |
 | 1.2 | [Account and sign-in](1.2-account-and-sign-in.md) | A Identity & Profile | 1 Identity | Done | 0 |
-| 1.3 | [Guest browsing](1.3-guest-browsing.md) | A Identity & Profile | 1 Identity | Not started | 0 |
+| 1.3 | [Guest browsing](1.3-guest-browsing.md) | A Identity & Profile | 1 Identity | Done | 0 |
 | 1.4 | [Onboarding](1.4-onboarding.md) | A Identity & Profile | 1 Identity | Not started | 0 |
 | 1.5 | [Discover map](1.5-discover-map.md) | B Discover & Hosting | 3 Discover | Not started | 0 |
 | 1.6 | [Discover list](1.6-discover-list.md) | B Discover & Hosting | 3 Discover | Not started | 0 |

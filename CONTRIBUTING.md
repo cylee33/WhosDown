@@ -23,7 +23,7 @@ How to set up, pick up a feature, and hand it off. Read this before your first c
 3. Debug builds need no Firebase config file: they use the local emulator as `demo-whosdown`. Release builds use `app/WhosDown/GoogleService-Info.plist` (already in the repo, D40) to reach the real `whosdown-57e99` project.
 4. Start the emulator: from `firebase/`, run `npm install` (first time), then `npm run emulators`. It runs as the demo project `demo-whosdown`, so it can never touch real data. Emulator UI: http://127.0.0.1:4000.
 5. Seed sample data: in a second terminal, from `firebase/`, run `npm run seed` (Pittsburgh Venues, 10 Matches, 5 test Players; D41). Test logins are in [`firebase/seed/README.md`](firebase/seed/README.md). The script refuses to run against anything but the local emulator.
-6. Run the app on an iOS 26 simulator. Debug builds talk to the emulator; Release builds talk to the real `whosdown-57e99` project. On the Welcome screen, Debug builds show **Developer sign-in (Alex, emulator)**. To skip the tap, set the environment variable `WHOSDOWN_DEV_SIGNIN=1` in the scheme (Product → Scheme → Edit Scheme → Run → Arguments). If Xcode says "The iOS 27.0 simulator runtime is not available", pick an iOS 26.5 simulator or install the runtime in Xcode Settings → Components.
+6. Run the app on an iOS 26 simulator. Debug builds talk to the emulator; Release builds talk to the real `whosdown-57e99` project. On the Welcome screen, Debug builds show **Developer sign-in (Alex, emulator)**. To skip the tap, set the environment variable `WHOSDOWN_DEV_SIGNIN=1` (Alex) or `WHOSDOWN_DEV_SIGNIN=guest` (Guest) in the scheme (Product → Scheme → Edit Scheme → Run → Arguments). If Xcode says "The iOS 27.0 simulator runtime is not available", pick an iOS 26.5 simulator or install the runtime in Xcode Settings → Components.
 7. On your own iPhone: sign in to Xcode with a free Apple ID and run. The install expires after 7 days; run again to renew (D36).
 
 **Tests:**
@@ -51,6 +51,7 @@ Lanes (A Identity & Profile, B Discover & Hosting, C Joining & Lifecycle, Core) 
 - **Security rules:** if your feature writes something new, add the rule and an emulator test in `firebase/` in the same PR.
 - **Screens:** match the Figma wireframe named in the brief (layout, wording, colors, spacing on the 8-point grid). Use the system font (SF Pro), light mode only (D34, D35). Wireframe text says "game"; app text says **Match** (D13).
 - **New files:** add them in the right `Views/`, `ViewModels/`, or `Models/` subfolder. Xcode synchronized folders mean you don't edit the project file.
+- **Guests:** wrap every action a Guest can't take in `session.requireAccount { … }` (1.3).
 - **Extras:** nothing beyond the brief without Chris's approval (ADR-0003).
 
 ## 5. Hand off (every PR, even unfinished work)

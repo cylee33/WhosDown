@@ -60,6 +60,20 @@ struct EmulatorIntegrationTests {
         #expect(auth.currentUser == nil)
     }
 
+    @Test func guestUpgradeKeepsTheIdAndCanWriteItsProfile() async throws {
+        try await auth.signInAsGuest()
+        defer { try? auth.signOut() }
+        let guest = try #require(auth.currentUser)
+        #expect(guest.isGuest)
+
+        let email = uniqueEmail()
+        let upgraded = try await auth.linkGuestAccount(email: email, password: "whosdown123")
+        #expect(upgraded.id == guest.id)
+        #expect(!upgraded.isGuest)
+        // Succeeds only if the refreshed token no longer says "anonymous" (security rules, 1.3).
+        try await users.createProfile(userId: upgraded.id, displayName: "Former Guest", email: email)
+    }
+
     @Test func passwordResetForUnknownEmailDoesNotThrowANetworkError() async {
         do {
             try await auth.sendPasswordReset(email: uniqueEmail())

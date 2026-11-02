@@ -1,7 +1,8 @@
 import Foundation
 
 /// H02 Create account (1.2). Creates the Auth user, then the profile and settings (W1).
-/// Session then routes the new Player to onboarding.
+/// Session then routes the new Player to onboarding. A Guest's account is linked instead,
+/// keeping their user ID (1.3 rule 3).
 @Observable
 final class CreateAccountViewModel {
     var email = ""
@@ -35,7 +36,9 @@ final class CreateAccountViewModel {
         isWorking = true
         defer { isWorking = false }
         do {
-            let user = try await auth.createAccount(email: email, password: password)
+            let user = auth.currentUser?.isGuest == true
+                ? try await auth.linkGuestAccount(email: email, password: password)
+                : try await auth.createAccount(email: email, password: password)
             try await users.createProfile(userId: user.id, displayName: name, email: email)
         } catch let error as AuthError {
             errorMessage = error.message
