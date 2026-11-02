@@ -1,6 +1,6 @@
 # WhosDown V1 Build Plan
 
-**Version:** 0.7 · **Last updated:** 2026-11-01 · **Status:** planning (no code until the owner says "start coding" or "do phase X")
+**Version:** 0.8 · **Last updated:** 2026-11-02 · **Status:** planning (no code until the owner says "start coding" or "do phase X")
 
 ## 1. Goal
 
@@ -22,7 +22,7 @@ Build **WhosDown V1**: the native iOS app that delivers all 26 Version 1 feature
 | C — Joining & Lifecycle | `Match/`, `Notifications/` | 1.13–1.17, 1.19–1.21, 1.23, 1.24, 1.27 |
 | Core (Chris reviews) | `Packages/WhosDownCore/`, `firebase/`, `DesignSystem/` | 1.1, 1.26 |
 
-- Every feature must be documented well enough that whoever picks it up next knows exactly what to do (format: open question, round 5).
+- Every feature has a brief in [`docs/features/`](features/) so whoever picks it up next knows exactly what to do (D29). How to claim work and hand it off: [CONTRIBUTING.md](../CONTRIBUTING.md).
 
 ## 3. Timeline
 
@@ -63,8 +63,8 @@ The Sprint 3 week-by-week dates (Oct 26 → Nov 16) are replaced by this timelin
 | 1.24 | Game reminders | Local notification before each approved game; removed if the player leaves or the game is cancelled | H14, H27 |
 | 1.25 | Report a user or game | Safety & Reporting form writes a report | H33 |
 | 1.26 | Layout and interaction pass | Small steps (join review, leave / cancel confirmations, approve / decline) open as bottom sheets; spacing on a shared 8-point grid | H09, H12, H21, H37, H38 |
-| **1.27** | **Host check-in** *(approved extra, ADR-0007)* | Host records which Players attended; this is the data behind Reliability | _new screen, design open_ |
-| **1.28** | **Transfer host** *(approved extra, was V2 2.14)* | Host passes the Match to a joined Player; the Host cannot simply leave | H22, H38 |
+| **1.27** | **Host check-in** *(approved extra, ADR-0007)* | Host records which Players attended; this is the data behind Reliability (rules: D31) | New screen built in the existing design style, no Figma frame (D32); opens from H20 and the Host's past Matches |
+| **1.28** | **Transfer host** *(approved extra, was V2 2.14)* | Host passes the Match to a joined Player; the Host cannot simply leave (rules: D33) | H22, H38 |
 
 Feature names keep their Sprint 3 numbers; wording follows the glossary (Match, Host). V2 gains **Private Matches** (with invites and share links).
 
@@ -102,10 +102,18 @@ Feature names keep their Sprint 3 numbers; wording follows the glossary (Match, 
 | D26 | Match reminder: local notification 1 hour before start, no setting in V1 | §4 (1.24) |
 | D27 | Guests can browse everything public (map, list, details, roster, weather); any action opens the H34 sheet | §4 (1.3) |
 | D28 | Testing: domain rules test-first in `WhosDownCore`; security rules tested on the Firebase emulator (moved up to Phase 0); seed script in `firebase/seed/` runs against the emulator only unless asked; screens checked by hand against the wireframes | §7 |
+| D29 | One brief per feature in `docs/features/` (status and owner + hand-off note, goal, screens, data, rules and edge cases, acceptance checklist, files to touch, changelog); each GitHub issue links its brief; `CONTRIBUTING.md` covers setup, claiming, branches, PRs; every PR updates its brief's hand-off note | [features/](features/) |
+| D30 | All 28 briefs are written before coding, as the last planning step | §7 |
+| D31 | Check-in (1.27): open from the Match's start until 48 hours after it ends; every approved Player starts as attended and the Host switches off no-shows, then submits; the Host counts as attended automatically; only checked-in Matches count toward Reliability; the Host can redo it until the window closes | [GLOSSARY](../GLOSSARY.md) |
+| D32 | Check-in screen has no Figma frame; it is built to match the existing design (roster style of H11, Attended switch per row, Submit button) | §4 (1.27) |
+| D33 | Transfer host (1.28): only to an approved Player in the Match; takes effect at once, no accept step; the former Host stays as an approved Player and may then leave; the new Host gets an in-app notification; the Host label moves in Match chat | [GLOSSARY](../GLOSSARY.md) |
+| D34 | Font: SF Pro (system font) with Dynamic Type; Figma's Inter is treated as equivalent | [architecture §5](architecture.md) |
+| D35 | V1 is light mode only; **dark mode is a stated V2 objective** | §9 |
+| D36 | V1 runs in the simulator and on teammates' phones via free Xcode installs (7-day expiry); no TestFlight. Paid Apple Developer Program decided before V2 push work starts (push needs it) | §9 |
 
 ## 6. Open questions
 
-- Build order of the 26 features, and how the work is split into parallel lanes.
+- See the current grilling round; settled answers move to §5.
 
 ## 7. Phases and tasks
 
@@ -115,7 +123,9 @@ Feature names keep their Sprint 3 numbers; wording follows the glossary (Match, 
 - [x] Set up documentation (`docs/`, ADRs, glossary, this plan)
 - [ ] Settle the open questions in §6
 - [ ] Write the architecture blueprint in `architecture.md`
-- [ ] Break V1 into build phases here
+- [x] Break V1 into build phases here (D20)
+- [ ] Write `CONTRIBUTING.md` and the brief template (D29)
+- [ ] Write all 28 feature briefs in `docs/features/` (D30)
 - [ ] Owner approves the plan ("start coding")
 
 ## 8. Team workflow on GitHub
@@ -145,6 +155,14 @@ Feature names keep their Sprint 3 numbers; wording follows the glossary (Match, 
 
 - [ ] ~2026-11-04: Student Pack active → enable branch protection on `main` → add Jaimin and Kurt as collaborators (D14)
 
+## 9. V2 objectives already decided
+
+Recorded here so they are not lost while V1 is built. The full V2 list is features 2.1–2.23 in the Sprint 3 document.
+
+- **Dark mode** across every screen (D35). Needs dark versions of the design colors first.
+- **Private Matches** with invites and share links (ADR-0007).
+- **Push notifications** with Cloud Functions (ADR-0006); needs the paid Apple Developer Program, to be decided before this work starts (D36).
+
 
 ## Changelog
 
@@ -157,3 +175,4 @@ Feature names keep their Sprint 3 numbers; wording follows the glossary (Match, 
 | 0.5 | 2026-11-01 | Chris Lee (with Claude) | Round 3: Match/Host everywhere (D13), branch protection (D14), repo layout (D15, ADR-0005), Swift/iOS (D16), no server code in V1 (D17, ADR-0006), GeoFireUtils (D18), issue timing (D19) |
 | 0.6 | 2026-11-01 | Chris Lee (with Claude) | D14 updated: Student Pack in ~3 days; interim self-merge rule |
 | 0.7 | 2026-11-01 | Chris Lee (with Claude) | Round 4: build order (D20), lanes (D21), extras 1.27 check-in and 1.28 transfer host, Private Matches to V2 (D22–D23, ADR-0007), full-Match rules (D24), Host can't leave (D25), reminder timing (D26), Guest scope (D27), testing and emulator moved to Phase 0 (D28) |
+| 0.8 | 2026-11-02 | Chris Lee (with Claude) | Round 5: feature briefs + CONTRIBUTING (D29–D30), check-in rules and screen (D31–D32), transfer rules (D33), SF Pro (D34), light mode only with dark mode as V2 objective (D35), free device installs (D36); new §9 V2 objectives |

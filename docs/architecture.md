@@ -1,6 +1,6 @@
 # WhosDown Architecture
 
-**Version:** 0.3 · **Last updated:** 2026-11-01 · **Status:** draft
+**Version:** 0.4 · **Last updated:** 2026-11-02 · **Status:** draft
 
 Blueprint for building the app. Sections marked _open_ are still being decided in the [build plan](v1-build-plan.md).
 
@@ -84,6 +84,15 @@ WhosDown/                      ← git repo root
 
 - **Minimum iOS:** 26. **Swift:** Xcode 27's defaults for new app projects (record the exact settings here when the project is created).
 
+## 5. Design system
+
+Lives in `app/WhosDown/DesignSystem/`. The Figma hi-fi page "03 — Hi-Fi Full Marks" is the source.
+
+- **Font:** SF Pro (the system font) with Dynamic Type text styles. Figma uses Inter; treat it as equivalent (D34).
+- **Color mode:** light only in V1; dark mode is a V2 objective (D35). Define colors as named tokens anyway, so V2 can add dark values without touching screens.
+- **Spacing:** shared 8-point grid (1.26).
+- **Screens without a Figma frame** (for example 1.27 Check-in): reuse existing components and the closest wireframe's layout (D32).
+
 ## Changelog
 
 | Version | Date | Author | Change |
@@ -91,3 +100,4 @@ WhosDown/                      ← git repo root
 | 0.1 | 2026-11-01 | Chris Lee (with Claude) | Draft: layers, data model starting point, external services; moved from `brain/` |
 | 0.2 | 2026-11-01 | Chris Lee (with Claude) | Backend set to Firebase (ADR-0004) |
 | 0.3 | 2026-11-01 | Chris Lee (with Claude) | Match naming, repository layout (ADR-0005), no server code in V1 (ADR-0006), GeoFireUtils, iOS 26 |
+| 0.4 | 2026-11-02 | Chris Lee (with Claude) | §5 design system: SF Pro, light only in V1, color tokens, screens without frames |

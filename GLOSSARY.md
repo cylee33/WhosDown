@@ -17,8 +17,12 @@ Anyone using WhosDown to find or join Matches.
 _Avoid_: User (in product copy), member (reserved for groups)
 
 **Host**:
-The Player who created a Match and approves, edits, or cancels it.
+The Player in charge of a Match (its creator, or the Player it was transferred to); approves, edits, cancels, and checks in.
 _Avoid_: Organizer, owner, creator
+
+**Host transfer**:
+The Host handing their Match to one of its approved Players, who becomes the new Host; the former Host stays in as a Player.
+_Avoid_: Handoff, reassign
 
 **Guest**:
 A Player who is browsing without an account; must create an account or sign in before joining, posting, or messaging.
@@ -55,7 +59,7 @@ A Match whose joined count has reached its player limit; new Players can only jo
 ### Trust
 
 **Check-in**:
-The Host's record of which approved Players actually attended a Match.
+The Host's record, made after a Match starts, of which approved Players actually attended it.
 _Avoid_: Attendance marking, roll call
 
 **Reliability**:
@@ -82,3 +86,4 @@ V1 is the first release (the 26 approved features plus approved extras 1.27–1.
 | 2026-11-01 | Chris Lee (with Claude) | First terms from the Sprint 3 documents. |
 | 2026-11-01 | Chris Lee | Added Match (replaces Game), Host (replaces Organizer), RSVP, Join request. |
 | 2026-11-01 | Chris Lee | Added Check-in and Full; Reliability now based on Check-ins; V1/V2 updated for ADR-0007. |
+| 2026-11-02 | Chris Lee | Added Host transfer; Check-in happens after the Match starts. |
