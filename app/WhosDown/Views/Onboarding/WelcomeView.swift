@@ -54,10 +54,11 @@ struct WelcomeView: View {
         .task {
             if viewModel == nil { viewModel = WelcomeViewModel(auth: environment.auth) }
             #if DEBUG
-            // Launch with WHOSDOWN_DEV_SIGNIN=1 (Alex) or =guest (Guest) to skip the tap.
+            // Launch with WHOSDOWN_DEV_SIGNIN=1 (Alex), =guest, or =<seeded email> to skip the tap.
             switch ProcessInfo.processInfo.environment["WHOSDOWN_DEV_SIGNIN"] {
-            case "1": await viewModel?.developerSignIn()
-            case "guest": await viewModel?.exploreAsGuest()
+            case "1"?: await viewModel?.developerSignIn()
+            case "guest"?: await viewModel?.exploreAsGuest()
+            case let email? where email.contains("@"): await viewModel?.developerSignIn(email: email)
             default: break
             }
             #endif

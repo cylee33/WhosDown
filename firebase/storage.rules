@@ -1,10 +1,17 @@
 rules_version = '2';
 
-// WhosDown Storage rules, v1 (Phase 0). Deny by default; 1.4 adds avatar uploads.
+// WhosDown Storage rules. Deny by default.
 service firebase.storage {
   match /b/{bucket}/o {
+    // Profile photo (1.4, 1.22): anyone signed in can see it; only its owner (not a Guest) can upload,
+    // and only a JPEG/PNG/HEIC image under 5 MB.
     match /users/{uid}/avatar.jpg {
       allow read: if request.auth != null;
+      allow write: if request.auth != null
+        && request.auth.uid == uid
+        && request.auth.token.firebase.sign_in_provider != 'anonymous'
+        && request.resource.size < 5 * 1024 * 1024
+        && request.resource.contentType.matches('image/(jpeg|png|heic)');
     }
   }
 }

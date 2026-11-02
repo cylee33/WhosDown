@@ -97,6 +97,34 @@ async function seedPlayers() {
   }
 }
 
+// A Player who has an account but hasn't finished onboarding (1.4), for testing that flow.
+async function seedNewPlayer() {
+  const uid = 'seed_newbie';
+  const email = 'newbie@whosdown.test';
+  try {
+    await auth.updateUser(uid, { email, password: PASSWORD, displayName: 'Nova Newbie' });
+  } catch {
+    await auth.createUser({ uid, email, password: PASSWORD, displayName: 'Nova Newbie' });
+  }
+  await db.doc(`users/${uid}`).set({
+    displayName: 'Nova Newbie',
+    displayNameLowercase: 'nova newbie',
+    photoURL: null,
+    bio: null,
+    homeArea: null,
+    playStyles: [],
+    sportLevels: {},
+    customSportName: null,
+    createdAt: at(0),
+    onboardedAt: null,
+  });
+  await db.doc(`users/${uid}/private/settings`).set({
+    email,
+    notificationPrefs: { approvals: true, timeOrLocationChanges: true, cancellations: true },
+    searchRadiusMiles: 3,
+  });
+}
+
 async function seedVenues() {
   for (const [id, v] of Object.entries(venues)) {
     await db.doc(`venues/${id}`).set({
@@ -192,7 +220,9 @@ async function seedMatches() {
 }
 
 await seedPlayers();
+await seedNewPlayer();
 await seedVenues();
 await seedMatches();
 console.log(`Seeded ${Object.keys(players).length} Players, ${Object.keys(venues).length} Venues, ${Object.keys(matches).length} Matches.`);
 console.log(`Sign in as alex@whosdown.test (or jamie, mina, taylor, sam) with password "${PASSWORD}".`);
+console.log('newbie@whosdown.test has an account but has not finished onboarding.');

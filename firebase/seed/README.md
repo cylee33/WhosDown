@@ -13,6 +13,7 @@ Password for all: `whosdown123`
 | mina@whosdown.test | Mina Kim | Hosts Beginner Kickabout and Indoor Volleyball; marked not attended in the past Sunday 7v7 |
 | taylor@whosdown.test | Taylor Ross | Pending on Pickup Soccer; waitlisted on 7v7; hosts Ultimate and the cancelled Spikeball |
 | sam@whosdown.test | Sam Lee | Hosts Basketball Run (Approval required, $5) |
+| newbie@whosdown.test | Nova Newbie | Has an account but hasn't finished onboarding: signing in opens onboarding (1.4). Running the seed again resets it |
 
 ## What the 10 Matches cover
 
