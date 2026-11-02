@@ -1,6 +1,6 @@
 # WhosDown V1 Build Plan
 
-**Version:** 0.10 · **Last updated:** 2026-11-02 · **Status:** planning (no code until the owner says "start coding" or "do phase X")
+**Version:** 0.11 · **Last updated:** 2026-11-02 · **Status:** planning (no code until the owner says "start coding" or "do phase X")
 
 ## 1. Goal
 
@@ -63,7 +63,7 @@ The Sprint 3 week-by-week dates (Oct 26 → Nov 16) are replaced by this timelin
 | 1.24 | Game reminders | Local notification before each approved game; removed if the player leaves or the game is cancelled | H14, H27 |
 | 1.25 | Report a user or game | Safety & Reporting form writes a report | H33 |
 | 1.26 | Layout and interaction pass | Small steps (join review, leave / cancel confirmations, approve / decline) open as bottom sheets; spacing on a shared 8-point grid | H09, H12, H21, H37, H38 |
-| **1.27** | **Host check-in** *(approved extra, ADR-0007)* | Host records which Players attended; this is the data behind Reliability (rules: D31) | New screen built in the existing design style, no Figma frame (D32); opens from H20 and the Host's past Matches |
+| **1.27** | **Host check-in** *(approved extra, ADR-0007)* | Host records which Players attended; this is the data behind Reliability (rules: D31) | New screen built in the existing design style, no Figma frame (D32); opens from H20 and the Host's past Matches (H28) |
 | **1.28** | **Transfer host** *(approved extra, was V2 2.14)* | Host passes the Match to a joined Player; the Host cannot simply leave (rules: D33) | H22, H38 |
 
 Feature names keep their Sprint 3 numbers; wording follows the glossary (Match, Host). V2 gains **Private Matches** (with invites and share links).
@@ -135,7 +135,8 @@ Feature names keep their Sprint 3 numbers; wording follows the glossary (Match, 
 - [ ] Write the architecture blueprint in `architecture.md`
 - [x] Break V1 into build phases here (D20)
 - [x] Write `CONTRIBUTING.md` and the brief template (D29)
-- [ ] Write all 28 feature briefs in `docs/features/` (D30)
+- [x] Write all 28 feature briefs in `docs/features/` (D30); index: [features/README.md](features/README.md)
+- [ ] Settle the briefs' open questions (round 8)
 - [ ] Owner approves the plan ("start coding")
 
 ## 8. Team workflow on GitHub
@@ -188,3 +189,4 @@ Recorded here so they are not lost while V1 is built. The full V2 list is featur
 | 0.8 | 2026-11-02 | Chris Lee (with Claude) | Round 5: feature briefs + CONTRIBUTING (D29–D30), check-in rules and screen (D31–D32), transfer rules (D33), SF Pro (D34), light mode only with dark mode as V2 objective (D35), free device installs (D36); new §9 V2 objectives |
 | 0.9 | 2026-11-02 | Chris Lee (with Claude) | Round 6: Reliability counted on read (D37), notification write rule (D38), Match chat (D39), bundle ID + plist (D40), seed data (D41), time zone (D42), brief rollout (D43) |
 | 0.10 | 2026-11-02 | Chris Lee (with Claude) | Round 7: reports reviewed in console (D44), brief format approved (D45) |
+| 0.11 | 2026-11-02 | Chris Lee (with Claude) | All 28 feature briefs written; feature index |
