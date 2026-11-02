@@ -8,7 +8,7 @@ The status column here is a snapshot; the brief itself is the truth. Update this
 
 | # | Feature | Lane | Phase | Status | Open questions |
 |---|---|---|---|---|---|
-| 1.1 | [Project setup](1.1-project-setup.md) | Core | 0 Foundation | In review | 0 |
+| 1.1 | [Project setup](1.1-project-setup.md) | Core | 0 Foundation | Done | 0 |
 | 1.2 | [Account and sign-in](1.2-account-and-sign-in.md) | A Identity & Profile | 1 Identity | Not started | 0 |
 | 1.3 | [Guest browsing](1.3-guest-browsing.md) | A Identity & Profile | 1 Identity | Not started | 0 |
 | 1.4 | [Onboarding](1.4-onboarding.md) | A Identity & Profile | 1 Identity | Not started | 0 |
