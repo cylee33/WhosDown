@@ -1,6 +1,6 @@
 # WhosDown V1 Build Plan
 
-**Version:** 0.9 · **Last updated:** 2026-11-02 · **Status:** planning (no code until the owner says "start coding" or "do phase X")
+**Version:** 0.10 · **Last updated:** 2026-11-02 · **Status:** planning (no code until the owner says "start coding" or "do phase X")
 
 ## 1. Goal
 
@@ -117,11 +117,13 @@ Feature names keep their Sprint 3 numbers; wording follows the glossary (Match, 
 | D41 | Seed data: Node script in `firebase/seed/`, emulator only (Pittsburgh Venues, ~10 Matches, 5 test Players); real project only on request, key kept out of git; `firebase` CLI installed at "start coding" | [CONTRIBUTING](../CONTRIBUTING.md) |
 | D42 | Match times stored as timestamps, shown in the phone's time zone; no Venue time-zone field in V1 | [architecture §2](architecture.md) |
 | D43 | Briefs: `CONTRIBUTING.md`, template, and samples 1.14 and 1.27 first for owner review; the other 26 follow in the same format | [features/](features/) |
+| D44 | Reports (1.25) are only written in V1; Chris reviews them in the Firebase console; no admin screen | §4 (1.25) |
+| D45 | Brief format approved (template + samples 1.14, 1.27); each brief keeps its own "Open questions", brought to Chris in batches | [features/](features/) |
 
 ## 6. Open questions
 
 - See the current grilling round; settled answers move to §5.
-- Reports (1.25): reviewed only in the Firebase console, no admin screen in V1? (asked in round 6, not yet answered)
+- Per-feature questions live in each brief's "Open questions" section.
 
 ## 7. Phases and tasks
 
@@ -185,3 +187,4 @@ Recorded here so they are not lost while V1 is built. The full V2 list is featur
 | 0.7 | 2026-11-01 | Chris Lee (with Claude) | Round 4: build order (D20), lanes (D21), extras 1.27 check-in and 1.28 transfer host, Private Matches to V2 (D22–D23, ADR-0007), full-Match rules (D24), Host can't leave (D25), reminder timing (D26), Guest scope (D27), testing and emulator moved to Phase 0 (D28) |
 | 0.8 | 2026-11-02 | Chris Lee (with Claude) | Round 5: feature briefs + CONTRIBUTING (D29–D30), check-in rules and screen (D31–D32), transfer rules (D33), SF Pro (D34), light mode only with dark mode as V2 objective (D35), free device installs (D36); new §9 V2 objectives |
 | 0.9 | 2026-11-02 | Chris Lee (with Claude) | Round 6: Reliability counted on read (D37), notification write rule (D38), Match chat (D39), bundle ID + plist (D40), seed data (D41), time zone (D42), brief rollout (D43) |
+| 0.10 | 2026-11-02 | Chris Lee (with Claude) | Round 7: reports reviewed in console (D44), brief format approved (D45) |
