@@ -30,6 +30,7 @@ How to set up, pick up a feature, and hand it off. Read this before your first c
 
 - App and domain rules: Xcode ⌘U, or `xcodebuild test -project app/WhosDown.xcodeproj -scheme WhosDown -destination 'platform=iOS Simulator,name=iPhone 17'`.
 - Security rules: from `firebase/`, run `npm test` (it starts and stops its own emulator).
+- Emulator integration tests (`EmulatorIntegrationTests`) run the real Firebase repositories. They run only while `npm run emulators` is up, and skip themselves otherwise.
 
 ## 3. Pick up a feature
 

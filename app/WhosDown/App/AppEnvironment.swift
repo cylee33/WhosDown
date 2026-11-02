@@ -5,18 +5,20 @@ import SwiftUI
 @Observable
 final class AppEnvironment {
     let auth: AuthRepository
+    let users: UserRepository
     let matches: MatchRepository
 
-    init(auth: AuthRepository, matches: MatchRepository) {
+    init(auth: AuthRepository, users: UserRepository, matches: MatchRepository) {
         self.auth = auth
+        self.users = users
         self.matches = matches
     }
 
     static func live() -> AppEnvironment {
-        AppEnvironment(auth: FirebaseAuthRepository(), matches: FirebaseMatchRepository())
+        AppEnvironment(auth: FirebaseAuthRepository(), users: FirebaseUserRepository(), matches: FirebaseMatchRepository())
     }
 
     static func preview(signedInAs userId: String? = "seed_alex") -> AppEnvironment {
-        AppEnvironment(auth: FakeAuthRepository(signedInAs: userId), matches: FakeMatchRepository())
+        AppEnvironment(auth: FakeAuthRepository(signedInAs: userId), users: FakeUserRepository(), matches: FakeMatchRepository())
     }
 }

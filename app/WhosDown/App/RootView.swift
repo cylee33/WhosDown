@@ -1,6 +1,7 @@
 import SwiftUI
 
-/// Signed out → Welcome (1.2); signed in → the tab bar.
+/// Signed out → Welcome (1.2). Signed in or Guest → the tab bar, with onboarding (1.4) covering it
+/// until the Player finishes. Keeping one tab bar for both means a Guest who upgrades stays where they were (1.3).
 struct RootView: View {
     @Environment(Session.self) private var session
 
@@ -10,8 +11,11 @@ struct RootView: View {
             ProgressView()
         case .signedOut:
             WelcomeView()
-        case .signedIn:
+        case .active:
             MainTabView()
+                .fullScreenCover(isPresented: .constant(session.needsOnboarding)) {
+                    OnboardingFlowView()
+                }
         }
     }
 }
@@ -40,5 +44,5 @@ struct MainTabView: View {
     let environment = AppEnvironment.preview()
     MainTabView()
         .environment(environment)
-        .environment(Session(auth: environment.auth))
+        .environment(Session(auth: environment.auth, users: environment.users))
 }
