@@ -54,8 +54,10 @@ The definition of done. Tick in the PR that makes each one pass.
 
 ## Files to touch
 
-- `app/WhosDown/<Folder>/…`
-- `app/Packages/WhosDownCore/…`
+- `app/WhosDown/Views/<Area>/…`
+- `app/WhosDown/ViewModels/<Area>/…`
+- `app/WhosDown/Models/<Data|Repositories|Services|Rules>/…`
+- `app/WhosDownTests/…`
 - `firebase/…`
 
 ## Open questions

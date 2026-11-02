@@ -2,6 +2,15 @@
 
 Problems hit and how they were solved. Newest first. Add an entry whenever something cost more than ~15 minutes.
 
+## 2026-11-02 — Phase 0 setup
+
+- **GeoFireUtils doesn't support Firebase 13.** Its `Package.swift` caps Firebase below 12 (release 5.0.1) or 13 (main branch), so SPM can't resolve it with `firebase-ios-sdk` 13.x. We port the small geohash part instead (D50).
+- **The Firestore emulator needs Java 21.** `brew install openjdk@21` installs it "keg-only", so `java` isn't on the PATH until you add `/opt/homebrew/opt/openjdk@21/bin` (CONTRIBUTING §2).
+- **Use a `demo-` project ID for local work.** The emulator, seed script, rules tests, and Debug app all use `demo-whosdown`. Firebase treats `demo-*` IDs as offline-only, so nothing can reach the real project by mistake.
+- **`@DocumentID` doesn't fit Xcode 27's concurrency defaults.** With `SWIFT_DEFAULT_ACTOR_ISOLATION = MainActor`, data models must be `nonisolated` (or their `Codable` conformance only works on the main actor), and `@DocumentID`'s wrapper isn't `Sendable`. Models keep a plain `var id: String?`; repositories decode with `snapshot.decoded(as:)` (`Models/Repositories/FirestoreDocument.swift`), which fills in the document ID. This also replaces the Sprint 3 `decode(_:from:in:)` workaround below.
+- **"The iOS 27.0 simulator runtime is not available."** After an Xcode update, CoreSimulator can be stale. Test on an iOS 26.5 simulator (our minimum anyway) or reinstall the runtime in Xcode Settings → Components.
+- **Xcode 27's default Swift settings live in its templates.** `/Applications/Xcode.app/Contents/Developer/Library/Xcode/Templates/Project Templates/Base/*/TemplateInfo.plist`. Read them there instead of guessing (architecture §4).
+
 ## 2026-11-01 — Carried over from Sprint 3
 
 - **Firestore test-mode rules expire.** They stop allowing reads and writes about 30 days after the database was created (about Nov 24, 2026 for `whosdown-57e99`). Real security rules must be in place before then.

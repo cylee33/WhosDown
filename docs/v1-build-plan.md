@@ -1,6 +1,6 @@
 # WhosDown V1 Build Plan
 
-**Version:** 0.13 · **Last updated:** 2026-11-02 · **Status:** planning (no code until the owner says "start coding" or "do phase X")
+**Version:** 0.16 · **Last updated:** 2026-11-02 · **Status:** planning (no code until the owner says "start coding" or "do phase X")
 
 ## 1. Goal
 
@@ -17,10 +17,10 @@ Build **WhosDown V1**: the native iOS app that delivers all 26 Version 1 feature
 
 | Lane | Folders | Features |
 |---|---|---|
-| A — Identity & Profile | `Onboarding/`, `Profile/` | 1.2, 1.3, 1.4, 1.22, 1.25 |
-| B — Discover & Hosting | `Discover/`, `Host/` (create flow) | 1.5–1.12, 1.18, 1.28 |
-| C — Joining & Lifecycle | `Match/`, `Notifications/` | 1.13–1.17, 1.19–1.21, 1.23, 1.24, 1.27 |
-| Core (Chris reviews) | `Packages/WhosDownCore/`, `firebase/`, `DesignSystem/` | 1.1, 1.26 |
+| A — Identity & Profile | `Onboarding/`, `Profile/` (in `Views/` and `ViewModels/`) | 1.2, 1.3, 1.4, 1.22, 1.25 |
+| B — Discover & Hosting | `Discover/`, `Host/` (in `Views/` and `ViewModels/`) | 1.5–1.12, 1.18, 1.28 |
+| C — Joining & Lifecycle | `Match/`, `Notifications/` (in `Views/` and `ViewModels/`) | 1.13–1.17, 1.19–1.21, 1.23, 1.24, 1.27 |
+| Core (Chris reviews) | `Models/`, `Views/DesignSystem/`, `firebase/` | 1.1, 1.26 |
 
 - Every feature has a brief in [`docs/features/`](features/) so whoever picks it up next knows exactly what to do (D29). How to claim work and hand it off: [CONTRIBUTING.md](../CONTRIBUTING.md).
 
@@ -88,10 +88,10 @@ Feature names keep their Sprint 3 numbers; wording follows the glossary (Match, 
 | D12 | Timeline: V1 in about one week, then V1 polish and V2 developed together | §3 |
 | D13 | **Match** and **Host** replace Game and Organizer everywhere: app text ("My Matches", "Match details", "Match chat"), code (`Match`, `MatchRepository`), and Firestore (`matches` collection) | [GLOSSARY](../GLOSSARY.md) |
 | D14 | `main` protection: Student Developer Pack (free Pro) expected ~2026-11-04. Until then: feature branches + PRs from day one, Chris may self-merge while building alone. When Pro is active: turn on protection (PR-only, 1 approval) **before** adding Jaimin and Kurt | §8 |
-| D15 | App target with feature folders + local `WhosDownCore` package + `firebase/` folder | [ADR-0005](adr/0005-app-target-plus-core-package.md) |
+| D15 | ~~App target with feature folders + local `WhosDownCore` package~~ replaced by D49 | [ADR-0005](adr/0005-app-target-plus-core-package.md) |
 | D16 | Swift: Xcode 27's default settings for new app projects (checked at project creation). Minimum iOS 26 (current minus one) | [architecture §4](architecture.md) |
 | D17 | V1 has no server code: transactions on the device + strict security rules; Cloud Functions in V2 | [ADR-0006](adr/0006-v1-has-no-server-code.md) |
-| D18 | Radius search with GeoFireUtils (Firebase's geohash helper) | [architecture §2](architecture.md) |
+| D18 | ~~Radius search with GeoFireUtils~~ replaced by D50 | [architecture §2](architecture.md) |
 | D19 | GitHub issues, board, labels, and PR template are created when the owner says "start coding" | §8 |
 | D20 | Build order: phases 0–8 (§7); core loop done at end of Phase 5 | §7 |
 | D21 | Three lanes + Core; lanes are a guide, anyone can take any lane; strong hand-off documentation required | §2 |
@@ -101,7 +101,7 @@ Feature names keep their Sprint 3 numbers; wording follows the glossary (Match, 
 | D25 | Host can't leave their Match: only cancel, or transfer (1.28) | [ADR-0007](adr/0007-v1-scope-changes-checkin-transfer-private.md) |
 | D26 | Match reminder: local notification 1 hour before start, no setting in V1 | §4 (1.24) |
 | D27 | Guests can browse everything public (map, list, details, roster, weather); any action opens the H34 sheet | §4 (1.3) |
-| D28 | Testing: domain rules test-first in `WhosDownCore`; security rules tested on the Firebase emulator (moved up to Phase 0); seed script in `firebase/seed/` runs against the emulator only unless asked; screens checked by hand against the wireframes | §7 |
+| D28 | Testing: domain rules test-first in `WhosDownTests`; security rules tested on the Firebase emulator (moved up to Phase 0); seed script in `firebase/seed/` runs against the emulator only unless asked; screens checked by hand against the wireframes | §7 |
 | D29 | One brief per feature in `docs/features/` (status and owner + hand-off note, goal, screens, data, rules and edge cases, acceptance checklist, files to touch, changelog); each GitHub issue links its brief; `CONTRIBUTING.md` covers setup, claiming, branches, PRs; every PR updates its brief's hand-off note | [features/](features/) |
 | D30 | All 28 briefs are written before coding, as the last planning step | §7 |
 | D31 | Check-in (1.27): open from the Match's start until 48 hours after it ends; every approved Player starts as attended and the Host switches off no-shows, then submits; the Host counts as attended automatically; only checked-in Matches count toward Reliability; the Host can redo it until the window closes | [GLOSSARY](../GLOSSARY.md) |
@@ -122,6 +122,8 @@ Feature names keep their Sprint 3 numbers; wording follows the glossary (Match, 
 | D46 | Round 8 brief answers: four tabs (no Friends tab in V1); Sign out row on H36; no profile document for Guests, Guest Profile tab shows an empty "+" profile with sign-in buttons; no level block on H04; one custom sport; stale names on old copies accepted; Discover re-queries after every pan; time filter presets plus custom days and time of day; the Host counts toward the player limit; optional Match title; "Waitlist when full" switch; three-question new Venue sheet; pending requests stay pending on join type change; Note to Players on edits; chat row preview without unread count; one notifications list with a bell; calendar events not updated; basic accessibility check | [features/](features/) |
 | D47 | **No 10-minute Spot offer** (replaces that part of D24). Open Match: first in line gets a freed spot automatically. Approval required: Join waitlist needs no approval; H21 shows Join requests and Waitlist; the Host approves anyone while a spot is free and gets a `spotOpened` notification when someone leaves while people wait. H53 and `spotOpen` dropped | [ADR-0008](adr/0008-waitlist-without-spot-offers.md) |
 | D48 | Notification permission: one iOS prompt on H05 "Continue" during onboarding; reminders on by default after that | [1.4](features/1.4-onboarding.md), [1.24](features/1.24-match-reminders.md) |
+| D49 | Strict MVVM: three top-level folders `Models/`, `Views/`, `ViewModels/` (ViewModels play MVC's Controller role); no separate Swift package; tests in `WhosDownTests` | [ADR-0009](adr/0009-mvvm-three-top-level-folders.md) |
+| D50 | GeoFireUtils (D18) is not used: even its newest version only supports Firebase below 13. 1.5 adds a small `Geohash` helper in `Models/Rules/`, ported from Firebase's `geofire-common` and tested against its output | [architecture §3](architecture.md) |
 
 ## 6. Open questions
 
@@ -141,7 +143,7 @@ Feature names keep their Sprint 3 numbers; wording follows the glossary (Match, 
 - [x] Write all 28 feature briefs in `docs/features/` (D30); index: [features/README.md](features/README.md)
 - [x] Settle the briefs' open questions (round 8)
 - [x] Round 9: waitlist without spot offers (1.17, ADR-0008), reminder permission (1.24)
-- [ ] Owner approves the plan ("start coding")
+- [x] Owner approves the plan ("start coding", 2026-11-02: "do Phase 0")
 
 ## 8. Team workflow on GitHub
 
@@ -156,7 +158,7 @@ Feature names keep their Sprint 3 numbers; wording follows the glossary (Match, 
 
 | Phase | Features | Done when |
 |---|---|---|
-| 0 Foundation | 1.1: Xcode project, `WhosDownCore`, models, repositories, design system, tab bar, security rules v1 + emulator tests, seed data | App launches on the tab bar against the emulator; rules tests pass |
+| 0 Foundation | 1.1: Xcode project (MVVM folders), models, repositories, design system, tab bar, security rules v1 + emulator tests, seed data | App launches on the tab bar against the emulator; rules tests pass |
 | 1 Identity | 1.2, 1.3, 1.4, 1.22 | A new Player signs up, finishes onboarding, edits their profile; a Guest browses |
 | 2 Hosting | 1.12, 1.11 | A Host publishes a Match at a searched Venue |
 | 3 Discover | 1.5, 1.6, 1.7, 1.8, 1.9, 1.10 | A Player finds that Match on the map and list and opens its details |
@@ -197,3 +199,6 @@ Recorded here so they are not lost while V1 is built. The full V2 list is featur
 | 0.11 | 2026-11-02 | Chris Lee (with Claude) | All 28 feature briefs written; feature index |
 | 0.12 | 2026-11-02 | Chris Lee (with Claude) | Round 8 answers (D46), spot offers dropped (D47), accessibility added to V2 objectives |
 | 0.13 | 2026-11-02 | Chris Lee (with Claude) | Round 9: waitlist without spot offers (D47, ADR-0008), permission prompt on H05 (D48) |
+| 0.14 | 2026-11-02 | Chris Lee (with Claude) | MVVM folder layout (D49, ADR-0009) replaces D15 |
+| 0.15 | 2026-11-02 | Chris Lee (with Claude) | D50: geohash helper instead of GeoFireUtils |
+| 0.16 | 2026-11-02 | Chris Lee (with Claude) | Phase 0 built (1.1 in review: board and plist left) |

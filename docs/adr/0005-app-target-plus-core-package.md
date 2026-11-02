@@ -1,5 +1,5 @@
 ---
-Status: accepted
+Status: superseded by ADR-0009
 Date: 2026-11-01
 Decided by: Chris Lee
 ---

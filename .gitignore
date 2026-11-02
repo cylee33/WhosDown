@@ -17,3 +17,5 @@ build/
 .firebase/
 firebase-debug.log
 firestore-debug.log
+node_modules/
+*-debug.log
