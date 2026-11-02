@@ -4,15 +4,17 @@ How the team's documentation is organized, and how it is versioned.
 
 | Document | What it holds | How it changes |
 |---|---|---|
-| [`../GLOSSARY.md`](../GLOSSARY.md) | The project's words: what a Game, RSVP, Waitlist, etc. mean. No implementation details. | Living. Edit when a term is settled; note it in the changelog at the bottom. |
+| [`../GLOSSARY.md`](../GLOSSARY.md) | The project's words: what a Match, RSVP, Waitlist, etc. mean. No implementation details. | Living. Edit when a term is settled; note it in the changelog at the bottom. |
 | [`adr/`](adr/) | Architecture Decision Records: one file per hard-to-reverse decision, with the reason. | **Append-only.** Never rewrite an accepted ADR. To change a decision, write a new ADR and mark the old one `superseded by ADR-NNNN`. |
 | [`v1-build-plan.md`](v1-build-plan.md) | V1 goal, feature list, build order, phases, timeline, open questions. | Living. Bump the version and add a changelog row on every change. |
 | [`architecture.md`](architecture.md) | Blueprint: layers, modules, data flow, repo layout. | Living. Bump the version and add a changelog row on every change. |
+| [`features/`](features/) | One brief per V1 feature (1.1–1.28): status, owner, hand-off note, screens, data, rules, acceptance checklist, files. Start from [`_TEMPLATE.md`](features/_TEMPLATE.md). | Living. Update the hand-off note, status, and changelog in every PR that touches the feature. |
+| [`../CONTRIBUTING.md`](../CONTRIBUTING.md) | Setup, claiming a feature, building, hand-off, pull requests. | Living. Bump the version and add a changelog row on every change. |
 | [`lessons-learned.md`](lessons-learned.md) | Problems hit and how they were solved, so nobody repeats them. | Append-only log, newest first. |
 
 ## Versioning rules
 
-1. **Living docs** (`v1-build-plan.md`, `architecture.md`) carry a `Version` and `Last updated` line at the top and a **Changelog** table at the bottom.
+1. **Living docs** (`v1-build-plan.md`, `architecture.md`, `CONTRIBUTING.md`, feature briefs) carry a `Version` and `Last updated` line at the top and a **Changelog** table at the bottom.
    - Minor change (wording, one item added): `0.1 → 0.2`.
    - Major change (scope, order, or structure changes): `0.x → 1.0`, `1.x → 2.0`.
    - Every changelog row names the author, so teammates know who to ask.

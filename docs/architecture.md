@@ -1,6 +1,6 @@
 # WhosDown Architecture
 
-**Version:** 0.4 · **Last updated:** 2026-11-02 · **Status:** draft
+**Version:** 0.5 · **Last updated:** 2026-11-02 · **Status:** draft
 
 Blueprint for building the app. Sections marked _open_ are still being decided in the [build plan](v1-build-plan.md).
 
@@ -35,9 +35,23 @@ The Sprint 3 schema (§2 of the Sprint 3 document) is the starting point; the co
 | `matches/{matchId}` | Matches, with denormalized Host/Venue names and counters (was `games` in Sprint 3) |
 | `matches/{matchId}/rsvps/{userId}` | One RSVP per Player per Match |
 | `groups/…`, `members/…` | Groups (V2) |
-| `conversations/{id}`, `messages/{id}` | Match chat (V1); direct and group chat (V2) |
+| `conversations/{matchId}/messages/{id}` | Match chat (V1, document ID = Match ID); direct and group chat reuse `conversations/` in V2 |
 | `reviews/{id}` | Post-game reviews (V2) |
 | `reports/{id}` | Safety reports |
+
+Changes from the Sprint 3 schema:
+
+- `games` → `matches`, `gameId` → `matchId`, `gameUpdated` → `matchUpdated`, and so on (D13).
+- No `visibility` field in V1 (every Match is public, ADR-0007).
+- RSVP gains `checkedIn` (Bool). `attended` (Bool?) is set by Check-in. The RSVP no longer stores a `reliability` copy, and the profile no longer stores `gamesAttended` / `gamesRSVPd`. Reliability = (RSVPs with `checkedIn` and `attended`) ÷ (RSVPs with `checkedIn`), counted with Firestore count queries over the `rsvps` collection group (D37).
+- Match gains `checkedInAt` (Timestamp?), set by the Host's Check-in.
+- Times are Firestore Timestamps; the app shows them in the phone's time zone (D42).
+
+Security-rule rules of thumb:
+
+- A Player writes only their own RSVP, except the Host, who sets status on Join requests and Check-in fields.
+- Notifications: create in another Player's inbox only as yourself (`fromUserId == auth.uid`), and only if you are the Match's Host or hold an RSVP in it; the recipient may only read, mark read, or delete (D38).
+- Match chat: read and post only for approved Players and the Host (D39).
 
 Known patterns from Sprint 3: RSVP document ID = user ID; counters change in the same transaction as the RSVP; geohash for radius search (computed with GeoFireUtils); lowercase name fields for prefix search.
 
@@ -101,3 +115,4 @@ Lives in `app/WhosDown/DesignSystem/`. The Figma hi-fi page "03 — Hi-Fi Full M
 | 0.2 | 2026-11-01 | Chris Lee (with Claude) | Backend set to Firebase (ADR-0004) |
 | 0.3 | 2026-11-01 | Chris Lee (with Claude) | Match naming, repository layout (ADR-0005), no server code in V1 (ADR-0006), GeoFireUtils, iOS 26 |
 | 0.4 | 2026-11-02 | Chris Lee (with Claude) | §5 design system: SF Pro, light only in V1, color tokens, screens without frames |
+| 0.5 | 2026-11-02 | Chris Lee (with Claude) | Schema changes from Sprint 3 (Reliability counted on read, Check-in fields, chat path), security-rule rules of thumb |
