@@ -95,7 +95,38 @@ final class FakeUserRepository: UserRepository {
         }
     }
 
+    private(set) var uploadedAvatars: [String: Data] = [:]
+    private(set) var savedPrefs: [String: UserSettings.NotificationPrefs] = [:]
+    /// When set, the next write throws it.
+    var nextError: Error?
+
+    func updateProfile(userId: String, fields: ProfileFields) async throws {
+        if let error = nextError { nextError = nil; throw error }
+        guard var profile = profiles[userId] else { return }
+        profile.displayName = fields.displayName
+        profile.displayNameLowercase = fields.displayName.lowercased()
+        profile.photoURL = fields.photoURL
+        profile.bio = fields.bio
+        profile.homeArea = fields.homeArea
+        profile.playStyles = fields.playStyles
+        profile.sportLevels = fields.sportLevels
+        profile.customSportName = fields.customSportName
+        update(userId, profile)
+    }
+
+    func uploadAvatar(userId: String, jpegData: Data) async throws -> String {
+        if let error = nextError { nextError = nil; throw error }
+        uploadedAvatars[userId] = jpegData
+        return "https://example.test/\(userId)/avatar.jpg"
+    }
+
+    func saveNotificationPrefs(userId: String, prefs: UserSettings.NotificationPrefs) async throws {
+        if let error = nextError { nextError = nil; throw error }
+        savedPrefs[userId] = prefs
+    }
+
     func completeOnboarding(userId: String) async throws {
+        if let error = nextError { nextError = nil; throw error }
         guard var profile = profiles[userId] else { return }
         profile.onboardedAt = .now
         update(userId, profile)
@@ -104,6 +135,23 @@ final class FakeUserRepository: UserRepository {
     private func update(_ userId: String, _ profile: UserProfile) {
         profiles[userId] = profile
         continuations[userId]?.forEach { $0.yield(profile) }
+    }
+}
+
+final class FakePermissionsService: PermissionsService {
+    var allowLocation = true
+    var allowNotifications = true
+    private(set) var notificationRequests = 0
+    private(set) var locationRequests = 0
+
+    func requestLocation() async -> Bool {
+        locationRequests += 1
+        return allowLocation
+    }
+
+    func requestNotifications() async -> Bool {
+        notificationRequests += 1
+        return allowNotifications
     }
 }
 

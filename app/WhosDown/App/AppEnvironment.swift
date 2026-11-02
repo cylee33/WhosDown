@@ -7,18 +7,26 @@ final class AppEnvironment {
     let auth: AuthRepository
     let users: UserRepository
     let matches: MatchRepository
+    let permissions: PermissionsService
 
-    init(auth: AuthRepository, users: UserRepository, matches: MatchRepository) {
+    init(auth: AuthRepository, users: UserRepository, matches: MatchRepository, permissions: PermissionsService) {
         self.auth = auth
         self.users = users
         self.matches = matches
+        self.permissions = permissions
     }
 
     static func live() -> AppEnvironment {
-        AppEnvironment(auth: FirebaseAuthRepository(), users: FirebaseUserRepository(), matches: FirebaseMatchRepository())
+        AppEnvironment(
+            auth: FirebaseAuthRepository(), users: FirebaseUserRepository(),
+            matches: FirebaseMatchRepository(), permissions: SystemPermissionsService()
+        )
     }
 
     static func preview(signedInAs userId: String? = "seed_alex") -> AppEnvironment {
-        AppEnvironment(auth: FakeAuthRepository(signedInAs: userId), users: FakeUserRepository(), matches: FakeMatchRepository())
+        AppEnvironment(
+            auth: FakeAuthRepository(signedInAs: userId), users: FakeUserRepository(),
+            matches: FakeMatchRepository(), permissions: FakePermissionsService()
+        )
     }
 }

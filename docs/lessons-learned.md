@@ -2,6 +2,11 @@
 
 Problems hit and how they were solved. Newest first. Add an entry whenever something cost more than ~15 minutes.
 
+## 2026-11-02 — Phase 1
+
+- **iCloud Drive makes " 2" copies inside the repo.** The repo lives on the Desktop, which syncs to iCloud. When files change quickly, iCloud can leave conflict copies such as `OnboardingViewModel 2.swift`. Xcode's synchronized folders then compile both, and the build fails with "invalid redeclaration". Fix: compare the copy with the real file (`diff`), then delete the copy. To avoid it, keep the repo outside iCloud-synced folders, for example `~/Developer/WhosDown`.
+- **Nested `#require` doesn't compile.** `try #require(f(try #require(x)))` fails with "recursive expansion of macro". Unwrap in two lines.
+
 ## 2026-11-02 — Phase 0 setup
 
 - **GeoFireUtils doesn't support Firebase 13.** Its `Package.swift` caps Firebase below 12 (release 5.0.1) or 13 (main branch), so SPM can't resolve it with `firebase-ios-sdk` 13.x. We port the small geohash part instead (D50).

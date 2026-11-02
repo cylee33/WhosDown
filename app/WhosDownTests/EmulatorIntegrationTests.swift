@@ -1,5 +1,6 @@
 import Foundation
 import Testing
+import UIKit
 @testable import WhosDown
 
 /// Runs the real Firebase repositories against the local emulator (the Debug test host is already
@@ -72,6 +73,40 @@ struct EmulatorIntegrationTests {
         #expect(!upgraded.isGuest)
         // Succeeds only if the refreshed token no longer says "anonymous" (security rules, 1.3).
         try await users.createProfile(userId: upgraded.id, displayName: "Former Guest", email: email)
+    }
+
+    @Test func onboardingSavesProfilePhotoAndPreferences() async throws {
+        let email = uniqueEmail()
+        let user = try await auth.createAccount(email: email, password: "whosdown123")
+        defer { try? auth.signOut() }
+        try await users.createProfile(userId: user.id, displayName: "Onboarding Test", email: email)
+        var profile: UserProfile?
+        for try await value in users.profileChanges(userId: user.id) {
+            if let value { profile = value; break }
+        }
+        var fields = ProfileFields(try #require(profile))
+
+        let png = try #require(UIImage(systemName: "star")?.pngData())
+        let jpeg = try #require(AvatarImage.jpegData(from: png))
+        fields.photoURL = try await users.uploadAvatar(userId: user.id, jpegData: jpeg)
+        fields.sportLevels = ["soccer": .intermediate, "other": .casual]
+        fields.customSportName = "Spikeball"
+        fields.playStyles = [.social]
+        fields.bio = "Midfielder."
+        fields.homeArea = "Oakland / CMU"
+        try await users.updateProfile(userId: user.id, fields: fields)
+        try await users.saveNotificationPrefs(
+            userId: user.id,
+            prefs: .init(approvals: true, timeOrLocationChanges: false, cancellations: true)
+        )
+        try await users.completeOnboarding(userId: user.id)
+
+        for try await value in users.profileChanges(userId: user.id) where value?.onboardedAt != nil {
+            #expect(value?.sportLevels == ["soccer": .intermediate, "other": .casual])
+            #expect(value?.customSportName == "Spikeball")
+            #expect(value?.photoURL?.contains("avatar.jpg") == true)
+            break
+        }
     }
 
     @Test func passwordResetForUnknownEmailDoesNotThrowANetworkError() async {

@@ -27,10 +27,10 @@ final class WelcomeViewModel {
     }
 
     #if DEBUG
-    /// Signs in as the seeded test Player Alex (emulator only).
-    func developerSignIn() async {
+    /// Signs in as a seeded test Player (emulator only); Alex unless another seeded email is given.
+    func developerSignIn(email: String = "alex@whosdown.test") async {
         do {
-            try await auth.signIn(email: "alex@whosdown.test", password: "whosdown123")
+            try await auth.signIn(email: email, password: "whosdown123")
         } catch {
             errorMessage = "Developer sign-in failed. Is the emulator running and seeded? (npm run emulators, npm run seed)"
         }
