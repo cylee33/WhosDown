@@ -1,6 +1,6 @@
 # Contributing to WhosDown
 
-**Version:** 0.1 · **Last updated:** 2026-11-02
+**Version:** 0.2 · **Last updated:** 2026-11-02
 
 How to set up, pick up a feature, and hand it off. Read this before your first commit. One person can work through every lane; three people can work in parallel without blocking each other.
 
@@ -16,20 +16,20 @@ How to set up, pick up a feature, and hand it off. Read this before your first c
 
 > The Xcode project and emulator are created in Phase 0. Until then, this section is the target setup.
 
-**You need:** a Mac with Xcode 27, Node 20 or later, Java 21 or later (for the Firebase emulator), and the Firebase CLI (`npm install -g firebase-tools`).
+**You need:** a Mac with Xcode 27, Node 24.12 or later, and Java 21 (for the Firebase emulator): `brew install openjdk@21`, then add `export PATH="/opt/homebrew/opt/openjdk@21/bin:$PATH"` to `~/.zshrc`. The Firebase CLI comes with `npm install` in `firebase/`; no global install needed.
 
 1. Clone: `git clone https://github.com/cylee33/WhosDown.git`.
 2. Open `app/WhosDown.xcodeproj` in Xcode. Swift packages (Firebase, GeoFireUtils) resolve on first open.
-3. `GoogleService-Info.plist` is already in the repo (D40). You don't need to download anything from the Firebase console.
-4. Start the emulator: from `firebase/`, run `firebase emulators:start`.
-5. Seed sample data into the emulator: `node firebase/seed/seed.js` (Pittsburgh Venues, about 10 Matches, 5 test Players; D41). It never touches the real project unless you pass a flag and a key, and the key never goes in git.
-6. Run the app on an iOS 26 simulator. Debug builds talk to the emulator; Release builds talk to the real `whosdown-57e99` project.
+3. Debug builds need no Firebase config file: they use the local emulator as `demo-whosdown`. Release builds use `GoogleService-Info.plist`, committed to the repo once Chris registers the app (D40).
+4. Start the emulator: from `firebase/`, run `npm install` (first time), then `npm run emulators`. It runs as the demo project `demo-whosdown`, so it can never touch real data. Emulator UI: http://127.0.0.1:4000.
+5. Seed sample data: in a second terminal, from `firebase/`, run `npm run seed` (Pittsburgh Venues, 10 Matches, 5 test Players; D41). Test logins are in [`firebase/seed/README.md`](firebase/seed/README.md). The script refuses to run against anything but the local emulator.
+6. Run the app on an iOS 26 simulator. Debug builds talk to the emulator; Release builds talk to the real `whosdown-57e99` project. On the Welcome screen, Debug builds show **Developer sign-in (Alex, emulator)**. To skip the tap, set the environment variable `WHOSDOWN_DEV_SIGNIN=1` in the scheme (Product → Scheme → Edit Scheme → Run → Arguments). If Xcode says "The iOS 27.0 simulator runtime is not available", pick an iOS 26.5 simulator or install the runtime in Xcode Settings → Components.
 7. On your own iPhone: sign in to Xcode with a free Apple ID and run. The install expires after 7 days; run again to renew (D36).
 
 **Tests:**
 
-- Domain rules: `swift test` in `app/Packages/WhosDownCore`.
-- Security rules: from `firebase/`, run `npm test` with the emulator running.
+- App and domain rules: Xcode ⌘U, or `xcodebuild test -project app/WhosDown.xcodeproj -scheme WhosDown -destination 'platform=iOS Simulator,name=iPhone 17'`.
+- Security rules: from `firebase/`, run `npm test` (it starts and stops its own emulator).
 
 ## 3. Pick up a feature
 
@@ -44,11 +44,12 @@ Lanes (A Identity & Profile, B Discover & Hosting, C Joining & Lifecycle, Core) 
 
 - **Follow the brief.** Its acceptance checklist is the definition of done. If the brief is wrong or unclear, fix the brief in the same PR and say so. If the change affects scope or another feature, ask Chris first.
 - **Layers:** views → `@Observable` view models → repositories. Views and view models never call Firebase directly. If you think one must, ask first (ADR-0001).
-- **Shared code:** models, repository protocols, Firebase repositories, and domain rules live in `WhosDownCore`. Change them only if the brief says to, and keep the change small. Core changes need Chris's review.
-- **Domain rules test-first:** write the failing test in `WhosDownCoreTests`, then the code (D28).
+- **Folders (strict MVVM, ADR-0009):** screens in `Views/<Area>/`, their `@Observable` classes in `ViewModels/<Area>/`, and everything about data in `Models/` (`Data/`, `Repositories/`, `Services/`, `Rules/`, `Fakes/`).
+- **Shared code:** `Models/` and `Views/DesignSystem/` are shared by every feature. Change them only if the brief says to, and keep the change small. Changes there need Chris's review.
+- **Domain rules test-first:** write the failing test in `WhosDownTests`, then the code (D28).
 - **Security rules:** if your feature writes something new, add the rule and an emulator test in `firebase/` in the same PR.
 - **Screens:** match the Figma wireframe named in the brief (layout, wording, colors, spacing on the 8-point grid). Use the system font (SF Pro), light mode only (D34, D35). Wireframe text says "game"; app text says **Match** (D13).
-- **New files:** add them in the feature's folder. Xcode synchronized folders mean you don't edit the project file.
+- **New files:** add them in the right `Views/`, `ViewModels/`, or `Models/` subfolder. Xcode synchronized folders mean you don't edit the project file.
 - **Extras:** nothing beyond the brief without Chris's approval (ADR-0003).
 
 ## 5. Hand off (every PR, even unfinished work)
@@ -84,3 +85,4 @@ Also tick the acceptance boxes that now pass, and add a changelog row to the bri
 | Version | Date | Author | Change |
 |---|---|---|---|
 | 0.1 | 2026-11-02 | Chris Lee (with Claude) | First version: setup, claiming, building, hand-off, PRs |
+| 0.2 | 2026-11-02 | Chris Lee (with Claude) | Real setup steps (Java, npm scripts, demo project), MVVM folders (ADR-0009) |

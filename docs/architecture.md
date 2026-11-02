@@ -1,19 +1,19 @@
 # WhosDown Architecture
 
-**Version:** 0.7 · **Last updated:** 2026-11-02 · **Status:** draft
+**Version:** 0.9 · **Last updated:** 2026-11-02 · **Status:** draft
 
 Blueprint for building the app. Sections marked _open_ are still being decided in the [build plan](v1-build-plan.md).
 
 ## 1. Layers
 
 ```
-SwiftUI views            (one feature folder per area: Onboarding, Discover, Match, Host, Profile, Notifications)
+SwiftUI views            (Views/, one subfolder per area: Onboarding, Discover, Match, Host, Profile, Notifications)
       │  read state, send user actions
       ▼
-@Observable view models  (one per screen or flow)
+@Observable view models  (ViewModels/, one per screen or flow)
       │  call
       ▼
-Repositories             (one per domain: matches, RSVPs, users, venues, chat, notifications, reports)
+Repositories             (Models/Repositories/, one per domain: matches, RSVPs, users, venues, chat, notifications, reports)
       │  the ONLY layer that talks to the backend
       ▼
 Firebase SDK + device services (Firebase per ADR-0004; MapKit, Core Location, EventKit, UserNotifications, Open-Meteo)
@@ -69,7 +69,7 @@ Endpoints: reads R1–R19 and writes W1–W19, listed in Sprint 3 §8.2 and on t
 | Service | Use | Release |
 |---|---|---|
 | Apple MapKit + Core Location | Map, place search, user location, distance | V1 |
-| GeoFireUtils (`geofire-objc`) | Geohash and radius query ranges | V1 |
+| `Geohash` helper in `Models/Rules/` (ported from Firebase's `geofire-common`) | Geohash and radius query ranges (D50; GeoFireUtils doesn't support Firebase 13) | V1 |
 | Open-Meteo | Weather line for outdoor games (free, no key) | V1 |
 | EventKit | Add game to calendar | V1 |
 | UserNotifications (local) | Game reminders | V1 |
@@ -77,35 +77,48 @@ Endpoints: reads R1–R19 and writes W1–W19, listed in Sprint 3 §8.2 and on t
 
 ## 4. Repository layout
 
-See [ADR-0005](adr/0005-app-target-plus-core-package.md).
+Strict MVVM in three top-level folders; see [ADR-0009](adr/0009-mvvm-three-top-level-folders.md) (replaces ADR-0005).
 
 ```
 WhosDown/                      ← git repo root
 ├── app/
 │   ├── WhosDown.xcodeproj
-│   ├── WhosDown/              ← app target, Xcode synchronized folders
-│   │   ├── App/               ← app entry, tab bar, navigation, dependency setup
-│   │   ├── DesignSystem/      ← colors, type, spacing (8-point grid), shared components
-│   │   ├── Onboarding/
-│   │   ├── Discover/
-│   │   ├── Match/
-│   │   ├── Host/
-│   │   ├── Profile/
-│   │   └── Notifications/
-│   ├── WhosDownTests/
-│   └── Packages/WhosDownCore/ ← models, repository protocols, Firebase repositories, domain rules + tests
-├── firebase/                  ← firestore.rules, firestore.indexes.json, storage.rules, seed data
-├── docs/                      ← plan, architecture, ADRs, lessons
-├── GLOSSARY.md
+│   ├── WhosDown/              ← app target (Xcode synchronized folders)
+│   │   ├── App/               ← app entry, tab bar, dependency setup, emulator switch
+│   │   ├── Models/
+│   │   │   ├── Data/          ← structs and enums (Match, RSVP, UserProfile…)
+│   │   │   ├── Repositories/  ← protocols + Firebase implementations; the ONLY Firebase access
+│   │   │   ├── Services/      ← weather, location, calendar, reminders
+│   │   │   ├── Rules/         ← domain rules (JoinRules, WaitlistRules…), formatting
+│   │   │   └── Fakes/         ← in-memory repositories for previews and tests
+│   │   ├── Views/
+│   │   │   ├── DesignSystem/  ← colors, type, spacing (8-point grid), shared components
+│   │   │   └── Onboarding/ Discover/ Match/ Host/ Profile/ Notifications/
+│   │   └── ViewModels/
+│   │       └── Onboarding/ Discover/ Match/ Host/ Profile/ Notifications/
+│   └── WhosDownTests/         ← domain-rule and view-model tests
+├── firebase/                  ← firestore.rules, firestore.indexes.json, storage.rules, tests/, seed/
+├── docs/                      ← plan, architecture, ADRs, feature briefs, lessons
+├── GLOSSARY.md, CONTRIBUTING.md
 ├── IdeaDocs/                  ← history
 └── WhosDown (Team 6) Sprint 3/ ← history (reference only, ADR-0002)
 ```
 
-- **Minimum iOS:** 26. **Swift:** Xcode 27's defaults for new app projects (record the exact settings here when the project is created).
+- **Minimum iOS:** 26.0. iPhone only, portrait, light mode (`UIUserInterfaceStyle = Light`, D35).
+- **Swift settings** = Xcode 27.2's defaults for a new SwiftUI app, read from Xcode's own project templates on 2026-11-02 (D16):
+  - `SWIFT_VERSION = 5.0` (Swift 5 language mode on the Swift 6 compiler)
+  - `SWIFT_DEFAULT_ACTOR_ISOLATION = MainActor` (app target: code is main-actor by default)
+  - `SWIFT_APPROACHABLE_CONCURRENCY = YES`
+  - `SWIFT_UPCOMING_FEATURE_MEMBER_IMPORT_VISIBILITY = YES` (import every module you use, e.g. `import FirebaseCore`)
+  - `STRING_CATALOG_GENERATE_SYMBOLS = YES`, `SWIFT_EMIT_LOC_STRINGS = YES` (app target)
+  - `ENABLE_USER_SCRIPT_SANDBOXING = YES`, `GENERATE_INFOPLIST_FILE = YES`
+- **Packages:** `firebase-ios-sdk` 13.1.1 (up to next major): FirebaseAuth, FirebaseFirestore, FirebaseStorage. Versions are pinned in `Package.resolved`.
+- **Tests:** Swift Testing (`import Testing`) in `WhosDownTests`, hosted in the app.
+- **Firebase switch:** Debug builds talk to the local emulator as demo project `demo-whosdown` (no plist needed); Release builds read `GoogleService-Info.plist` for `whosdown-57e99` (`App/FirebaseSetup.swift`).
 
 ## 5. Design system
 
-Lives in `app/WhosDown/DesignSystem/`. The Figma hi-fi page "03 — Hi-Fi Full Marks" is the source.
+Lives in `app/WhosDown/Views/DesignSystem/`. The Figma hi-fi page "03 — Hi-Fi Full Marks" is the source.
 
 - **Font:** SF Pro (the system font) with Dynamic Type text styles. Figma uses Inter; treat it as equivalent (D34).
 - **Color mode:** light only in V1; dark mode is a V2 objective (D35). Define colors as named tokens anyway, so V2 can add dark values without touching screens.
@@ -123,3 +136,5 @@ Lives in `app/WhosDown/DesignSystem/`. The Figma hi-fi page "03 — Hi-Fi Full M
 | 0.5 | 2026-11-02 | Chris Lee (with Claude) | Schema changes from Sprint 3 (Reliability counted on read, Check-in fields, chat path), security-rule rules of thumb |
 | 0.6 | 2026-11-02 | Chris Lee (with Claude) | Schema changes found while writing the feature briefs (waitlistedAt, onboardedAt, notification fields, R20, W20) |
 | 0.7 | 2026-11-02 | Chris Lee (with Claude) | Waitlist without spot offers (ADR-0008): `waitlistIds`, `spotOpened` |
+| 0.8 | 2026-11-02 | Chris Lee (with Claude) | Layout changed to strict MVVM folders (ADR-0009) |
+| 0.9 | 2026-11-02 | Chris Lee (with Claude) | Swift settings recorded; geohash helper replaces GeoFireUtils (D50); Firebase switch |

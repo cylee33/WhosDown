@@ -1,0 +1,10 @@
+rules_version = '2';
+
+// WhosDown Storage rules, v1 (Phase 0). Deny by default; 1.4 adds avatar uploads.
+service firebase.storage {
+  match /b/{bucket}/o {
+    match /users/{uid}/avatar.jpg {
+      allow read: if request.auth != null;
+    }
+  }
+}
