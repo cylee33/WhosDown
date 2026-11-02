@@ -90,12 +90,82 @@ service cloud.firestore {
         && request.resource.data.createdBy == resource.data.createdBy && validVenue(request.resource.data);
     }
 
+    function matchKeys() {
+      return ['title', 'titleLowercase', 'sport', 'customSportName', 'notes', 'hostId', 'hostName', 'venueId',
+              'venueName', 'location', 'geohash', 'isIndoor', 'surface', 'hasLights', 'startTime', 'endTime',
+              'skillLevel', 'joinType', 'priceCents', 'playerLimit', 'waitlistEnabled', 'joinedCount',
+              'pendingCount', 'waitlistCount', 'waitlistIds', 'attendeePreview', 'fieldReserved',
+              'reservationWindow', 'facilityNote', 'status', 'cancelReason', 'checkedInAt', 'createdAt', 'updatedAt'];
+    }
+
+    // The fields a Host chooses (1.11, and later edits in 1.18).
+    function validMatchDetails(d) {
+      return d.keys().hasOnly(matchKeys()) && d.keys().hasAll(matchKeys())
+        && d.title is string && d.title.size() >= 1 && d.title.size() <= 40
+        && d.titleLowercase == d.title.lower()
+        && d.sport in ['soccer', 'basketball', 'tennis', 'volleyball', 'pickleball', 'baseball', 'football', 'ultimate', 'other']
+        && (d.sport == 'other'
+            ? (d.customSportName is string && d.customSportName.size() >= 1 && d.customSportName.size() <= 30)
+            : d.customSportName == null)
+        && optionalString(d.notes, 500)
+        && d.hostName is string && d.venueName is string && d.venueId is string
+        && d.location.latitude is number && d.location.longitude is number
+        && d.geohash is string && d.geohash.size() >= 5
+        && d.isIndoor is bool && d.hasLights is bool && d.surface is string
+        && d.startTime is timestamp && d.endTime is timestamp
+        && d.endTime > d.startTime && d.endTime <= d.startTime + duration.value(6, 'h')
+        && d.skillLevel in ['beginner', 'casual', 'allLevels', 'intermediate', 'competitive']
+        && d.joinType in ['open', 'approvalRequired']
+        && d.priceCents is int && d.priceCents >= 0 && d.priceCents <= 10000
+        && d.playerLimit is int && d.playerLimit >= 2 && d.playerLimit <= 50
+        && d.waitlistEnabled is bool && d.fieldReserved is bool
+        && optionalString(d.reservationWindow, 40)
+        && optionalString(d.facilityNote, 200)
+        && d.attendeePreview is list && d.attendeePreview.size() <= 6;
+    }
+
     match /matches/{matchId} {
       allow read: if signedIn();
+      // W3 (1.11): a Player publishes a future Match as its Host, with the starting counters
+      // (the Host counts as the first joined Player) and server timestamps.
+      allow create: if isPlayer() && validMatchDetails(request.resource.data)
+        && request.resource.data.hostId == request.auth.uid
+        && request.resource.data.startTime > request.time
+        && request.resource.data.status == 'scheduled'
+        && request.resource.data.joinedCount == 1
+        && request.resource.data.pendingCount == 0
+        && request.resource.data.waitlistCount == 0
+        && request.resource.data.waitlistIds == []
+        && request.resource.data.cancelReason == null
+        && request.resource.data.checkedInAt == null
+        && request.resource.data.createdAt == request.time
+        && request.resource.data.updatedAt == request.time
+        // The Host's own RSVP and the Match chat are written in the same batch.
+        && existsAfter(/databases/$(database)/documents/matches/$(matchId)/rsvps/$(request.auth.uid))
+        && existsAfter(/databases/$(database)/documents/conversations/$(matchId));
 
       match /rsvps/{uid} {
         allow read: if signedIn();
+        // W3 (1.11): the Host's own approved RSVP, only while the Match itself is being created.
+        allow create: if isOwner(uid)
+          && !exists(/databases/$(database)/documents/matches/$(matchId))
+          && getAfter(/databases/$(database)/documents/matches/$(matchId)).data.hostId == uid
+          && request.resource.data.userId == uid
+          && request.resource.data.status == 'approved'
+          && request.resource.data.isHost == true
+          && request.resource.data.checkedIn == false
+          && request.resource.data.attended == null;
       }
+    }
+
+    // Match chat (D39). Read and post rules come with 1.20.
+    match /conversations/{matchId} {
+      // W3 (1.11): created by the Host together with a new Match.
+      allow create: if isPlayer()
+        && !exists(/databases/$(database)/documents/matches/$(matchId))
+        && getAfter(/databases/$(database)/documents/matches/$(matchId)).data.hostId == request.auth.uid
+        && request.resource.data.type == 'match'
+        && request.resource.data.matchId == matchId;
     }
 
     // Collection-group queries over RSVPs (My Matches, Reliability).

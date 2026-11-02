@@ -65,7 +65,7 @@ struct MainTabView: View {
                         systemImage: "plus.circle"
                     )
                 } else {
-                    CreateMatchView()
+                    CreateMatchView(onBackToDiscover: { selection = .discover })
                 }
             }
             Tab("Profile", systemImage: "person.crop.circle", value: TabID.profile) {
