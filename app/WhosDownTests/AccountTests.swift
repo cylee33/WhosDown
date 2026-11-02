@@ -119,7 +119,7 @@ struct SessionTests {
     @Test func signedOutThenNewAccountNeedsOnboarding() async {
         let auth = FakeAuthRepository(signedInAs: nil)
         let users = FakeUserRepository(profiles: [:])
-        let session = Session(auth: auth, users: users)
+        let session = Session(auth: auth, users: users, defaults: .launchedBefore)
         let task = Task { await session.start() }
         defer { task.cancel() }
         await settle()
@@ -138,7 +138,7 @@ struct SessionTests {
 
     @Test func signOutClearsTheProfile() async {
         let auth = FakeAuthRepository(signedInAs: "seed_alex")
-        let session = Session(auth: auth, users: FakeUserRepository())
+        let session = Session(auth: auth, users: FakeUserRepository(), defaults: .launchedBefore)
         let task = Task { await session.start() }
         defer { task.cancel() }
         await settle()

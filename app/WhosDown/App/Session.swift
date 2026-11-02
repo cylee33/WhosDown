@@ -25,11 +25,13 @@ final class Session {
 
     private let auth: AuthRepository
     private let users: UserRepository
+    private let defaults: UserDefaults
     private var profileTask: Task<Void, Never>?
 
-    init(auth: AuthRepository, users: UserRepository) {
+    init(auth: AuthRepository, users: UserRepository, defaults: UserDefaults = .standard) {
         self.auth = auth
         self.users = users
+        self.defaults = defaults
     }
 
     var isGuest: Bool { user?.isGuest ?? false }
@@ -55,12 +57,20 @@ final class Session {
 
     /// Follows sign-in changes for the life of the app.
     func start() async {
+        // Firebase keeps the sign-in in the Keychain, which survives deleting the app; UserDefaults doesn't.
+        // So the first launch after an install signs out any leftover account (1.3 rule 7).
+        if !defaults.bool(forKey: Self.hasLaunchedKey) {
+            try? auth.signOut()
+            defaults.set(true, forKey: Self.hasLaunchedKey)
+        }
         for await user in auth.authStateChanges() {
             // Token refreshes repeat the same user; only real changes reset state.
             guard state == .loading || user != self.user else { continue }
             apply(user)
         }
     }
+
+    private static let hasLaunchedKey = "hasLaunchedBefore"
 
     private func apply(_ user: AuthUser?) {
         profileTask?.cancel()

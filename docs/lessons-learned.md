@@ -5,6 +5,7 @@ Problems hit and how they were solved. Newest first. Add an entry whenever somet
 ## 2026-11-02 — Phase 1
 
 - **iCloud Drive makes " 2" copies inside the repo.** The repo lives on the Desktop, which syncs to iCloud. When files change quickly, iCloud can leave conflict copies such as `OnboardingViewModel 2.swift`. Xcode's synchronized folders then compile both, and the build fails with "invalid redeclaration". Fix: compare the copy with the real file (`diff`), then delete the copy. To avoid it, keep the repo outside iCloud-synced folders, for example `~/Developer/WhosDown`.
+- **Firebase sign-in survives deleting the app.** Firebase Auth stores the session in the iOS Keychain, which isn't wiped on uninstall. A reinstalled app came back signed in as the last account. Fix in `Session.start()`: sign out once when a UserDefaults flag (wiped on uninstall) is missing. Tests that build a `Session` pass `defaults: .launchedBefore`.
 - **Nested `#require` doesn't compile.** `try #require(f(try #require(x)))` fails with "recursive expansion of macro". Unwrap in two lines.
 
 ## 2026-11-02 — Phase 0 setup
