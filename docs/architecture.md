@@ -1,6 +1,6 @@
 # WhosDown Architecture
 
-**Version:** 0.6 · **Last updated:** 2026-11-02 · **Status:** draft
+**Version:** 0.7 · **Last updated:** 2026-11-02 · **Status:** draft
 
 Blueprint for building the app. Sections marked _open_ are still being decided in the [build plan](v1-build-plan.md).
 
@@ -45,9 +45,9 @@ Changes from the Sprint 3 schema:
 - No `visibility` field in V1 (every Match is public, ADR-0007).
 - RSVP gains `checkedIn` (Bool). `attended` (Bool?) is set by Check-in. The RSVP no longer stores a `reliability` copy, and the profile no longer stores `gamesAttended` / `gamesRSVPd`. Reliability = (RSVPs with `checkedIn` and `attended`) ÷ (RSVPs with `checkedIn`), counted with Firestore count queries over the `rsvps` collection group (D37).
 - Match gains `checkedInAt` (Timestamp?), set by the Host's Check-in.
-- RSVP `waitlistPosition` is replaced by `waitlistedAt` (Timestamp); position is computed from the order (1.17).
+- RSVP `waitlistPosition` and `spotOfferExpiresAt` are removed. The waiting order is `matches/{id}.waitlistIds` (array of user IDs, max 50), so rules can check "first in line"; position = index + 1 (ADR-0008, 1.17).
 - User gains `onboardedAt` (Timestamp?) and `customSportName` (String?) (1.2, 1.4).
-- Notification gains `fromUserId` (D38) and `changes: [{field, oldValue, newValue}]` plus `hostNote` in place of the single `change` (1.18). V1 types: `approved`, `declined`, `matchUpdated`, `matchCancelled`, `spotOpen`, `hostTransferred` (1.21).
+- Notification gains `fromUserId` (D38) and `changes: [{field, oldValue, newValue}]` plus `hostNote` in place of the single `change` (1.18). V1 types: `approved`, `declined`, `matchUpdated`, `matchCancelled`, `spotOpened` (to the Host), `hostTransferred` (1.21, ADR-0008).
 - Conversation `type` is `"match"` for Match chat; `participantIds` and `unreadCounts` are not maintained in V1 (1.20).
 - New endpoints: **R20** Reliability (count queries, 1.10) and **W20** Check-in (batch, 1.27).
 - Times are Firestore Timestamps; the app shows them in the phone's time zone (D42).
@@ -122,3 +122,4 @@ Lives in `app/WhosDown/DesignSystem/`. The Figma hi-fi page "03 — Hi-Fi Full M
 | 0.4 | 2026-11-02 | Chris Lee (with Claude) | §5 design system: SF Pro, light only in V1, color tokens, screens without frames |
 | 0.5 | 2026-11-02 | Chris Lee (with Claude) | Schema changes from Sprint 3 (Reliability counted on read, Check-in fields, chat path), security-rule rules of thumb |
 | 0.6 | 2026-11-02 | Chris Lee (with Claude) | Schema changes found while writing the feature briefs (waitlistedAt, onboardedAt, notification fields, R20, W20) |
+| 0.7 | 2026-11-02 | Chris Lee (with Claude) | Waitlist without spot offers (ADR-0008): `waitlistIds`, `spotOpened` |

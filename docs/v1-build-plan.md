@@ -1,6 +1,6 @@
 # WhosDown V1 Build Plan
 
-**Version:** 0.12 · **Last updated:** 2026-11-02 · **Status:** planning (no code until the owner says "start coding" or "do phase X")
+**Version:** 0.13 · **Last updated:** 2026-11-02 · **Status:** planning (no code until the owner says "start coding" or "do phase X")
 
 ## 1. Goal
 
@@ -53,11 +53,11 @@ The Sprint 3 week-by-week dates (Oct 26 → Nov 16) are replaced by this timelin
 | 1.14 | Request to join | Join review explains the three approval steps; note to host; Pending; live change to Approved or Declined (with host message); one color per status | H12, H13, H14, H35 |
 | 1.15 | Host: approve / decline | Host dashboard and join-request list | H20, H21 |
 | 1.16 | Leave game / cancel request | "Leave game" or "Cancel request" on Game Detail whenever the player has an RSVP; confirmation sheet; counters update | H09, H13, H37 |
-| 1.17 | Waitlist | Full games say "Full · Join waitlist" with the count; join waitlist; first in line gets a 10-minute spot offer when someone leaves; claim spot | H15, H53 |
+| 1.17 | Waitlist | Full Matches say "Full · Join waitlist" with the count; join waitlist; on Open Matches the first in line gets a freed spot automatically; on Approval-required Matches the Host approves from the waitlist (ADR-0008; no spot offer, no H53) | H15, H21 |
 | 1.18 | Edit and cancel game | Host edits time, location, limit, join type; cancels with a reason; joined players get an in-app notification | H46, H38, H51, H52 |
 | 1.19 | My Games | Upcoming (color-coded status), Hosting, and Past lists; games move to Past after they end | H27, H28 |
 | 1.20 | Game chat | One chat per game, created on publish; live messages for approved players | H16 |
-| 1.21 | In-app notifications | List and detail screens for approved, declined, game updated, game cancelled, spot open | H31, H50–H53 |
+| 1.21 | In-app notifications | List and detail screens for approved, declined, Match updated, Match cancelled, spot opened (Host), Host transferred | H50–H52 |
 | 1.22 | Profile | Own profile organized by sport with a level per sport; edit profile (photo, name, bio, home area, sports and levels); organizer profile | H36, H49, H10 |
 | 1.23 | Add to calendar | Calendar event from a joined game | H14 |
 | 1.24 | Game reminders | Local notification before each approved game; removed if the player leaves or the game is cancelled | H14, H27 |
@@ -120,7 +120,8 @@ Feature names keep their Sprint 3 numbers; wording follows the glossary (Match, 
 | D44 | Reports (1.25) are only written in V1; Chris reviews them in the Firebase console; no admin screen | §4 (1.25) |
 | D45 | Brief format approved (template + samples 1.14, 1.27); each brief keeps its own "Open questions", brought to Chris in batches | [features/](features/) |
 | D46 | Round 8 brief answers: four tabs (no Friends tab in V1); Sign out row on H36; no profile document for Guests, Guest Profile tab shows an empty "+" profile with sign-in buttons; no level block on H04; one custom sport; stale names on old copies accepted; Discover re-queries after every pan; time filter presets plus custom days and time of day; the Host counts toward the player limit; optional Match title; "Waitlist when full" switch; three-question new Venue sheet; pending requests stay pending on join type change; Note to Players on edits; chat row preview without unread count; one notifications list with a bell; calendar events not updated; basic accessibility check | [features/](features/) |
-| D47 | **No 10-minute Spot offer.** The waitlist is managed by approving people off it; details in round 9 | _pending ADR-0008_ |
+| D47 | **No 10-minute Spot offer** (replaces that part of D24). Open Match: first in line gets a freed spot automatically. Approval required: Join waitlist needs no approval; H21 shows Join requests and Waitlist; the Host approves anyone while a spot is free and gets a `spotOpened` notification when someone leaves while people wait. H53 and `spotOpen` dropped | [ADR-0008](adr/0008-waitlist-without-spot-offers.md) |
+| D48 | Notification permission: one iOS prompt on H05 "Continue" during onboarding; reminders on by default after that | [1.4](features/1.4-onboarding.md), [1.24](features/1.24-match-reminders.md) |
 
 ## 6. Open questions
 
@@ -139,7 +140,7 @@ Feature names keep their Sprint 3 numbers; wording follows the glossary (Match, 
 - [x] Write `CONTRIBUTING.md` and the brief template (D29)
 - [x] Write all 28 feature briefs in `docs/features/` (D30); index: [features/README.md](features/README.md)
 - [x] Settle the briefs' open questions (round 8)
-- [ ] Round 9: waitlist without spot offers (1.17), reminder permission (1.24)
+- [x] Round 9: waitlist without spot offers (1.17, ADR-0008), reminder permission (1.24)
 - [ ] Owner approves the plan ("start coding")
 
 ## 8. Team workflow on GitHub
@@ -195,3 +196,4 @@ Recorded here so they are not lost while V1 is built. The full V2 list is featur
 | 0.10 | 2026-11-02 | Chris Lee (with Claude) | Round 7: reports reviewed in console (D44), brief format approved (D45) |
 | 0.11 | 2026-11-02 | Chris Lee (with Claude) | All 28 feature briefs written; feature index |
 | 0.12 | 2026-11-02 | Chris Lee (with Claude) | Round 8 answers (D46), spot offers dropped (D47), accessibility added to V2 objectives |
+| 0.13 | 2026-11-02 | Chris Lee (with Claude) | Round 9: waitlist without spot offers (D47, ADR-0008), permission prompt on H05 (D48) |

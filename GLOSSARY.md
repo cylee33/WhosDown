@@ -48,10 +48,7 @@ _Avoid_: Application, request (alone)
 Whether a Match is **Open** (Players join instantly) or **Approval required** (the Host approves each Join request).
 
 **Waitlist**:
-The ordered queue of Players who want a spot in a full Match.
-
-**Spot offer**:
-A time-limited (10-minute) offer of an open spot, given to the first Player on the Waitlist.
+The ordered line of Players who want a spot in a Full Match. On an Open Match the first in line gets a freed spot automatically; on an Approval-required Match the Host lets people in.
 
 **Full**:
 A Match whose joined count has reached its player limit; new Players can only join the Waitlist.
@@ -87,3 +84,4 @@ V1 is the first release (the 26 approved features plus approved extras 1.27–1.
 | 2026-11-01 | Chris Lee | Added Match (replaces Game), Host (replaces Organizer), RSVP, Join request. |
 | 2026-11-01 | Chris Lee | Added Check-in and Full; Reliability now based on Check-ins; V1/V2 updated for ADR-0007. |
 | 2026-11-02 | Chris Lee | Added Host transfer; Check-in happens after the Match starts. |
+| 2026-11-02 | Chris Lee | Removed Spot offer; Waitlist now says how spots are filled (ADR-0008). |
