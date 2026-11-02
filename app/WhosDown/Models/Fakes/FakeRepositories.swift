@@ -253,6 +253,14 @@ final class FakeMatchRepository: MatchRepository {
         self.error = error
     }
 
+    private(set) var published: [(draft: MatchDraft, hostId: String)] = []
+
+    func publish(_ draft: MatchDraft, host: UserProfile) async throws -> String {
+        if let error { throw error }
+        published.append((draft, host.id ?? ""))
+        return "m_published_\(published.count)"
+    }
+
     func upcomingMatches() async throws -> [Match] {
         if let error { throw error }
         return matches.sorted { $0.startTime < $1.startTime }

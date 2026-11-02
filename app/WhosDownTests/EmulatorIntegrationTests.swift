@@ -139,6 +139,29 @@ struct EmulatorIntegrationTests {
         #expect(try await venues.search(namePrefix: name.lowercased()).first?.id == created.id)
     }
 
+    @Test func publishedMatchShowsUpWithItsHostRSVP() async throws {
+        try await auth.signIn(email: "alex@whosdown.test", password: "whosdown123")
+        defer { try? auth.signOut() }
+        let host = try #require(try await users.profile(userId: "seed_alex"))
+        let venue = try #require(try await FirebaseVenueRepository().search(namePrefix: "cmu soccer").first)
+        var draft = MatchDraft()
+        draft.sport = .soccer
+        draft.title = "Integration Kickabout \(UUID().uuidString.prefix(4))"
+        draft.venue = venue
+        draft.playerLimit = 12
+        draft.joinType = .approvalRequired
+
+        let matches = FirebaseMatchRepository()
+        let id = try await matches.publish(draft, host: host)
+        let published = try #require(try await matches.upcomingMatches().first { $0.id == id })
+        #expect(published.title == draft.title)
+        #expect(published.hostId == "seed_alex")
+        #expect(published.joinedCount == 1)
+        #expect(published.attendeePreview == ["AM"])
+        #expect(published.geohash.hasPrefix("dppnhf"))
+        #expect(published.venueName == "CMU Soccer Field")
+    }
+
     @Test func passwordResetForUnknownEmailDoesNotThrowANetworkError() async {
         do {
             try await auth.sendPasswordReset(email: uniqueEmail())
