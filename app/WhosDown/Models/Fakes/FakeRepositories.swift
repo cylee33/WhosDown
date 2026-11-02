@@ -95,6 +95,10 @@ final class FakeUserRepository: UserRepository {
         }
     }
 
+    func profile(userId: String) async throws -> UserProfile? {
+        profiles[userId]
+    }
+
     private(set) var uploadedAvatars: [String: Data] = [:]
     private(set) var savedPrefs: [String: UserSettings.NotificationPrefs] = [:]
     /// When set, the next write throws it.
@@ -152,6 +156,18 @@ final class FakePermissionsService: PermissionsService {
     func requestNotifications() async -> Bool {
         notificationRequests += 1
         return allowNotifications
+    }
+}
+
+final class FakeReliabilityRepository: ReliabilityRepository {
+    var records: [String: Reliability]
+
+    init(records: [String: Reliability] = ["seed_alex": Reliability(checkedIn: 18, attended: 17)]) {
+        self.records = records
+    }
+
+    func reliability(userId: String) async throws -> Reliability {
+        records[userId] ?? Reliability(checkedIn: 0, attended: 0)
     }
 }
 

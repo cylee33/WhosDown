@@ -31,14 +31,22 @@ extension Session.GateRoute: Identifiable {
 
 /// Four tabs in V1; the wireframes' Friends tab returns in V2 (1.1, D46).
 struct MainTabView: View {
+    enum TabID: String { case discover, matches, create, profile }
+
     @Environment(Session.self) private var session
+    #if DEBUG
+    // Launch with WHOSDOWN_DEV_TAB=profile (or matches, create) to open on that tab.
+    @State private var selection = TabID(rawValue: ProcessInfo.processInfo.environment["WHOSDOWN_DEV_TAB"] ?? "") ?? .discover
+    #else
+    @State private var selection = TabID.discover
+    #endif
 
     var body: some View {
-        TabView {
-            Tab("Discover", systemImage: "map") {
+        TabView(selection: $selection) {
+            Tab("Discover", systemImage: "map", value: TabID.discover) {
                 DiscoverView()
             }
-            Tab("Matches", systemImage: "sportscourt") {
+            Tab("Matches", systemImage: "sportscourt", value: TabID.matches) {
                 if session.isGuest {
                     GuestPromptView(
                         title: "Your Matches live here",
@@ -49,7 +57,7 @@ struct MainTabView: View {
                     MyMatchesView()
                 }
             }
-            Tab("Create", systemImage: "plus.circle") {
+            Tab("Create", systemImage: "plus.circle", value: TabID.create) {
                 if session.isGuest {
                     GuestPromptView(
                         title: "Host your own Match",
@@ -60,7 +68,7 @@ struct MainTabView: View {
                     CreateMatchView()
                 }
             }
-            Tab("Profile", systemImage: "person.crop.circle") {
+            Tab("Profile", systemImage: "person.crop.circle", value: TabID.profile) {
                 if session.isGuest {
                     GuestProfileView()
                 } else {

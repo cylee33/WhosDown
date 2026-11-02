@@ -1,6 +1,6 @@
 # Contributing to WhosDown
 
-**Version:** 0.3 · **Last updated:** 2026-11-02
+**Version:** 0.4 · **Last updated:** 2026-11-02
 
 How to set up, pick up a feature, and hand it off. Read this before your first commit. One person can work through every lane; three people can work in parallel without blocking each other.
 
@@ -18,12 +18,12 @@ How to set up, pick up a feature, and hand it off. Read this before your first c
 
 **You need:** a Mac with Xcode 27, Node 24.12 or later, and Java 21 (for the Firebase emulator): `brew install openjdk@21`, then add `export PATH="/opt/homebrew/opt/openjdk@21/bin:$PATH"` to `~/.zshrc`. The Firebase CLI comes with `npm install` in `firebase/`; no global install needed.
 
-1. Clone: `git clone https://github.com/cylee33/WhosDown.git`.
+1. Clone into a folder that iCloud doesn't sync (not Desktop or Documents if iCloud Drive syncs them), for example `mkdir -p ~/Developer && cd ~/Developer && git clone https://github.com/cylee33/WhosDown.git`. iCloud creates " 2" copies of files that break the build (lessons-learned).
 2. Open `app/WhosDown.xcodeproj` in Xcode. Swift packages (Firebase, GeoFireUtils) resolve on first open.
 3. Debug builds need no Firebase config file: they use the local emulator as `demo-whosdown`. Release builds use `app/WhosDown/GoogleService-Info.plist` (already in the repo, D40) to reach the real `whosdown-57e99` project.
 4. Start the emulator: from `firebase/`, run `npm install` (first time), then `npm run emulators`. It runs as the demo project `demo-whosdown`, so it can never touch real data. Emulator UI: http://127.0.0.1:4000.
 5. Seed sample data: in a second terminal, from `firebase/`, run `npm run seed` (Pittsburgh Venues, 10 Matches, 5 test Players; D41). Test logins are in [`firebase/seed/README.md`](firebase/seed/README.md). The script refuses to run against anything but the local emulator.
-6. Run the app on an iOS 26 simulator. Debug builds talk to the emulator; Release builds talk to the real `whosdown-57e99` project. On the Welcome screen, Debug builds show **Developer sign-in (Alex, emulator)**. To skip the tap, set the environment variable `WHOSDOWN_DEV_SIGNIN=1` (Alex), `=guest` (Guest), or `=<seeded email>` such as `newbie@whosdown.test` (onboarding) in the scheme (Product → Scheme → Edit Scheme → Run → Arguments). If Xcode says "The iOS 27.0 simulator runtime is not available", pick an iOS 26.5 simulator or install the runtime in Xcode Settings → Components.
+6. Run the app on an iOS 26 simulator. Debug builds talk to the emulator; Release builds talk to the real `whosdown-57e99` project. On the Welcome screen, Debug builds show **Developer sign-in (Alex, emulator)**. To skip the tap, set the environment variable `WHOSDOWN_DEV_SIGNIN=1` (Alex), `=guest` (Guest), or `=<seeded email>` such as `newbie@whosdown.test` (onboarding); add `WHOSDOWN_DEV_TAB=profile` (or `matches`, `create`) to open on that tab in the scheme (Product → Scheme → Edit Scheme → Run → Arguments). If Xcode says "The iOS 27.0 simulator runtime is not available", pick an iOS 26.5 simulator or install the runtime in Xcode Settings → Components.
 7. On your own iPhone: sign in to Xcode with a free Apple ID and run. The install expires after 7 days; run again to renew (D36).
 
 **Tests:**
@@ -89,3 +89,4 @@ Also tick the acceptance boxes that now pass, and add a changelog row to the bri
 | 0.1 | 2026-11-02 | Chris Lee (with Claude) | First version: setup, claiming, building, hand-off, PRs |
 | 0.2 | 2026-11-02 | Chris Lee (with Claude) | Real setup steps (Java, npm scripts, demo project), MVVM folders (ADR-0009) |
 | 0.3 | 2026-11-02 | Chris Lee (with Claude) | Plist committed |
+| 0.4 | 2026-11-02 | Chris Lee (with Claude) | Clone outside iCloud; WHOSDOWN_DEV_TAB |

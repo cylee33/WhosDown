@@ -51,7 +51,7 @@ final class OnboardingViewModel {
 
     /// Rule 1 and 2: at least one sport, and a valid name when "Other" is chosen.
     var canContinueFromSports: Bool {
-        !selectedSports.isEmpty && (!selectedSports.contains(.other) || ProfileRules.cleanedCustomSportName(customSportName) != nil)
+        ProfileRules.canContinue(sports: selectedSports, customSportName: customSportName)
     }
 
     /// Rule 3: a level for every chosen sport.
@@ -77,7 +77,7 @@ final class OnboardingViewModel {
 
     func continueFromLevels() async {
         guard canContinueFromLevels, var fields = currentFields else { return }
-        fields.sportLevels = Dictionary(uniqueKeysWithValues: selectedSports.map { ($0.rawValue, levels[$0] ?? .allLevels) })
+        fields.sportLevels = ProfileRules.sportLevels(for: selectedSports, levels: levels)
         fields.customSportName = selectedSports.contains(.other) ? ProfileRules.cleanedCustomSportName(customSportName) : nil
         if await save(fields) { advance(to: .profile) }
     }
@@ -192,10 +192,7 @@ final class OnboardingViewModel {
     }
 
     private func prefill(from profile: UserProfile) {
-        selectedSports = Sport.allCases.filter { profile.sportLevels[$0.rawValue] != nil }
-        levels = Dictionary(uniqueKeysWithValues: selectedSports.compactMap { sport in
-            profile.sportLevels[sport.rawValue].map { (sport, $0) }
-        })
+        (selectedSports, levels) = ProfileRules.selection(from: profile)
         customSportName = profile.customSportName ?? ""
         playStyles = Set(profile.playStyles)
         bio = profile.bio ?? ""
