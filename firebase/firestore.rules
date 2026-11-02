@@ -23,8 +23,40 @@ service cloud.firestore {
       return isPlayer() && request.auth.uid == uid;
     }
 
+    // Every field of users/{uid}, always written together (1.2, 1.4, 1.22).
+    function profileKeys() {
+      return ['displayName', 'displayNameLowercase', 'photoURL', 'bio', 'homeArea', 'playStyles',
+              'sportLevels', 'customSportName', 'createdAt', 'onboardedAt'];
+    }
+
+    function optionalString(value, maxLength) {
+      return value == null || (value is string && value.size() <= maxLength);
+    }
+
+    function validProfile(d) {
+      return d.keys().hasOnly(profileKeys()) && d.keys().hasAll(profileKeys())
+        && d.displayName is string && d.displayName.size() >= 1 && d.displayName.size() <= 40
+        && d.displayNameLowercase == d.displayName.lower()
+        && optionalString(d.photoURL, 2048)
+        && optionalString(d.bio, 300)
+        && optionalString(d.homeArea, 60)
+        && (d.customSportName == null || (d.customSportName is string && d.customSportName.size() >= 1 && d.customSportName.size() <= 30))
+        && d.playStyles is list && d.playStyles.size() <= 3
+        && d.sportLevels is map && d.sportLevels.size() <= 9
+        && (d.onboardedAt == null || d.onboardedAt is timestamp);
+    }
+
     match /users/{uid} {
       allow read: if signedIn();
+      // W1 (1.2): a new Player creates only their own profile, not yet onboarded.
+      allow create: if isOwner(uid) && validProfile(request.resource.data)
+        && request.resource.data.createdAt == request.time
+        && request.resource.data.onboardedAt == null;
+      // Onboarding and profile edits (1.4, 1.22). createdAt never changes; onboardedAt is set once, by the server clock.
+      allow update: if isOwner(uid) && validProfile(request.resource.data)
+        && request.resource.data.createdAt == resource.data.createdAt
+        && (request.resource.data.onboardedAt == resource.data.onboardedAt
+            || (resource.data.onboardedAt == null && request.resource.data.onboardedAt == request.time));
 
       match /private/{doc} {
         allow read, write: if isOwner(uid);
