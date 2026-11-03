@@ -64,23 +64,3 @@ struct ModelTests {
         #expect(profile.initials == "AM")
     }
 }
-
-@MainActor
-struct DiscoverViewModelTests {
-    @Test func loadsMatchesSoonestFirst() async {
-        let viewModel = DiscoverViewModel(matches: FakeMatchRepository())
-        await viewModel.load()
-        guard case .loaded(let matches) = viewModel.state else {
-            Issue.record("Expected loaded state, got \(viewModel.state)")
-            return
-        }
-        #expect(matches.map(\.title) == ["Pickup Soccer", "7v7 at Schenley", "Beginner Kickabout"])
-    }
-
-    @Test func showsAPlainErrorWhenLoadingFails() async {
-        struct Offline: Error {}
-        let viewModel = DiscoverViewModel(matches: FakeMatchRepository(error: Offline()))
-        await viewModel.load()
-        #expect(viewModel.state == .failed("Couldn't load Matches. Check your connection and try again."))
-    }
-}

@@ -12,11 +12,14 @@ final class AppEnvironment {
     let venues: VenueRepository
     let placeSearch: PlaceSearchService
     let location: LocationService
+    let weather: WeatherService
+    let rsvps: RSVPRepository
 
     init(
         auth: AuthRepository, users: UserRepository, matches: MatchRepository,
         permissions: PermissionsService, reliability: ReliabilityRepository,
-        venues: VenueRepository, placeSearch: PlaceSearchService, location: LocationService
+        venues: VenueRepository, placeSearch: PlaceSearchService, location: LocationService,
+        weather: WeatherService, rsvps: RSVPRepository
     ) {
         self.auth = auth
         self.users = users
@@ -26,6 +29,8 @@ final class AppEnvironment {
         self.venues = venues
         self.placeSearch = placeSearch
         self.location = location
+        self.weather = weather
+        self.rsvps = rsvps
     }
 
     static func live() -> AppEnvironment {
@@ -33,7 +38,8 @@ final class AppEnvironment {
             auth: FirebaseAuthRepository(), users: FirebaseUserRepository(),
             matches: FirebaseMatchRepository(), permissions: SystemPermissionsService(),
             reliability: FirebaseReliabilityRepository(), venues: FirebaseVenueRepository(),
-            placeSearch: MapKitPlaceSearchService(), location: SystemLocationService()
+            placeSearch: MapKitPlaceSearchService(), location: SystemLocationService(),
+            weather: OpenMeteoWeatherService(), rsvps: FirebaseRSVPRepository()
         )
     }
 
@@ -42,7 +48,8 @@ final class AppEnvironment {
             auth: FakeAuthRepository(signedInAs: userId), users: FakeUserRepository(),
             matches: FakeMatchRepository(), permissions: FakePermissionsService(),
             reliability: FakeReliabilityRepository(), venues: FakeVenueRepository(),
-            placeSearch: FakePlaceSearchService(), location: FakeLocationService()
+            placeSearch: FakePlaceSearchService(), location: FakeLocationService(),
+            weather: FakeWeatherService(), rsvps: FakeRSVPRepository()
         )
     }
 }

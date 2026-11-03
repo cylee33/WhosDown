@@ -35,6 +35,10 @@ protocol UserRepository {
     func updateProfile(userId: String, fields: ProfileFields) async throws
     /// Uploads a JPEG to `users/{userId}/avatar.jpg` and returns its download URL.
     func uploadAvatar(userId: String, jpegData: Data) async throws -> String
+    /// R8: the Player's own private settings (search radius, 1.7).
+    func settings(userId: String) async throws -> UserSettings?
+    /// W16: the Discover search radius (1.7 rule 3).
+    func saveSearchRadius(userId: String, miles: Double) async throws
     /// W16: the three notification switches from H05.
     func saveNotificationPrefs(userId: String, prefs: UserSettings.NotificationPrefs) async throws
     /// Sets `onboardedAt`, which ends onboarding (1.4, H44).
@@ -90,6 +94,15 @@ final class FirebaseUserRepository: UserRepository {
         metadata.contentType = "image/jpeg"
         _ = try await reference.putDataAsync(jpegData, metadata: metadata)
         return try await reference.downloadURL().absoluteString
+    }
+
+    func settings(userId: String) async throws -> UserSettings? {
+        let snapshot = try await db.document("users/\(userId)/private/settings").getDocument()
+        return snapshot.exists ? try snapshot.data(as: UserSettings.self) : nil
+    }
+
+    func saveSearchRadius(userId: String, miles: Double) async throws {
+        try await db.document("users/\(userId)/private/settings").updateData(["searchRadiusMiles": miles])
     }
 
     func saveNotificationPrefs(userId: String, prefs: UserSettings.NotificationPrefs) async throws {

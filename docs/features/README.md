@@ -12,12 +12,12 @@ The status column here is a snapshot; the brief itself is the truth. Update this
 | 1.2 | [Account and sign-in](1.2-account-and-sign-in.md) | A Identity & Profile | 1 Identity | Done | 0 |
 | 1.3 | [Guest browsing](1.3-guest-browsing.md) | A Identity & Profile | 1 Identity | Done | 0 |
 | 1.4 | [Onboarding](1.4-onboarding.md) | A Identity & Profile | 1 Identity | Done | 0 |
-| 1.5 | [Discover map](1.5-discover-map.md) | B Discover & Hosting | 3 Discover | Not started | 0 |
-| 1.6 | [Discover list](1.6-discover-list.md) | B Discover & Hosting | 3 Discover | Not started | 0 |
-| 1.7 | [Filters](1.7-filters.md) | B Discover & Hosting | 3 Discover | Not started | 0 |
-| 1.8 | [Match details](1.8-match-details.md) | B Discover & Hosting | 3 Discover | Not started | 0 |
-| 1.9 | [Weather](1.9-weather.md) | B Discover & Hosting | 3 Discover | Not started | 0 |
-| 1.10 | [Player roster](1.10-player-roster.md) | B Discover & Hosting | 3 Discover | Not started | 0 |
+| 1.5 | [Discover map](1.5-discover-map.md) | B Discover & Hosting | 3 Discover | Done | 0 |
+| 1.6 | [Discover list](1.6-discover-list.md) | B Discover & Hosting | 3 Discover | Done | 0 |
+| 1.7 | [Filters](1.7-filters.md) | B Discover & Hosting | 3 Discover | Done | 0 |
+| 1.8 | [Match details](1.8-match-details.md) | B Discover & Hosting | 3 Discover | Done | 0 |
+| 1.9 | [Weather](1.9-weather.md) | B Discover & Hosting | 3 Discover | Done | 0 |
+| 1.10 | [Player roster](1.10-player-roster.md) | B Discover & Hosting | 3 Discover | Done | 0 |
 | 1.11 | [Create Match](1.11-create-match.md) | B Discover & Hosting | 2 Hosting | Done | 0 |
 | 1.12 | [Choose location](1.12-choose-location.md) | B Discover & Hosting | 2 Hosting | Done | 0 |
 | 1.13 | [Join an open Match](1.13-join-open-match.md) | C Joining & Lifecycle | 4 Joining | Not started | 0 |

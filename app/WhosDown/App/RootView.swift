@@ -44,7 +44,7 @@ struct MainTabView: View {
     var body: some View {
         TabView(selection: $selection) {
             Tab("Discover", systemImage: "map", value: TabID.discover) {
-                DiscoverView()
+                DiscoverView(onCreateMatch: { selection = .create })
             }
             Tab("Matches", systemImage: "sportscourt", value: TabID.matches) {
                 if session.isGuest {

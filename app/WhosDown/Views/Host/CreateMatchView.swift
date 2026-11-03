@@ -205,7 +205,12 @@ private struct VenueDetailsView: View {
                             .lineLimit(1...3)
                             .padding(.vertical, Spacing.xs)
                     }
-                    // The weather card (H18) is added by 1.9.
+                    if let venue = viewModel.draft.venue {
+                        VStack(alignment: .leading, spacing: Spacing.xs) {
+                            Text("WEATHER").font(.caption.weight(.semibold)).foregroundStyle(Color.textSecondary)
+                            WeatherLine(location: venue.location, date: viewModel.draft.startTime, isIndoor: venue.isIndoor)
+                        }
+                    }
                     LabeledField(label: "NOTES (OPTIONAL)") {
                         TextField("e.g. Bring a light + dark shirt", text: $viewModel.draft.notes, axis: .vertical)
                             .lineLimit(2...5)
@@ -251,7 +256,10 @@ private struct ReviewMatchView: View {
 
                     VStack(alignment: .leading, spacing: Spacing.xs) {
                         Text("Visible before joining").font(.caption.weight(.semibold)).foregroundStyle(Color.textSecondary)
-                        if let venue = draft.venue { Text(VenueRules.factsLine(venue)) }
+                        if let venue = draft.venue {
+                            Text(VenueRules.factsLine(venue))
+                            WeatherLine(location: venue.location, date: draft.startTime, isIndoor: venue.isIndoor)
+                        }
                         Text("\(draft.playerLimit)-player cap · Waitlist \(draft.waitlistEnabled ? "on" : "off")")
                         if draft.fieldReserved {
                             Text("Field reserved\(draft.reservationWindow.isEmpty ? "" : " " + draft.reservationWindow)")
