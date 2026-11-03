@@ -14,6 +14,8 @@ One brief per V1 feature. Each brief is the single source for that feature: stat
 | What exactly was done and what's left? | The brief's **Hand-off note** and acceptance checklist |
 | Overall progress, with screenshots | [progress.md](../progress.md) |
 
+**Dates are local (Pittsburgh) time.** GitHub shows merge times in UTC, which is 5 hours ahead, so an evening merge can look like the next day there.
+
 **Keeping it current:** whoever claims a feature puts their name in **Owner** (and assigns the issue). The PR that finishes it fills in **Status**, **Done on**, **Branch**, and **PR**. The brief stays the source of truth if the two ever disagree.
 
 | # | Feature | Lane | Phase | Status | Owner | Done on | Branch | PR |
@@ -22,12 +24,12 @@ One brief per V1 feature. Each brief is the single source for that feature: stat
 | 1.2 | [Account and sign-in](1.2-account-and-sign-in.md) | A Identity & Profile | 1 Identity | Done | Chris Lee | 2026-11-02 | `feat/1.2-account-and-sign-in` | [#31](https://github.com/cylee33/WhosDown/pull/31) |
 | 1.3 | [Guest browsing](1.3-guest-browsing.md) | A Identity & Profile | 1 Identity | Done | Chris Lee | 2026-11-02 | `feat/1.3-guest-browsing`, `fix/1.3-signout-after-reinstall` | [#32](https://github.com/cylee33/WhosDown/pull/32), [#35](https://github.com/cylee33/WhosDown/pull/35) |
 | 1.4 | [Onboarding](1.4-onboarding.md) | A Identity & Profile | 1 Identity | Done | Chris Lee | 2026-11-02 | `feat/1.4-onboarding` | [#33](https://github.com/cylee33/WhosDown/pull/33) |
-| 1.5 | [Discover map](1.5-discover-map.md) | B Discover & Hosting | 3 Discover | Done | Chris Lee | 2026-11-03 | `feat/phase-3-discover` | [#39](https://github.com/cylee33/WhosDown/pull/39) |
-| 1.6 | [Discover list](1.6-discover-list.md) | B Discover & Hosting | 3 Discover | Done | Chris Lee | 2026-11-03 | `feat/phase-3-discover` | [#39](https://github.com/cylee33/WhosDown/pull/39) |
-| 1.7 | [Filters](1.7-filters.md) | B Discover & Hosting | 3 Discover | Done | Chris Lee | 2026-11-03 | `feat/phase-3-discover` | [#39](https://github.com/cylee33/WhosDown/pull/39) |
-| 1.8 | [Match details](1.8-match-details.md) | B Discover & Hosting | 3 Discover | Done | Chris Lee | 2026-11-03 | `feat/phase-3-discover` | [#39](https://github.com/cylee33/WhosDown/pull/39) |
-| 1.9 | [Weather](1.9-weather.md) | B Discover & Hosting | 3 Discover | Done | Chris Lee | 2026-11-03 | `feat/phase-3-discover` | [#39](https://github.com/cylee33/WhosDown/pull/39) |
-| 1.10 | [Player roster](1.10-player-roster.md) | B Discover & Hosting | 3 Discover | Done | Chris Lee | 2026-11-03 | `feat/phase-3-discover` | [#39](https://github.com/cylee33/WhosDown/pull/39) |
+| 1.5 | [Discover map](1.5-discover-map.md) | B Discover & Hosting | 3 Discover | Done | Chris Lee | 2026-11-02 | `feat/phase-3-discover` | [#39](https://github.com/cylee33/WhosDown/pull/39) |
+| 1.6 | [Discover list](1.6-discover-list.md) | B Discover & Hosting | 3 Discover | Done | Chris Lee | 2026-11-02 | `feat/phase-3-discover` | [#39](https://github.com/cylee33/WhosDown/pull/39) |
+| 1.7 | [Filters](1.7-filters.md) | B Discover & Hosting | 3 Discover | Done | Chris Lee | 2026-11-02 | `feat/phase-3-discover` | [#39](https://github.com/cylee33/WhosDown/pull/39) |
+| 1.8 | [Match details](1.8-match-details.md) | B Discover & Hosting | 3 Discover | Done | Chris Lee | 2026-11-02 | `feat/phase-3-discover` | [#39](https://github.com/cylee33/WhosDown/pull/39) |
+| 1.9 | [Weather](1.9-weather.md) | B Discover & Hosting | 3 Discover | Done | Chris Lee | 2026-11-02 | `feat/phase-3-discover` | [#39](https://github.com/cylee33/WhosDown/pull/39) |
+| 1.10 | [Player roster](1.10-player-roster.md) | B Discover & Hosting | 3 Discover | Done | Chris Lee | 2026-11-02 | `feat/phase-3-discover` | [#39](https://github.com/cylee33/WhosDown/pull/39) |
 | 1.11 | [Create Match](1.11-create-match.md) | B Discover & Hosting | 2 Hosting | Done | Chris Lee | 2026-11-02 | `feat/1.11-create-match` | [#38](https://github.com/cylee33/WhosDown/pull/38) |
 | 1.12 | [Choose location](1.12-choose-location.md) | B Discover & Hosting | 2 Hosting | Done | Chris Lee | 2026-11-02 | `feat/1.12-choose-location` | [#37](https://github.com/cylee33/WhosDown/pull/37) |
 | 1.13 | [Join an open Match](1.13-join-open-match.md) | C Joining & Lifecycle | 4 Joining | Not started | — | — | — | — |
@@ -51,4 +53,4 @@ One brief per V1 feature. Each brief is the single source for that feature: stat
 | Version | Date | Author | Change |
 |---|---|---|---|
 | 0.1 | 2026-11-02 | Chris Lee (with Claude) | All 28 briefs written (D30) |
-| 0.2 | 2026-11-03 | Chris Lee (with Claude) | Owner, Done on, Branch, PR columns; "where to look" guide |
+| 0.2 | 2026-11-02 | Chris Lee (with Claude) | Owner, Done on, Branch, PR columns; "where to look" guide |
