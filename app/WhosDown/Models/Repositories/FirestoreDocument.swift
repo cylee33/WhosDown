@@ -18,7 +18,7 @@ nonisolated extension Message: FirestoreDocument {}
 nonisolated extension Report: FirestoreDocument {}
 
 extension DocumentSnapshot {
-    func decoded<T: FirestoreDocument>(as type: T.Type) throws -> T {
+    nonisolated func decoded<T: FirestoreDocument>(as type: T.Type) throws -> T {
         var value = try data(as: type)
         value.id = documentID
         return value

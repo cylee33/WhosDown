@@ -2,6 +2,13 @@
 
 Problems hit and how they were solved. Newest first. Add an entry whenever something cost more than ~15 minutes.
 
+## 2026-11-02 — Phase 3
+
+- **Fake live streams must end.** View models loop over `AsyncThrowingStream`s from Firestore listeners, which never end. Fakes that yield once and never `finish()` make tests that `await viewModel.start()` hang forever (xcodebuild just sits there). Fakes yield their value, then `finish()`.
+- **A listener's first snapshot can be partial.** Firestore answers from the local cache first, and the cache may hold only documents another query fetched (for example your own RSVP). The roster showed "1 joined" for a moment. Listeners that show counts skip `metadata.isFromCache` snapshots.
+- **The simulator is in Cupertino by default.** Discover looks empty. Run `xcrun simctl location <device-id> set 40.4433,-79.9436` and grant location (`xcrun simctl privacy <device-id> grant location edu.cmu.whosdown`).
+- **Xcode 27 has no Simulator app.** The simulator window is DeviceHub: `/Applications/Xcode.app/Contents/Applications/DeviceHub.app`.
+
 ## 2026-11-02 — Phase 1
 
 - **iCloud Drive makes " 2" copies inside the repo.** The repo lives on the Desktop, which syncs to iCloud. When files change quickly, iCloud can leave conflict copies such as `OnboardingViewModel 2.swift`. Xcode's synchronized folders then compile both, and the build fails with "invalid redeclaration". Fix: compare the copy with the real file (`diff`), then delete the copy. To avoid it, keep the repo outside iCloud-synced folders, for example `~/Developer/WhosDown`.

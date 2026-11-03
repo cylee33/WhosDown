@@ -99,6 +99,20 @@ final class FakeUserRepository: UserRepository {
         profiles[userId]
     }
 
+    var savedRadius: [String: Double] = [:]
+
+    func settings(userId: String) async throws -> UserSettings? {
+        UserSettings(
+            email: "\(userId)@whosdown.test",
+            notificationPrefs: .init(approvals: true, timeOrLocationChanges: true, cancellations: true),
+            searchRadiusMiles: savedRadius[userId] ?? 3
+        )
+    }
+
+    func saveSearchRadius(userId: String, miles: Double) async throws {
+        savedRadius[userId] = miles
+    }
+
     private(set) var uploadedAvatars: [String: Data] = [:]
     private(set) var savedPrefs: [String: UserSettings.NotificationPrefs] = [:]
     /// When set, the next write throws it.
@@ -244,6 +258,49 @@ extension Venue {
     ]
 }
 
+final class FakeWeatherService: WeatherService {
+    var summary: WeatherSummary? = WeatherSummary(temperatureF: 64, condition: "Clear", rainChance: 8)
+    func forecast(at location: Coordinate, for date: Date) async -> WeatherSummary? { summary }
+}
+
+final class FakeRSVPRepository: RSVPRepository {
+    var approved: [String: [RSVP]]
+    var myApproved: [String: [String]]
+
+    init(approved: [String: [RSVP]] = ["m1": RSVP.samples], myApproved: [String: [String]] = ["seed_alex": ["m1"]]) {
+        self.approved = approved
+        self.myApproved = myApproved
+    }
+
+    /// Yields the current roster once, then ends (real listeners stay open).
+    func approvedChanges(matchId: String) -> AsyncThrowingStream<[RSVP], Error> {
+        AsyncThrowingStream { continuation in
+            continuation.yield(RosterRules.ordered(approved[matchId] ?? []))
+            continuation.finish()
+        }
+    }
+
+    func myApprovedMatchIds(userId: String) async throws -> [String] {
+        myApproved[userId] ?? []
+    }
+}
+
+extension RSVP {
+    static func sample(_ userId: String, _ name: String, host: Bool = false, level: SkillLevel = .allLevels, minutesAgo: Double) -> RSVP {
+        let time = Date.now.addingTimeInterval(-minutesAgo * 60)
+        return RSVP(
+            id: userId, userId: userId, displayName: name, skillLevel: level, status: .approved, isHost: host,
+            noteToHost: nil, hostResponse: nil, requestedAt: time, respondedAt: time, checkedIn: false, attended: nil
+        )
+    }
+
+    static let samples: [RSVP] = [
+        .sample("seed_mina", "Mina Kim", level: .intermediate, minutesAgo: 30),
+        .sample("seed_alex", "Alex Morgan", minutesAgo: 60),
+        .sample("seed_jamie", "Jamie Morales", host: true, level: .intermediate, minutesAgo: 120),
+    ]
+}
+
 final class FakeMatchRepository: MatchRepository {
     var matches: [Match]
     var error: Error?
@@ -264,6 +321,26 @@ final class FakeMatchRepository: MatchRepository {
     func upcomingMatches() async throws -> [Match] {
         if let error { throw error }
         return matches.sorted { $0.startTime < $1.startTime }
+    }
+
+    func nearby(center: Coordinate, radiusMeters: Double) async throws -> [Match] {
+        if let error { throw error }
+        return matches
+            .filter { $0.status == .scheduled && $0.endTime > .now && VenueRules.distanceMeters($0.location, center) <= radiusMeters }
+            .sorted { VenueRules.distanceMeters($0.location, center) < VenueRules.distanceMeters($1.location, center) }
+    }
+
+    /// Yields the current value once, then ends (real listeners stay open).
+    func matchChanges(matchId: String) -> AsyncThrowingStream<Match?, Error> {
+        AsyncThrowingStream { continuation in
+            continuation.yield(matches.first { $0.id == matchId })
+            continuation.finish()
+        }
+    }
+
+    func matches(ids: [String]) async throws -> [Match] {
+        if let error { throw error }
+        return matches.filter { ids.contains($0.id ?? "") }
     }
 }
 

@@ -162,6 +162,34 @@ struct EmulatorIntegrationTests {
         #expect(published.venueName == "CMU Soccer Field")
     }
 
+    @Test func discoverQueriesAgainstSeededData() async throws {
+        try await auth.signIn(email: "alex@whosdown.test", password: "whosdown123")
+        defer { try? auth.signOut() }
+        let matches = FirebaseMatchRepository()
+        let nearby = try await matches.nearby(center: .cmu, radiusMeters: 3 * 1609.344)
+        let titles = Set(nearby.map(\.title))
+        #expect(titles.isSuperset(of: ["Pickup Soccer", "7v7 at Schenley", "Basketball Run"]))
+        #expect(!titles.contains("Sunday 7v7"))            // ended
+        #expect(!titles.contains("Spikeball on the Cut"))  // cancelled
+
+        let rsvps = FirebaseRSVPRepository()
+        let mine = try await rsvps.myApprovedMatchIds(userId: "seed_alex")
+        #expect(Set(mine).isSuperset(of: ["m_soccer_tonight", "m_7v7_full"]))
+        #expect(try await matches.matches(ids: ["m_soccer_tonight", "m_hoops"]).count == 2)
+
+        var roster: [RSVP] = []
+        for try await value in rsvps.approvedChanges(matchId: "m_soccer_tonight") { roster = value; break }
+        #expect(roster.first?.displayName == "Jamie Morales")
+        #expect(roster.count == 3)
+
+        var live: Match?
+        for try await value in matches.matchChanges(matchId: "m_soccer_tonight") { live = value; break }
+        #expect(live?.pendingCount == 1)
+
+        let radius = try #require(try await users.settings(userId: "seed_alex"))
+        try await users.saveSearchRadius(userId: "seed_alex", miles: radius.searchRadiusMiles)
+    }
+
     @Test func passwordResetForUnknownEmailDoesNotThrowANetworkError() async {
         do {
             try await auth.sendPasswordReset(email: uniqueEmail())

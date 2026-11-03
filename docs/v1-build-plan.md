@@ -1,6 +1,6 @@
 # WhosDown V1 Build Plan
 
-**Version:** 0.20 · **Last updated:** 2026-11-02 · **Status:** planning (no code until the owner says "start coding" or "do phase X")
+**Version:** 0.21 · **Last updated:** 2026-11-02 · **Status:** planning (no code until the owner says "start coding" or "do phase X")
 
 ## 1. Goal
 
@@ -163,7 +163,7 @@ Feature names keep their Sprint 3 numbers; wording follows the glossary (Match, 
 | 0 Foundation ✅ | 1.1: Xcode project (MVVM folders), models, repositories, design system, tab bar, security rules v1 + emulator tests, seed data | App launches on the tab bar against the emulator; rules tests pass |
 | 1 Identity ✅ | 1.2, 1.3, 1.4, 1.22 | A new Player signs up, finishes onboarding, edits their profile; a Guest browses. **Done 2026-11-02** (PRs #31–#34) |
 | 2 Hosting ✅ | 1.12, 1.11 | A Host publishes a Match at a searched Venue. **Done 2026-11-02** (PRs #37–#38) |
-| 3 Discover | 1.5, 1.6, 1.7, 1.8, 1.9, 1.10 | A Player finds that Match on the map and list and opens its details |
+| 3 Discover ✅ | 1.5, 1.6, 1.7, 1.8, 1.9, 1.10 | A Player finds that Match on the map and list and opens its details. **Done 2026-11-02**, approved by Chris in the simulator |
 | 4 Joining | 1.13, 1.14, 1.15, 1.16 | Open join, Join request, approve/decline, leave all work across two devices |
 | 5 Follow-through | 1.19, 1.20 | **Core loop done** (the "V1 is done when" scenario in §1) |
 | 6 Lifecycle | 1.17, 1.18, 1.21, 1.27, 1.28 | Waitlist, edit/cancel, notifications, check-in, transfer |
@@ -208,3 +208,4 @@ Recorded here so they are not lost while V1 is built. The full V2 list is featur
 | 0.18 | 2026-11-02 | Chris Lee (with Claude) | Phase 0 done (1.1); CMU account co-Owner |
 | 0.19 | 2026-11-02 | Chris Lee (with Claude) | Phase 0 and Phase 1 done; D52 repo location |
 | 0.20 | 2026-11-02 | Chris Lee (with Claude) | Phase 2 done |
+| 0.21 | 2026-11-02 | Chris Lee (with Claude) | Phase 3 done |
