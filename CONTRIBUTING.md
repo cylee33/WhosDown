@@ -36,7 +36,7 @@ How to set up, pick up a feature, and hand it off. Read this before your first c
 
 1. Open the GitHub project board. Each feature (1.1–1.28) is one issue, and each issue links to its brief.
 2. Check that everything listed under **Depends on** in the brief is **Done**. If not, pick another feature or ask.
-3. Assign the issue to yourself. In the brief, set **Status** to `In progress` and **Owner** to your name, and commit that change (`docs: claim 1.14`). This is how others see the feature is taken.
+3. Assign the issue to yourself. In the brief, set **Status** to `In progress` and **Owner** to your name; put the same in the feature index row; commit that change (`docs: claim 1.14`). This is how others see the feature is taken.
 4. Make a branch from up-to-date `main`: `git checkout main && git pull && git checkout -b feat/1.14-request-to-join`.
 
 Lanes (A Identity & Profile, B Discover & Hosting, C Joining & Lifecycle, Core) are a planned split, not a lock. Anyone can take any feature.
@@ -71,7 +71,7 @@ Also tick the acceptance boxes that now pass, and add a changelog row to the bri
 - **Template** (filled in automatically): feature number, screens (H-numbers), brief updated (yes/no), how you tested, screenshots for UI.
 - **Size:** one feature per PR. Split large features into several PRs; the brief's hand-off note tracks progress between them.
 - **Review:** one teammate approves, then **squash merge**. Until branch protection is on (around 2026-11-04, D14), Chris may self-merge while building alone; everyone else waits for an approval.
-- When the feature's last PR merges, set the brief's **Status** to `Done` and close the issue.
+- When the feature's last PR merges, set the brief's **Status** to `Done`, fill in **Owner**, **Done on**, **Branch**, and **PR** in [`docs/features/README.md`](docs/features/README.md), and close the issue.
 
 ## 7. Commits and docs
 
