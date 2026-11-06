@@ -169,10 +169,13 @@ service cloud.firestore {
         && existsAfter(/databases/$(database)/documents/conversations/$(matchId));
 
       // Counter changes that travel with an RSVP write (1.13–1.16). Detail edits come in 1.18.
-      allow update: if isPlayer() && matchDetailsUnchanged() && request.resource.data.updatedAt == request.time
-        && (openJoinCounters(matchId) || requestCounters(matchId) || leaveApprovedCounters(matchId)
-            || leavePendingCounters(matchId) || leaveWaitlistCounters(matchId) || hostApproveCounters(matchId)
-            || hostDeclineCounters());
+      allow update: if isPlayer() && request.resource.data.updatedAt == request.time && (
+        (matchDetailsUnchanged() && (openJoinCounters(matchId) || requestCounters(matchId)
+            || leaveApprovedCounters(matchId) || leavePendingCounters(matchId) || leaveWaitlistCounters(matchId)
+            || hostApproveCounters(matchId) || hostDeclineCounters() || joinWaitlistCounters(matchId)
+            || promoteCounters(matchId) || hostWaitlistApproveCounters(matchId)))
+        || hostEdit() || hostCancel() || hostTransfer(matchId) || hostCheckInStamp()
+      );
 
       match /rsvps/{uid} {
         allow read: if signedIn();
@@ -187,9 +190,11 @@ service cloud.firestore {
             && request.resource.data.attended == null)
           || openJoinRSVP(matchId, uid)
           || requestRSVP(matchId, uid)
+          || waitlistRSVP(matchId, uid)
         );
-        allow update: if openJoinRSVP(matchId, uid) || requestRSVP(matchId, uid) || leaveRSVP(matchId, uid)
-          || hostDecisionRSVP(matchId, uid);
+        allow update: if openJoinRSVP(matchId, uid) || requestRSVP(matchId, uid) || waitlistRSVP(matchId, uid)
+          || leaveRSVP(matchId, uid) || hostDecisionRSVP(matchId, uid) || promotedRSVP(matchId, uid)
+          || hostWaitlistDecision(matchId, uid) || checkInRSVP(matchId, uid) || transferFlag(matchId, uid);
       }
     }
 
@@ -348,6 +353,147 @@ service cloud.firestore {
         && request.resource.data.pendingCount == resource.data.pendingCount - 1
         && request.resource.data.waitlistCount == resource.data.waitlistCount
         && request.resource.data.waitlistIds == resource.data.waitlistIds;
+    }
+
+    function joinWaitlistCounters(matchId) {
+      return resource.data.waitlistEnabled == true && resource.data.joinedCount >= resource.data.playerLimit
+        && matchIsOpen(matchId) && resource.data.hostId != request.auth.uid
+        && resource.data.waitlistIds.size() < 50
+        && request.resource.data.waitlistIds == resource.data.waitlistIds.concat([request.auth.uid])
+        && request.resource.data.waitlistCount == resource.data.waitlistCount + 1
+        && request.resource.data.joinedCount == resource.data.joinedCount
+        && request.resource.data.pendingCount == resource.data.pendingCount
+        && request.resource.data.attendeePreview == resource.data.attendeePreview
+        && getAfter(/databases/$(database)/documents/matches/$(matchId)/rsvps/$(request.auth.uid)).data.status == 'waitlisted';
+    }
+
+    function promoteCounters(matchId) {
+      return resource.data.joinType == 'open' && resource.data.waitlistIds.size() > 0
+        && get(/databases/$(database)/documents/matches/$(matchId)/rsvps/$(request.auth.uid)).data.status == 'approved'
+        && getAfter(/databases/$(database)/documents/matches/$(matchId)/rsvps/$(request.auth.uid)).data.status == 'left'
+        && request.resource.data.joinedCount == resource.data.joinedCount
+        && request.resource.data.waitlistCount == resource.data.waitlistCount - 1
+        && request.resource.data.waitlistIds == resource.data.waitlistIds.removeAll([resource.data.waitlistIds[0]])
+        && request.resource.data.pendingCount == resource.data.pendingCount
+        && getAfter(/databases/$(database)/documents/matches/$(matchId)/rsvps/$(resource.data.waitlistIds[0])).data.status == 'approved';
+    }
+
+    function hostWaitlistApproveCounters(matchId) {
+      return resource.data.hostId == request.auth.uid
+        && resource.data.joinedCount < resource.data.playerLimit
+        && request.resource.data.joinedCount == resource.data.joinedCount + 1
+        && request.resource.data.waitlistCount == resource.data.waitlistCount - 1
+        && request.resource.data.pendingCount == resource.data.pendingCount;
+    }
+
+    function hostEdit() {
+      return resource.data.hostId == request.auth.uid && resource.data.status == 'scheduled'
+        && resource.data.startTime > request.time
+        && request.resource.data.hostId == resource.data.hostId
+        && request.resource.data.hostName == resource.data.hostName
+        && request.resource.data.createdAt == resource.data.createdAt
+        && request.resource.data.joinedCount == resource.data.joinedCount
+        && request.resource.data.pendingCount == resource.data.pendingCount
+        && request.resource.data.waitlistCount == resource.data.waitlistCount
+        && request.resource.data.waitlistIds == resource.data.waitlistIds
+        && request.resource.data.status == 'scheduled'
+        && request.resource.data.cancelReason == resource.data.cancelReason
+        && request.resource.data.checkedInAt == resource.data.checkedInAt
+        && request.resource.data.playerLimit >= resource.data.joinedCount
+        && validMatchDetails(request.resource.data);
+    }
+
+    function hostCancel() {
+      return resource.data.hostId == request.auth.uid && resource.data.status == 'scheduled'
+        && resource.data.startTime > request.time
+        && request.resource.data.status == 'cancelled'
+        && request.resource.data.cancelReason is string
+        && request.resource.data.cancelReason.size() >= 1
+        && request.resource.data.cancelReason.size() <= 200
+        && request.resource.data.hostId == resource.data.hostId
+        && request.resource.data.joinedCount == resource.data.joinedCount
+        && request.resource.data.pendingCount == resource.data.pendingCount
+        && request.resource.data.waitlistCount == resource.data.waitlistCount
+        && request.resource.data.title == resource.data.title
+        && request.resource.data.startTime == resource.data.startTime;
+    }
+
+    function hostTransfer(matchId) {
+      return resource.data.hostId == request.auth.uid
+        && request.resource.data.hostId != resource.data.hostId
+        && request.resource.data.joinedCount == resource.data.joinedCount
+        && request.resource.data.pendingCount == resource.data.pendingCount
+        && request.resource.data.waitlistCount == resource.data.waitlistCount
+        && request.resource.data.waitlistIds == resource.data.waitlistIds
+        && request.resource.data.status == resource.data.status
+        && request.resource.data.playerLimit == resource.data.playerLimit
+        && get(/databases/$(database)/documents/matches/$(matchId)/rsvps/$(request.resource.data.hostId)).data.status == 'approved'
+        && getAfter(/databases/$(database)/documents/matches/$(matchId)/rsvps/$(request.auth.uid)).data.isHost == false
+        && getAfter(/databases/$(database)/documents/matches/$(matchId)/rsvps/$(request.resource.data.hostId)).data.isHost == true;
+    }
+
+    function hostCheckInStamp() {
+      return resource.data.hostId == request.auth.uid && resource.data.status == 'scheduled'
+        && resource.data.startTime <= request.time
+        && request.time <= resource.data.endTime + duration.value(48, 'h')
+        && request.resource.data.checkedInAt == request.time
+        && request.resource.data.hostId == resource.data.hostId
+        && request.resource.data.joinedCount == resource.data.joinedCount
+        && request.resource.data.status == resource.data.status
+        && request.resource.data.title == resource.data.title;
+    }
+
+    function waitlistRSVP(matchId, uid) {
+      let d = request.resource.data;
+      return isOwner(uid) && rsvpShape(d, uid) && d.status == 'waitlisted'
+        && d.requestedAt == request.time && d.respondedAt == null
+        && wasLeftOrNew(matchId, uid)
+        && matchIsOpen(matchId) && matchData(matchId).hostId != uid
+        && matchData(matchId).waitlistEnabled == true
+        && matchData(matchId).joinedCount >= matchData(matchId).playerLimit
+        && matchAfter(matchId).waitlistCount == matchData(matchId).waitlistCount + 1;
+    }
+
+    function promotedRSVP(matchId, uid) {
+      return uid != request.auth.uid
+        && resource.data.status == 'waitlisted'
+        && request.resource.data.status == 'approved'
+        && request.resource.data.respondedAt == request.time
+        && matchData(matchId).joinType == 'open'
+        && matchData(matchId).waitlistIds[0] == uid
+        && get(/databases/$(database)/documents/matches/$(matchId)/rsvps/$(request.auth.uid)).data.status == 'approved'
+        && getAfter(/databases/$(database)/documents/matches/$(matchId)/rsvps/$(request.auth.uid)).data.status == 'left';
+    }
+
+    function hostWaitlistDecision(matchId, uid) {
+      return isPlayer() && uid != request.auth.uid
+        && matchData(matchId).hostId == request.auth.uid
+        && resource.data.status == 'waitlisted'
+        && request.resource.data.status == 'approved'
+        && request.resource.data.respondedAt == request.time
+        && matchData(matchId).joinedCount < matchData(matchId).playerLimit
+        && matchAfter(matchId).joinedCount == matchData(matchId).joinedCount + 1
+        && matchAfter(matchId).waitlistCount == matchData(matchId).waitlistCount - 1;
+    }
+
+    function checkInRSVP(matchId, uid) {
+      return matchData(matchId).hostId == request.auth.uid
+        && resource.data.status == 'approved'
+        && request.resource.data.checkedIn == true
+        && request.resource.data.attended is bool
+        && (uid != request.auth.uid || request.resource.data.attended == true)
+        && matchData(matchId).status == 'scheduled'
+        && matchData(matchId).startTime <= request.time
+        && request.time <= matchData(matchId).endTime + duration.value(48, 'h');
+    }
+
+    function transferFlag(matchId, uid) {
+      return matchData(matchId).hostId == request.auth.uid
+        && matchAfter(matchId).hostId != request.auth.uid
+        && (
+          (uid == request.auth.uid && resource.data.isHost == true && request.resource.data.isHost == false)
+          || (uid == matchAfter(matchId).hostId && resource.data.status == 'approved' && request.resource.data.isHost == true)
+        );
     }
 
     function hostDeclineCounters() {

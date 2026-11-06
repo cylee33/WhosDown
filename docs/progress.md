@@ -1,6 +1,6 @@
 # WhosDown V1 Progress
 
-**Version:** 0.5 · **Last updated:** 2026-11-06 · **Status:** Phases 0–5 done; Phase 6 next
+**Version:** 0.6 · **Last updated:** 2026-11-06 · **Status:** Phases 0–6 done; Phase 7 next
 
 Where the V1 build stands, what you can see in the app today, and how to try it yourself. Update this page at the end of every phase. The [build plan](v1-build-plan.md) has the phases; each [feature brief](features/) has the details.
 
@@ -8,10 +8,10 @@ Where the V1 build stands, what you can see in the app today, and how to try it 
 
 | | |
 |---|---|
-| Features done | **19 of 28** (1.1–1.16, 1.19, 1.20, 1.22) |
-| Phases done | **0–5** (of 0–8). The core loop's screens are in place. |
-| Swift tests | **101 passing** (10 of them run the real Firebase code against the local emulator) |
-| Security-rule tests | **60 passing** (Firestore and Storage) |
+| Features done | **24 of 28** (1.1–1.22, 1.27, 1.28) |
+| Phases done | **0–6** (of 0–8). Waitlist, edits, the inbox, check-in, and host transfer are in the app. |
+| Swift tests | **105 passing** (10 of them run the real Firebase code against the local emulator) |
+| Security-rule tests | **69** (60 from Phase 5, plus 9 lifecycle tests). This session re-ran the Firestore rules: the 9 new tests passed with the older Firestore tests. The 9 profile tests that need the Storage emulator did not start, because that emulator would not come up. |
 | Pull requests merged | #29–#39 |
 | Core loop ("V1 is done when", plan §1) | Not yet; needs Phases 2–5 |
 
@@ -25,7 +25,7 @@ Where the V1 build stands, what you can see in the app today, and how to try it 
 | 3 Discover | 1.5–1.10 | ✅ Done (PR #39), approved by Chris in the simulator |
 | 4 Joining | 1.13–1.16 | ✅ Done (2026-11-06) |
 | 5 Follow-through | 1.19, 1.20 | ✅ Done (2026-11-06) |
-| 6 Lifecycle | 1.17, 1.18, 1.21, 1.27, 1.28 | Not started |
+| 6 Lifecycle | 1.17, 1.18, 1.21, 1.27, 1.28 | ✅ Done (2026-11-06) |
 | 7 Device + safety | 1.23, 1.24, 1.25 | Not started |
 | 8 Finish | 1.26, final rules | Not started |
 
@@ -52,13 +52,23 @@ Where the V1 build stands, what you can see in the app today, and how to try it 
 
 **Discover (1.5–1.10):** a map of nearby Matches (sport pins per Venue, radius circle, "Next up"), a list sorted soonest first, filters (sport, time incl. custom days and hours, distance, skill, join type), live Match details with weather, Venue facts, players and the Host, and the roster with Reliability.
 
-**Joining (1.13–1.16):** an Open Match joins in one tap and shows H14. An Approval-required Match opens the H12 sheet, writes a pending RSVP, and turns green or red when the Host approves or declines from H20/H21. Leave and cancel-request confirm with a bottom sheet. Guests still hit H34. The Host has Manage Match and no Leave button. "Full · Join waitlist" shows on a full Match; joining the line is Phase 6. Chat and calendar buttons on H14 wait for 1.20 and 1.23.
+**Joining (1.13–1.16):** an Open Match joins in one tap and shows H14. An Approval-required Match opens the H12 sheet, writes a pending RSVP, and turns green or red when the Host approves or declines from H20/H21. Leave and cancel-request confirm with a bottom sheet. Guests still hit H34. The Host has Manage Match and no Leave button. Chat on H14 is live. The calendar button waits for 1.23.
 
-**My Matches (1.19):** Upcoming, Hosting, and Past. Hosting opens the dashboard. A Match moves to Past on the device once it ends.
+**My Matches (1.19):** Upcoming, Hosting, and Past. Hosting opens the dashboard. A Match moves to Past on the device once it ends. Past hosted rows show Check in while the window is open.
 
 **Match chat (1.20):** approved Players and the Host post in H16. The Host's messages are labeled. Entry points are H14 and H20.
 
-**Placeholders until their feature is built:** Edit, transfer, check-in, and cancel on the Host dashboard wait for Phase 6. The calendar button on H14 waits for 1.23. The inbox bell waits for 1.21.
+**Waitlist (1.17):** a full Match with the waitlist on shows H15. Joining appends the Player to `waitlistIds`. On an Open Match, the first person in line is approved in the same write as a leave. On an Approval-required Match, the Host gets `spotOpened` and approves from the Waitlist section on H21.
+
+**Edit and cancel (1.18):** H46 saves time, place, limit, join type, and description. Approved Players are notified unless the only change is the description or the Host turns notify off. Cancel asks for a reason and notifies approved, pending, and waitlisted Players. Raising the limit on an Open Match lets the line in as follow-up writes, after the edit saves.
+
+**Notifications (1.21):** the bell on Discover and My Matches shows the unread count. The list marks one or all as read and deletes on swipe. The detail shows changed fields, the Host note, and a link to the Match.
+
+**Check-in (1.27):** from the start until 48 hours after the end, H20 and past hosted rows open check-in. The Host is always attended. Submit writes `checkedIn` and `attended`.
+
+**Transfer host (1.28):** H20 lists approved Players. The chosen Player becomes `hostId` immediately and gets `hostTransferred`.
+
+**Still a placeholder:** the calendar button on H14 waits for 1.23.
 
 ## 4. Screens in the simulator
 
@@ -104,8 +114,8 @@ All test passwords are `whosdown123`.
 
 ## 7. Next
 
-- **Phase 6 Lifecycle:** 1.17 waitlist, 1.18 edit and cancel, 1.21 notifications, 1.27 check-in, 1.28 transfer host.
-- **Still to tap through:** the core loop on two devices. Rules tests cover the writes.
+- **Phase 7 Device + safety:** 1.23 calendar, 1.24 reminders, 1.25 report.
+- **Still to tap through:** the core loop on two devices, and the Phase 6 screens (waitlist, edit, inbox, check-in, transfer). Rules tests cover the writes.
 - **Chris, around 2026-11-04:** once the Student Developer Pack is active, turn on branch protection for `main`, then add Jaimin and Kurt (D14).
 - **Before 2026-11-24:** deploy real security rules to `whosdown-57e99` (test mode expires; 1.26).
 
@@ -118,3 +128,4 @@ All test passwords are `whosdown123`.
 | 0.3 | 2026-11-02 | Chris Lee (with Claude) | Phase 3 done |
 | 0.4 | 2026-11-06 | Kurt Schimmel | Phase 4 done: join, request, approve/decline, leave |
 | 0.5 | 2026-11-06 | Kurt Schimmel | Phase 5 done: My Matches and Match chat |
+| 0.6 | 2026-11-06 | Kurt Schimmel | Phase 6 done: waitlist, edit and cancel, inbox, check-in, transfer host |

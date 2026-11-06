@@ -16,6 +16,21 @@ protocol MatchRepository {
     func hostedChanges(hostId: String) -> AsyncThrowingStream<[Match], Error>
     /// W3 (1.11): the Match, the Host's own approved RSVP, and the Match chat, in one batch. Returns the Match ID.
     func publish(_ draft: MatchDraft, host: UserProfile) async throws -> String
+    func saveEdits(_ match: Match, edits: MatchEdits, recipients: [String], hostId: String) async throws
+    func cancel(_ match: Match, reason: String, recipients: [String], hostId: String) async throws
+    func transferHost(_ match: Match, to player: RSVP, hostId: String) async throws
+    func checkIn(_ match: Match, attendedByPlayer: [String: Bool], hostId: String) async throws
+}
+
+struct MatchEdits: Equatable, Sendable {
+    var startTime: Date
+    var endTime: Date
+    var playerLimit: Int
+    var joinType: JoinType
+    var notes: String?
+    var venue: Venue?
+    var notify: Bool
+    var hostNote: String?
 }
 
 final class FirebaseMatchRepository: MatchRepository {
@@ -164,5 +179,86 @@ final class FirebaseMatchRepository: MatchRepository {
                 }
             continuation.onTermination = { _ in registration.remove() }
         }
+    }
+
+    func saveEdits(_ match: Match, edits: MatchEdits, recipients: [String], hostId: String) async throws {
+        guard let matchId = match.id, match.hostId == hostId, edits.playerLimit >= match.joinedCount else { throw PublishError.incomplete }
+        let changes = MatchChange.changes(from: match, edits: edits)
+        let batch = db.batch()
+        var fields: [String: Any] = [
+            "startTime": Timestamp(date: edits.startTime),
+            "endTime": Timestamp(date: edits.endTime),
+            "playerLimit": edits.playerLimit,
+            "joinType": edits.joinType.rawValue,
+            "notes": edits.notes ?? NSNull(),
+            "updatedAt": FieldValue.serverTimestamp(),
+        ]
+        if let venue = edits.venue {
+            fields["venueId"] = venue.id ?? ""
+            fields["venueName"] = venue.name
+            fields["location"] = ["latitude": venue.location.latitude, "longitude": venue.location.longitude]
+            fields["geohash"] = Geohash.encode(latitude: venue.location.latitude, longitude: venue.location.longitude)
+            fields["isIndoor"] = venue.isIndoor
+            fields["surface"] = venue.surface
+            fields["hasLights"] = venue.hasLights
+        }
+        batch.updateData(fields, forDocument: db.document("matches/\(matchId)"))
+        let notable = changes.filter { $0.field != "Description" }
+        if edits.notify, !notable.isEmpty {
+            let payload = changes.map { ["field": $0.field, "oldValue": $0.oldValue, "newValue": $0.newValue] }
+            for userId in recipients where userId != hostId {
+                batch.setData(NotificationWriter.fields(
+                    type: .matchUpdated, title: "\(match.title) was updated",
+                    body: notable.map { "\($0.field): \($0.oldValue) → \($0.newValue)" }.joined(separator: "\n"),
+                    matchId: matchId, fromUserId: hostId, hostNote: edits.hostNote, changes: payload
+                ), forDocument: db.collection("users/\(userId)/notifications").document())
+            }
+        }
+        try await batch.commit()
+    }
+
+    func cancel(_ match: Match, reason: String, recipients: [String], hostId: String) async throws {
+        guard let matchId = match.id, match.hostId == hostId, (1...200).contains(reason.count) else { throw PublishError.incomplete }
+        let batch = db.batch()
+        batch.updateData([
+            "status": MatchStatus.cancelled.rawValue,
+            "cancelReason": reason,
+            "updatedAt": FieldValue.serverTimestamp(),
+        ], forDocument: db.document("matches/\(matchId)"))
+        for userId in recipients where userId != hostId {
+            batch.setData(NotificationWriter.fields(
+                type: .matchCancelled, title: "\(match.title) was cancelled",
+                body: reason, matchId: matchId, fromUserId: hostId, hostNote: reason
+            ), forDocument: db.collection("users/\(userId)/notifications").document())
+        }
+        try await batch.commit()
+    }
+
+    func transferHost(_ match: Match, to player: RSVP, hostId: String) async throws {
+        guard let matchId = match.id, match.hostId == hostId, player.status == .approved, !player.isHost else { throw PublishError.incomplete }
+        let batch = db.batch()
+        batch.updateData([
+            "hostId": player.userId,
+            "hostName": player.displayName,
+            "updatedAt": FieldValue.serverTimestamp(),
+        ], forDocument: db.document("matches/\(matchId)"))
+        batch.updateData(["isHost": false], forDocument: db.document("matches/\(matchId)/rsvps/\(hostId)"))
+        batch.updateData(["isHost": true], forDocument: db.document("matches/\(matchId)/rsvps/\(player.userId)"))
+        batch.setData(NotificationWriter.fields(
+            type: .hostTransferred, title: "You're now the Host of \(match.title)",
+            body: "You can edit, approve, and cancel this Match.", matchId: matchId, fromUserId: hostId
+        ), forDocument: db.collection("users/\(player.userId)/notifications").document())
+        try await batch.commit()
+    }
+
+    func checkIn(_ match: Match, attendedByPlayer: [String: Bool], hostId: String) async throws {
+        guard let matchId = match.id, match.hostId == hostId else { throw PublishError.incomplete }
+        let batch = db.batch()
+        batch.updateData(["checkedInAt": FieldValue.serverTimestamp(), "updatedAt": FieldValue.serverTimestamp()], forDocument: db.document("matches/\(matchId)"))
+        for (userId, attended) in attendedByPlayer {
+            let didAttend = userId == hostId ? true : attended
+            batch.updateData(["checkedIn": true, "attended": didAttend], forDocument: db.document("matches/\(matchId)/rsvps/\(userId)"))
+        }
+        try await batch.commit()
     }
 }

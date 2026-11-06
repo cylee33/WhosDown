@@ -18,6 +18,8 @@ struct DiscoverView: View {
     @State private var viewModel: DiscoverViewModel?
     @State private var path: [DiscoverRoute] = []
     @State private var showingFilters = false
+    @State private var showInbox = false
+    @State private var unread = 0
 
     var body: some View {
         NavigationStack(path: $path) {
@@ -31,6 +33,11 @@ struct DiscoverView: View {
             .background(Color.background)
             .navigationTitle(viewModel?.mode == .list ? "Matches near you" : "WhosDown")
             .toolbar {
+                ToolbarItem(placement: .topBarLeading) {
+                    if !session.isGuest {
+                        BellButton(count: unread) { showInbox = true }
+                    }
+                }
                 ToolbarItem(placement: .topBarTrailing) {
                     Button { showingFilters = true } label: {
                         Image(systemName: "line.3.horizontal.decrease.circle")
@@ -46,6 +53,7 @@ struct DiscoverView: View {
                     .accessibilityLabel("Filters")
                 }
             }
+            .navigationDestination(isPresented: $showInbox) { NotificationsView() }
             .navigationDestination(for: DiscoverRoute.self) { route in
                 switch route {
                 case .match(let id):
@@ -68,6 +76,16 @@ struct DiscoverView: View {
             )
             self.viewModel = viewModel
             await viewModel.load()
+        }
+        .task(id: session.user?.id) {
+            guard let userId = session.user?.id, !session.isGuest else { unread = 0; return }
+            do {
+                for try await items in environment.notifications.inbox(userId: userId) {
+                    unread = items.filter { !$0.isRead }.count
+                }
+            } catch {
+                unread = 0
+            }
         }
     }
 

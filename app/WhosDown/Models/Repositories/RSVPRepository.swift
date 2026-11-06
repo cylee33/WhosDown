@@ -47,6 +47,8 @@ protocol RSVPRepository {
     func myRSVPChanges(matchId: String, userId: String) -> AsyncThrowingStream<RSVP?, Error>
     /// Pending Join requests, oldest first (1.15).
     func pendingChanges(matchId: String) -> AsyncThrowingStream<[RSVP], Error>
+    /// Waitlisted RSVPs (1.17). Order them with `waitlistIds` in the view.
+    func waitlistedChanges(matchId: String) -> AsyncThrowingStream<[RSVP], Error>
     /// W6 open join: an approved RSVP and `joinedCount + 1` in one transaction.
     func joinOpen(matchId: String, player: UserProfile, sport: Sport) async throws
     /// W6 request: a pending RSVP and `pendingCount + 1` in one transaction.
@@ -57,6 +59,14 @@ protocol RSVPRepository {
     func decline(matchId: String, userId: String, hostId: String, message: String?) async throws
     /// W8: the Player sets their own RSVP to `left` and the matching counter drops by 1.
     func leave(matchId: String, userId: String) async throws
+    /// Join the waitlist of a Full Match (1.17).
+    func joinWaitlist(matchId: String, player: UserProfile, sport: Sport) async throws
+    /// The Host approves someone from the waitlist while a spot is free (1.17).
+    func approveFromWaitlist(matchId: String, userId: String, hostId: String) async throws
+    /// Every RSVP on a Match. Cancel notifies approved, pending, and waitlisted Players (1.18).
+    func participants(matchId: String) async throws -> [RSVP]
+    /// Approved RSVPs, for check-in (1.27).
+    func approvedOnce(matchId: String) async throws -> [RSVP]
 }
 
 final class FirebaseRSVPRepository: RSVPRepository {
@@ -127,6 +137,22 @@ final class FirebaseRSVPRepository: RSVPRepository {
                         let requests = snapshot.documents.compactMap { try? $0.decoded(as: RSVP.self) }
                             .sorted { $0.requestedAt < $1.requestedAt }
                         continuation.yield(requests)
+                    }
+                }
+            continuation.onTermination = { _ in registration.remove() }
+        }
+    }
+
+    func waitlistedChanges(matchId: String) -> AsyncThrowingStream<[RSVP], Error> {
+        AsyncThrowingStream { continuation in
+            let registration = db.collection("matches/\(matchId)/rsvps")
+                .whereField("status", isEqualTo: RSVPStatus.waitlisted.rawValue)
+                .addSnapshotListener { snapshot, error in
+                    if let error {
+                        continuation.finish(throwing: error)
+                    } else if let snapshot {
+                        if snapshot.metadata.isFromCache { return }
+                        continuation.yield(snapshot.documents.compactMap { try? $0.decoded(as: RSVP.self) })
                     }
                 }
             continuation.onTermination = { _ in registration.remove() }
@@ -225,13 +251,36 @@ final class FirebaseRSVPRepository: RSVPRepository {
             var updates: [String: Any] = ["updatedAt": FieldValue.serverTimestamp()]
             switch existing.status {
             case .approved:
-                updates["joinedCount"] = max(match.joinedCount - 1, 0)
-                updates["attendeePreview"] = match.attendeePreview.filter { $0 != initials(of: existing.displayName) }
-                // 1.17 hook: Open Matches promote the first in line in this same transaction.
-                _ = WaitlistRules.promotedIds(
+                let promoted = WaitlistRules.promotedIds(
                     joinType: match.joinType, waitlistIds: match.waitlistIds, spotsOpened: 1,
                     hasStarted: match.startTime <= .now
                 )
+                var waitlist = match.waitlistIds
+                var joined = max(match.joinedCount - 1, 0)
+                for id in promoted {
+                    transaction.updateData([
+                        "status": RSVPStatus.approved.rawValue,
+                        "respondedAt": FieldValue.serverTimestamp(),
+                    ], forDocument: self.rsvpRef(matchId, id))
+                    if !waitlist.isEmpty { waitlist.removeFirst() }
+                    joined += 1
+                    transaction.setData(NotificationWriter.fields(
+                        type: .approved, title: "You're in from the waitlist: \(match.title)",
+                        body: "A spot opened and you're in.", matchId: matchId, fromUserId: userId
+                    ), forDocument: self.db.collection("users/\(id)/notifications").document())
+                }
+                updates["joinedCount"] = joined
+                updates["attendeePreview"] = match.attendeePreview.filter { $0 != initials(of: existing.displayName) }
+                if match.joinType == .open, !promoted.isEmpty {
+                    updates["waitlistIds"] = waitlist
+                    updates["waitlistCount"] = waitlist.count
+                } else if match.joinType == .approvalRequired, !match.waitlistIds.isEmpty || match.pendingCount > 0 {
+                    let waiting = match.waitlistCount + match.pendingCount
+                    transaction.setData(NotificationWriter.fields(
+                        type: .spotOpened, title: "A spot opened in \(match.title)",
+                        body: "\(waiting) waiting", matchId: matchId, fromUserId: userId
+                    ), forDocument: self.db.collection("users/\(match.hostId)/notifications").document())
+                }
             case .pending:
                 updates["pendingCount"] = max(match.pendingCount - 1, 0)
             case .waitlisted:
@@ -245,6 +294,57 @@ final class FirebaseRSVPRepository: RSVPRepository {
                 "status": RSVPStatus.left.rawValue,
             ], forDocument: self.rsvpRef(matchId, userId))
         }
+    }
+
+    func joinWaitlist(matchId: String, player: UserProfile, sport: Sport) async throws {
+        try await write(matchId: matchId, userId: player.id ?? "") { transaction, match, existing in
+            guard match.isFull, match.waitlistEnabled, match.status == .scheduled, match.startTime > .now,
+                  match.hostId != player.id, match.waitlistIds.count < WaitlistRules.cap else { throw RSVPWriteError.closed }
+            if let existing, existing.status != .left { throw RSVPWriteError.notAllowed }
+            transaction.updateData([
+                "waitlistIds": match.waitlistIds + [player.id ?? ""],
+                "waitlistCount": match.waitlistCount + 1,
+                "updatedAt": FieldValue.serverTimestamp(),
+            ], forDocument: self.matchRef(matchId))
+            transaction.setData(self.rsvpFields(
+                player: player, sport: sport, status: .waitlisted, note: nil, responded: false
+            ), forDocument: self.rsvpRef(matchId, player.id ?? ""))
+        }
+    }
+
+    func approveFromWaitlist(matchId: String, userId: String, hostId: String) async throws {
+        try await write(matchId: matchId, userId: userId) { transaction, match, existing in
+            guard match.hostId == hostId, match.joinedCount < match.playerLimit, match.waitlistIds.contains(userId),
+                  existing?.status == .waitlisted else { throw RSVPWriteError.notAllowed }
+            let preview = Self.preview(match.attendeePreview, adding: initials(of: existing?.displayName ?? ""))
+            transaction.updateData([
+                "joinedCount": match.joinedCount + 1,
+                "waitlistCount": max(match.waitlistCount - 1, 0),
+                "waitlistIds": match.waitlistIds.filter { $0 != userId },
+                "attendeePreview": preview,
+                "updatedAt": FieldValue.serverTimestamp(),
+            ], forDocument: self.matchRef(matchId))
+            transaction.updateData([
+                "status": RSVPStatus.approved.rawValue,
+                "respondedAt": FieldValue.serverTimestamp(),
+            ], forDocument: self.rsvpRef(matchId, userId))
+            transaction.setData(NotificationWriter.fields(
+                type: .approved, title: "You're in: \(match.title)",
+                body: "The Host let you in from the waitlist.", matchId: matchId, fromUserId: hostId
+            ), forDocument: self.db.collection("users/\(userId)/notifications").document())
+        }
+    }
+
+    func participants(matchId: String) async throws -> [RSVP] {
+        let snapshot = try await db.collection("matches/\(matchId)/rsvps").getDocuments()
+        return try snapshot.documents.map { try $0.decoded(as: RSVP.self) }
+    }
+
+    func approvedOnce(matchId: String) async throws -> [RSVP] {
+        let snapshot = try await db.collection("matches/\(matchId)/rsvps")
+            .whereField("status", isEqualTo: RSVPStatus.approved.rawValue)
+            .getDocuments()
+        return try snapshot.documents.map { try $0.decoded(as: RSVP.self) }
     }
 
     private func matchRef(_ matchId: String) -> DocumentReference {

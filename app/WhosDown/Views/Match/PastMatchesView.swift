@@ -3,6 +3,7 @@ import SwiftUI
 /// H28, shown as the Past segment of My Matches (1.19).
 struct PastMatchesView: View {
     let months: [PastMonth]
+    var userId: String = ""
     var onOpen: (Match) -> Void
 
     var body: some View {
@@ -14,15 +15,22 @@ struct PastMatchesView: View {
                     Text("\(month.title) · \(month.matchCount) \(month.matchCount == 1 ? "Match" : "Matches") · \(month.attendedCount) attended")
                         .font(.subheadline.weight(.semibold)).foregroundStyle(Color.textSecondary)
                     ForEach(month.rows) { row in
-                        Button { onOpen(row.match) } label: {
-                            MatchListCard(
-                                match: row.match,
-                                badge: MyMatchesSorter.pastBadge(
-                                    match: row.match, rsvp: row.rsvp, isHost: row.match.hostId == row.rsvp?.userId || row.rsvp == nil
-                                ).title
-                            )
+                        VStack(alignment: .leading, spacing: Spacing.xxs) {
+                            Button { onOpen(row.match) } label: {
+                                MatchListCard(
+                                    match: row.match,
+                                    badge: MyMatchesSorter.pastBadge(
+                                        match: row.match, rsvp: row.rsvp, isHost: row.match.hostId == row.rsvp?.userId || row.rsvp == nil
+                                    ).title
+                                )
+                            }
+                            .buttonStyle(.plain)
+                            if row.match.hostId == userId, MyMatchesSorter.checkInOpen(row.match) {
+                                NavigationLink { CheckInView(match: row.match) } label: {
+                                    Text("Check in").font(.footnote.weight(.semibold))
+                                }
+                            }
                         }
-                        .buttonStyle(.plain)
                     }
                 }
             }

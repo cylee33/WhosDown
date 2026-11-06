@@ -9,9 +9,17 @@ struct MatchActionArea: View {
     var onJoin: () -> Void
     var onRequest: () -> Void
     var onLeave: () -> Void
+    var onWaitlist: () -> Void
     var onFindSimilar: () -> Void
     var onBack: () -> Void
     var onManage: () -> Void
+
+    private var waitlistTitle: String {
+        if let userId = rsvp?.userId, let index = match.waitlistIds.firstIndex(of: userId) {
+            return "WAITLISTED · #\(index + 1)"
+        }
+        return "WAITLISTED"
+    }
 
     var body: some View {
         VStack(alignment: .leading, spacing: Spacing.s) {
@@ -25,9 +33,18 @@ struct MatchActionArea: View {
             case .requestToJoin:
                 Button("Request to join", action: onRequest).buttonStyle(.primary)
             case .fullWaitlist:
-                Button("Full · Join waitlist") {}
-                    .buttonStyle(.primary)
-                    .disabled(true)
+                VStack(alignment: .leading, spacing: Spacing.xs) {
+                    Text("FULL").font(.caption.weight(.bold)).foregroundStyle(Color.statusDeclined)
+                    Text("\(match.joinedCount) / \(match.playerLimit) players").font(.headline)
+                    Text(match.waitlistCount == 0 ? "Waitlist is enabled for this Match." : "\(match.waitlistCount) people waiting")
+                        .font(.subheadline).foregroundStyle(Color.textSecondary)
+                    Text(match.joinType == .open
+                         ? "If a Player leaves, the next person in line gets the spot automatically."
+                         : "If a spot opens, the Host can let you in.")
+                        .font(.footnote).foregroundStyle(Color.textSecondary)
+                    Button("Join waitlist", action: onWaitlist).buttonStyle(.primary).disabled(isWorking)
+                }
+                .card()
             case .full:
                 Button("Full") {}.buttonStyle(.primary).disabled(true)
                 Button("Find similar Matches", action: onFindSimilar).buttonStyle(.secondary)
@@ -72,7 +89,7 @@ struct MatchActionArea: View {
             .card()
         case .waitlisted:
             VStack(alignment: .leading, spacing: Spacing.xs) {
-                StatusBadge(title: "WAITLISTED", foreground: .statusWaitlisted, background: .statusWaitlistedSoft)
+                StatusBadge(title: waitlistTitle, foreground: .statusWaitlisted, background: .statusWaitlistedSoft)
                 if match.startTime > .now {
                     Button("Leave waitlist", action: onLeave).buttonStyle(.destructive)
                 }

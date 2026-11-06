@@ -5,6 +5,7 @@ import Foundation
 final class HostDashboardViewModel {
     private(set) var match: Match?
     private(set) var requests: [RSVP] = []
+    private(set) var waitlist: [RSVP] = []
     private(set) var reliability: [String: Reliability] = [:]
     private(set) var lastMessage: String?
     var errorMessage: String?
@@ -34,8 +35,18 @@ final class HostDashboardViewModel {
     func start() async {
         async let matchTask: Void = listenMatch()
         async let requestTask: Void = listenRequests()
+        async let waitTask: Void = listenWaitlist()
         async let chatTask: Void = listenChat()
-        _ = await (matchTask, requestTask, chatTask)
+        _ = await (matchTask, requestTask, waitTask, chatTask)
+    }
+
+    func approveWaitlist(_ request: RSVP) async {
+        guard !isFull else { return }
+        do {
+            try await rsvps.approveFromWaitlist(matchId: matchId, userId: request.userId, hostId: hostId)
+        } catch {
+            errorMessage = "Couldn't approve that Player."
+        }
     }
 
     func approve(_ request: RSVP) async {
@@ -76,6 +87,19 @@ final class HostDashboardViewModel {
             }
         } catch {
             errorMessage = "Couldn't load Join requests."
+        }
+    }
+
+    private func listenWaitlist() async {
+        do {
+            for try await value in rsvps.waitlistedChanges(matchId: matchId) {
+                let order = match?.waitlistIds ?? []
+                waitlist = value.sorted { a, b in
+                    (order.firstIndex(of: a.userId) ?? 0) < (order.firstIndex(of: b.userId) ?? 0)
+                }
+            }
+        } catch {
+            errorMessage = "Couldn't load the waitlist."
         }
     }
 

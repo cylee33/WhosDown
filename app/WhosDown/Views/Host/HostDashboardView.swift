@@ -57,13 +57,20 @@ struct HostDashboardView: View {
                     row(title: "Match chat", detail: viewModel.lastMessage ?? "No messages yet")
                 }
                 .buttonStyle(.plain)
-                row(title: "Edit Match", detail: "Coming in 1.18")
-                row(title: "Transfer host", detail: "Coming in 1.28")
-                row(title: "Check in players", detail: "Coming in 1.27")
+                NavigationLink { EditMatchView(match: match) } label: { row(title: "Edit Match", detail: "Time, place, limit") }
+                    .buttonStyle(.plain)
+                NavigationLink { TransferHostSheet(match: match) } label: { row(title: "Transfer host", detail: "Can't attend?") }
+                    .buttonStyle(.plain)
+                if CheckInRules.isOpen(match) {
+                    NavigationLink { CheckInView(match: match) } label: { row(title: "Check in players", detail: "Record who came") }
+                        .buttonStyle(.plain)
+                }
 
                 Text("Ownership safeguard: you can't leave a Match you host. Cancel it, or transfer the Host role.")
                     .font(.footnote).foregroundStyle(Color.textSecondary)
-                Text("Cancel Match").font(.headline).foregroundStyle(Color.textSecondary)
+                NavigationLink { CancelMatchSheet(match: match) } label: {
+                    Text("Cancel Match").font(.headline).foregroundStyle(Color.destructive)
+                }
             }
             .padding(Spacing.m)
         }

@@ -1,6 +1,6 @@
 # WhosDown V1 Build Plan
 
-**Version:** 0.23 · **Last updated:** 2026-11-06 · **Status:** building (Phases 0–5 done)
+**Version:** 0.24 · **Last updated:** 2026-11-06 · **Status:** building (Phases 0–6 done)
 
 ## 1. Goal
 
@@ -166,7 +166,7 @@ Feature names keep their Sprint 3 numbers; wording follows the glossary (Match, 
 | 3 Discover ✅ | 1.5, 1.6, 1.7, 1.8, 1.9, 1.10 | A Player finds that Match on the map and list and opens its details. **Done 2026-11-02**, approved by Chris in the simulator |
 | 4 Joining ✅ | 1.13, 1.14, 1.15, 1.16 | Open join, Join request, approve/decline, leave. **Done 2026-11-06.** Two-device hand check still open |
 | 5 Follow-through ✅ | 1.19, 1.20 | **Core loop screens done 2026-11-06.** Two-device hand check still open |
-| 6 Lifecycle | 1.17, 1.18, 1.21, 1.27, 1.28 | Waitlist, edit/cancel, notifications, check-in, transfer |
+| 6 Lifecycle ✅ | 1.17, 1.18, 1.21, 1.27, 1.28 | Waitlist, edit/cancel, notifications, check-in, transfer. **Done 2026-11-06.** Two-device hand check still open |
 | 7 Device + safety | 1.23, 1.24, 1.25 | Calendar, reminders, reports |
 | 8 Finish | 1.26, final security rules + tests | All 28 features pass their acceptance checks |
 
@@ -211,3 +211,4 @@ Recorded here so they are not lost while V1 is built. The full V2 list is featur
 | 0.21 | 2026-11-02 | Chris Lee (with Claude) | Phase 3 done |
 | 0.22 | 2026-11-06 | Kurt Schimmel | Phase 4 done |
 | 0.23 | 2026-11-06 | Kurt Schimmel | Phase 5 done |
+| 0.24 | 2026-11-06 | Kurt Schimmel | Phase 6 done |

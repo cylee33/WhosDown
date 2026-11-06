@@ -19,6 +19,20 @@ struct JoinRequestsView: View {
                 ForEach(viewModel.requests) { request in
                     requestCard(request)
                 }
+                if !viewModel.waitlist.isEmpty {
+                    Text("WAITLIST").font(.caption.weight(.semibold)).foregroundStyle(Color.textSecondary)
+                    ForEach(viewModel.waitlist) { person in
+                        VStack(alignment: .leading, spacing: Spacing.xs) {
+                            Text(person.displayName).font(.body.weight(.semibold))
+                            Text("\(viewModel.reliability[person.userId]?.label ?? "New player") · \(person.skillLevel.displayName)")
+                                .font(.footnote).foregroundStyle(Color.textSecondary)
+                            Button("Approve") { Task { await viewModel.approveWaitlist(person) } }
+                                .buttonStyle(.primary)
+                                .disabled(viewModel.isFull)
+                        }
+                        .card()
+                    }
+                }
                 if let message = viewModel.errorMessage {
                     Text(message).font(.footnote).foregroundStyle(Color.destructive)
                 }

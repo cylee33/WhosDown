@@ -218,6 +218,11 @@ struct MatchDetailView: View {
                             session.requireAccount { joinModel.showReview = true }
                         },
                         onLeave: { joinModel.showLeave = true },
+                        onWaitlist: {
+                            session.requireAccount {
+                                Task { await joinModel.joinWaitlist(player: session.profile, match: match) }
+                            }
+                        },
                         onFindSimilar: { onFindSimilar(match.sport) },
                         onBack: { dismiss() },
                         onManage: { showManage = true }

@@ -313,18 +313,50 @@ final class FakeRSVPRepository: RSVPRepository {
         }
     }
 
+    func waitlistedChanges(matchId: String) -> AsyncThrowingStream<[RSVP], Error> {
+        AsyncThrowingStream { continuation in
+            continuation.yield([])
+            continuation.finish()
+        }
+    }
+
     func joinOpen(matchId: String, player: UserProfile, sport: Sport) async throws {}
     func requestToJoin(matchId: String, player: UserProfile, sport: Sport, note: String?) async throws {}
     func approve(matchId: String, userId: String, hostId: String) async throws {}
     func decline(matchId: String, userId: String, hostId: String, message: String?) async throws {}
     func leave(matchId: String, userId: String) async throws {}
+    func joinWaitlist(matchId: String, player: UserProfile, sport: Sport) async throws {}
+    func approveFromWaitlist(matchId: String, userId: String, hostId: String) async throws {}
+    func participants(matchId: String) async throws -> [RSVP] { approved[matchId] ?? [] }
+    func approvedOnce(matchId: String) async throws -> [RSVP] { approved[matchId] ?? [] }
 }
 
 final class FakeNotificationRepository: NotificationRepository {
+    var inboxItems: [AppNotification] = []
+
     func send(
         to userId: String, type: NotificationType, title: String, body: String,
         matchId: String, fromUserId: String, hostNote: String?
     ) async throws {}
+
+    func inbox(userId: String) -> AsyncThrowingStream<[AppNotification], Error> {
+        AsyncThrowingStream { continuation in
+            continuation.yield(inboxItems)
+            continuation.finish()
+        }
+    }
+
+    func markRead(userId: String, notificationId: String) async throws {
+        if let index = inboxItems.firstIndex(where: { $0.id == notificationId }) { inboxItems[index].isRead = true }
+    }
+
+    func markAllRead(userId: String, ids: [String]) async throws {
+        for index in inboxItems.indices where ids.contains(inboxItems[index].id ?? "") { inboxItems[index].isRead = true }
+    }
+
+    func delete(userId: String, notificationId: String) async throws {
+        inboxItems.removeAll { $0.id == notificationId }
+    }
 }
 
 final class FakeChatRepository: ChatRepository {
@@ -419,6 +451,11 @@ final class FakeMatchRepository: MatchRepository {
             continuation.finish()
         }
     }
+
+    func saveEdits(_ match: Match, edits: MatchEdits, recipients: [String], hostId: String) async throws {}
+    func cancel(_ match: Match, reason: String, recipients: [String], hostId: String) async throws {}
+    func transferHost(_ match: Match, to player: RSVP, hostId: String) async throws {}
+    func checkIn(_ match: Match, attendedByPlayer: [String: Bool], hostId: String) async throws {}
 }
 
 extension UserProfile {

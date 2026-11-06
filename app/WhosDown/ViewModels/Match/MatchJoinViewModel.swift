@@ -62,6 +62,13 @@ final class MatchJoinViewModel {
         }
     }
 
+    func joinWaitlist(player: UserProfile?, match: Match) async {
+        guard let player else { return }
+        await run {
+            try await self.rsvps.joinWaitlist(matchId: match.id ?? self.matchId, player: player, sport: match.sport)
+        }
+    }
+
     func leave() async {
         guard let userId else { return }
         await run {

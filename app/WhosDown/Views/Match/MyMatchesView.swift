@@ -7,6 +7,8 @@ struct MyMatchesView: View {
     @State private var viewModel: MyMatchesViewModel?
     @State private var path: [String] = []
     @State private var managing: HostRoute?
+    @State private var showInbox = false
+    @State private var unread = 0
 
     var body: some View {
         NavigationStack(path: $path) {
@@ -19,6 +21,14 @@ struct MyMatchesView: View {
             }
             .background(Color.background)
             .navigationTitle("My Matches")
+            .toolbar {
+                if !session.isGuest {
+                    ToolbarItem(placement: .topBarTrailing) {
+                        BellButton(count: unread) { showInbox = true }
+                    }
+                }
+            }
+            .navigationDestination(isPresented: $showInbox) { NotificationsView() }
             .navigationDestination(for: String.self) { id in
                 MatchDetailView(matchId: id)
             }
@@ -31,6 +41,16 @@ struct MyMatchesView: View {
             let viewModel = MyMatchesViewModel(userId: userId, matches: environment.matches, rsvps: environment.rsvps)
             self.viewModel = viewModel
             await viewModel.start()
+        }
+        .task(id: session.user?.id) {
+            guard let userId = session.user?.id, !session.isGuest else { unread = 0; return }
+            do {
+                for try await items in environment.notifications.inbox(userId: userId) {
+                    unread = items.filter { !$0.isRead }.count
+                }
+            } catch {
+                unread = 0
+            }
         }
     }
 
@@ -71,7 +91,7 @@ struct MyMatchesView: View {
                             .buttonStyle(.plain)
                         }
                     case .past:
-                        PastMatchesView(months: viewModel.past) { path.append($0.id ?? "") }
+                        PastMatchesView(months: viewModel.past, userId: session.user?.id ?? "") { path.append($0.id ?? "") }
                     }
                     if let message = viewModel.errorMessage {
                         Text(message).font(.footnote).foregroundStyle(Color.destructive)
