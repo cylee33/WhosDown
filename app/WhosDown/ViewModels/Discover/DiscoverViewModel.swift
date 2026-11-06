@@ -37,6 +37,13 @@ final class DiscoverViewModel {
 
     var radiusMeters: Double { radiusMiles * 1609.344 }
 
+    /// H35: Discover list filtered to this sport and All Levels.
+    func showSimilar(sport: Sport) {
+        filter.sports = [sport]
+        filter.skillLevels = [.allLevels]
+        mode = .list
+    }
+
     /// Nearby Matches that pass the filters (map pins and list rows).
     var visibleMatches: [Match] {
         MatchFormatting.sortedForList(nearbyMatches.filter { filter.includes($0) })

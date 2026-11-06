@@ -1,0 +1,85 @@
+import SwiftUI
+
+/// The join / request / status controls on Match details (1.13, 1.14, 1.16).
+struct MatchActionArea: View {
+    let match: Match
+    let action: JoinAction
+    let rsvp: RSVP?
+    var isWorking: Bool
+    var onJoin: () -> Void
+    var onRequest: () -> Void
+    var onLeave: () -> Void
+    var onFindSimilar: () -> Void
+    var onBack: () -> Void
+    var onManage: () -> Void
+
+    var body: some View {
+        VStack(alignment: .leading, spacing: Spacing.s) {
+            switch action {
+            case .join:
+                Button(action: onJoin) {
+                    if isWorking { ProgressView().tint(.white) } else { Text("Join") }
+                }
+                .buttonStyle(.primary)
+                .disabled(isWorking)
+            case .requestToJoin:
+                Button("Request to join", action: onRequest).buttonStyle(.primary)
+            case .fullWaitlist:
+                Button("Full · Join waitlist") {}
+                    .buttonStyle(.primary)
+                    .disabled(true)
+            case .full:
+                Button("Full") {}.buttonStyle(.primary).disabled(true)
+                Button("Find similar Matches", action: onFindSimilar).buttonStyle(.secondary)
+            case .manage:
+                Button("Manage Match", action: onManage).buttonStyle(.primary)
+            case .status(let status):
+                statusCard(status)
+            case .none:
+                EmptyView()
+            }
+        }
+    }
+
+    @ViewBuilder
+    private func statusCard(_ status: RSVPStatus) -> some View {
+        switch status {
+        case .pending:
+            VStack(alignment: .leading, spacing: Spacing.xs) {
+                StatusBadge(status: .pending)
+                Text("Waiting for host approval").font(.headline).foregroundStyle(Color.textPrimary)
+                Text("\(match.title) · \(MatchFormatting.when(match))")
+                    .font(.subheadline).foregroundStyle(Color.textSecondary)
+                Text("We'll notify you when you're approved or declined.")
+                    .font(.footnote).foregroundStyle(Color.textSecondary)
+                if match.startTime > .now {
+                    Button("Cancel request", action: onLeave).buttonStyle(.destructive)
+                }
+            }
+            .card()
+        case .approved:
+            EmptyView()
+        case .declined:
+            VStack(alignment: .leading, spacing: Spacing.xs) {
+                StatusBadge(status: .declined)
+                Text("This request wasn't approved").font(.headline).foregroundStyle(Color.textPrimary)
+                if let message = rsvp?.hostResponse, !message.isEmpty {
+                    Text(message).font(.subheadline).foregroundStyle(Color.textSecondary)
+                }
+                Button("Find similar All-Level Matches", action: onFindSimilar).buttonStyle(.secondary)
+                Button("Back to Discover", action: onBack).buttonStyle(.secondary)
+            }
+            .card()
+        case .waitlisted:
+            VStack(alignment: .leading, spacing: Spacing.xs) {
+                StatusBadge(title: "WAITLISTED", foreground: .statusWaitlisted, background: .statusWaitlistedSoft)
+                if match.startTime > .now {
+                    Button("Leave waitlist", action: onLeave).buttonStyle(.destructive)
+                }
+            }
+            .card()
+        case .left:
+            EmptyView()
+        }
+    }
+}

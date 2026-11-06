@@ -266,10 +266,19 @@ final class FakeWeatherService: WeatherService {
 final class FakeRSVPRepository: RSVPRepository {
     var approved: [String: [RSVP]]
     var myApproved: [String: [String]]
+    var mine: [String: RSVP]
+    var pending: [String: [RSVP]]
 
-    init(approved: [String: [RSVP]] = ["m1": RSVP.samples], myApproved: [String: [String]] = ["seed_alex": ["m1"]]) {
+    init(
+        approved: [String: [RSVP]] = ["m1": RSVP.samples],
+        myApproved: [String: [String]] = ["seed_alex": ["m1"]],
+        mine: [String: RSVP] = [:],
+        pending: [String: [RSVP]] = [:]
+    ) {
         self.approved = approved
         self.myApproved = myApproved
+        self.mine = mine
+        self.pending = pending
     }
 
     /// Yields the current roster once, then ends (real listeners stay open).
@@ -282,6 +291,42 @@ final class FakeRSVPRepository: RSVPRepository {
 
     func myApprovedMatchIds(userId: String) async throws -> [String] {
         myApproved[userId] ?? []
+    }
+
+    func myRSVPChanges(matchId: String, userId: String) -> AsyncThrowingStream<RSVP?, Error> {
+        AsyncThrowingStream { continuation in
+            continuation.yield(mine[matchId])
+            continuation.finish()
+        }
+    }
+
+    func pendingChanges(matchId: String) -> AsyncThrowingStream<[RSVP], Error> {
+        AsyncThrowingStream { continuation in
+            continuation.yield(pending[matchId] ?? [])
+            continuation.finish()
+        }
+    }
+
+    func joinOpen(matchId: String, player: UserProfile, sport: Sport) async throws {}
+    func requestToJoin(matchId: String, player: UserProfile, sport: Sport, note: String?) async throws {}
+    func approve(matchId: String, userId: String, hostId: String) async throws {}
+    func decline(matchId: String, userId: String, hostId: String, message: String?) async throws {}
+    func leave(matchId: String, userId: String) async throws {}
+}
+
+final class FakeNotificationRepository: NotificationRepository {
+    func send(
+        to userId: String, type: NotificationType, title: String, body: String,
+        matchId: String, fromUserId: String, hostNote: String?
+    ) async throws {}
+}
+
+final class FakeChatRepository: ChatRepository {
+    func conversationChanges(matchId: String) -> AsyncThrowingStream<Conversation?, Error> {
+        AsyncThrowingStream { continuation in
+            continuation.yield(nil)
+            continuation.finish()
+        }
     }
 }
 

@@ -64,7 +64,31 @@ service cloud.firestore {
 
       match /notifications/{notificationId} {
         allow read: if isOwner(uid);
+        // D38: a Player writes into another inbox only as themselves, and only with a role in that Match.
+        allow create: if isPlayer() && validNotification(request.resource.data) && involvedIn(request.resource.data.matchId);
+        allow update: if isOwner(uid) && request.resource.data.diff(resource.data).affectedKeys().hasOnly(['isRead']);
+        allow delete: if isOwner(uid);
       }
+    }
+
+    function validNotification(d) {
+      return d.keys().hasOnly(['type', 'title', 'body', 'matchId', 'fromUserId', 'changes', 'hostNote', 'isRead', 'createdAt'])
+        && d.type in ['approved', 'declined', 'matchUpdated', 'matchCancelled', 'spotOpened', 'hostTransferred']
+        && d.title is string && d.title.size() <= 140
+        && d.body is string && d.body.size() <= 500
+        && d.matchId is string
+        && d.fromUserId == request.auth.uid
+        && (d.changes == null || d.changes is list)
+        && optionalString(d.hostNote, 300)
+        && d.isRead == false
+        && d.createdAt == request.time;
+    }
+
+    function involvedIn(matchId) {
+      return matchId is string
+        && exists(/databases/$(database)/documents/matches/$(matchId))
+        && (get(/databases/$(database)/documents/matches/$(matchId)).data.hostId == request.auth.uid
+            || exists(/databases/$(database)/documents/matches/$(matchId)/rsvps/$(request.auth.uid)));
     }
 
     function validVenue(d) {
@@ -144,22 +168,205 @@ service cloud.firestore {
         && existsAfter(/databases/$(database)/documents/matches/$(matchId)/rsvps/$(request.auth.uid))
         && existsAfter(/databases/$(database)/documents/conversations/$(matchId));
 
+      // Counter changes that travel with an RSVP write (1.13–1.16). Detail edits come in 1.18.
+      allow update: if isPlayer() && matchDetailsUnchanged() && request.resource.data.updatedAt == request.time
+        && (openJoinCounters(matchId) || requestCounters(matchId) || leaveApprovedCounters(matchId)
+            || leavePendingCounters(matchId) || leaveWaitlistCounters(matchId) || hostApproveCounters(matchId)
+            || hostDeclineCounters());
+
       match /rsvps/{uid} {
         allow read: if signedIn();
         // W3 (1.11): the Host's own approved RSVP, only while the Match itself is being created.
-        allow create: if isOwner(uid)
-          && !exists(/databases/$(database)/documents/matches/$(matchId))
-          && getAfter(/databases/$(database)/documents/matches/$(matchId)).data.hostId == uid
-          && request.resource.data.userId == uid
-          && request.resource.data.status == 'approved'
-          && request.resource.data.isHost == true
-          && request.resource.data.checkedIn == false
-          && request.resource.data.attended == null;
+        allow create: if isOwner(uid) && (
+          (!exists(/databases/$(database)/documents/matches/$(matchId))
+            && getAfter(/databases/$(database)/documents/matches/$(matchId)).data.hostId == uid
+            && request.resource.data.userId == uid
+            && request.resource.data.status == 'approved'
+            && request.resource.data.isHost == true
+            && request.resource.data.checkedIn == false
+            && request.resource.data.attended == null)
+          || openJoinRSVP(matchId, uid)
+          || requestRSVP(matchId, uid)
+        );
+        allow update: if openJoinRSVP(matchId, uid) || requestRSVP(matchId, uid) || leaveRSVP(matchId, uid)
+          || hostDecisionRSVP(matchId, uid);
       }
+    }
+
+    function matchData(matchId) {
+      return get(/databases/$(database)/documents/matches/$(matchId)).data;
+    }
+
+    function matchAfter(matchId) {
+      return getAfter(/databases/$(database)/documents/matches/$(matchId)).data;
+    }
+
+    function matchIsOpen(matchId) {
+      return matchData(matchId).status == 'scheduled' && matchData(matchId).startTime > request.time;
+    }
+
+    function matchDetailsUnchanged() {
+      let b = resource.data;
+      let a = request.resource.data;
+      return a.title == b.title && a.titleLowercase == b.titleLowercase && a.sport == b.sport
+        && a.customSportName == b.customSportName && a.notes == b.notes
+        && a.hostId == b.hostId && a.hostName == b.hostName
+        && a.venueId == b.venueId && a.venueName == b.venueName
+        && a.location == b.location && a.geohash == b.geohash
+        && a.isIndoor == b.isIndoor && a.surface == b.surface && a.hasLights == b.hasLights
+        && a.startTime == b.startTime && a.endTime == b.endTime
+        && a.skillLevel == b.skillLevel && a.joinType == b.joinType
+        && a.priceCents == b.priceCents && a.playerLimit == b.playerLimit && a.waitlistEnabled == b.waitlistEnabled
+        && a.fieldReserved == b.fieldReserved && a.reservationWindow == b.reservationWindow
+        && a.facilityNote == b.facilityNote && a.status == b.status && a.cancelReason == b.cancelReason
+        && a.checkedInAt == b.checkedInAt && a.createdAt == b.createdAt
+        && a.attendeePreview is list && a.attendeePreview.size() <= 6;
+    }
+
+    function rsvpShape(d, uid) {
+      return d.keys().hasOnly(['userId', 'displayName', 'skillLevel', 'status', 'isHost', 'noteToHost',
+                               'hostResponse', 'requestedAt', 'respondedAt', 'checkedIn', 'attended'])
+        && d.userId == uid
+        && d.displayName is string && d.displayName.size() >= 1 && d.displayName.size() <= 40
+        && d.skillLevel in ['beginner', 'casual', 'allLevels', 'intermediate', 'competitive']
+        && d.status in ['pending', 'approved', 'declined', 'waitlisted', 'left']
+        && d.isHost == false
+        && optionalString(d.noteToHost, 300)
+        && optionalString(d.hostResponse, 300)
+        && d.checkedIn == false
+        && d.attended == null;
+    }
+
+    function wasLeftOrNew(matchId, uid) {
+      return !exists(/databases/$(database)/documents/matches/$(matchId)/rsvps/$(uid))
+        || resource.data.status == 'left';
+    }
+
+    function openJoinRSVP(matchId, uid) {
+      let d = request.resource.data;
+      return isOwner(uid) && rsvpShape(d, uid) && d.status == 'approved'
+        && d.requestedAt == request.time && d.respondedAt == request.time
+        && wasLeftOrNew(matchId, uid)
+        && matchData(matchId).joinType == 'open' && matchIsOpen(matchId)
+        && matchData(matchId).hostId != uid
+        && matchAfter(matchId).joinedCount == matchData(matchId).joinedCount + 1
+        && matchAfter(matchId).joinedCount <= matchAfter(matchId).playerLimit
+        && matchAfter(matchId).pendingCount == matchData(matchId).pendingCount;
+    }
+
+    function requestRSVP(matchId, uid) {
+      let d = request.resource.data;
+      return isOwner(uid) && rsvpShape(d, uid) && d.status == 'pending'
+        && d.requestedAt == request.time && d.respondedAt == null
+        && wasLeftOrNew(matchId, uid)
+        && matchData(matchId).joinType == 'approvalRequired' && matchIsOpen(matchId)
+        && matchData(matchId).hostId != uid
+        && matchData(matchId).joinedCount < matchData(matchId).playerLimit
+        && matchAfter(matchId).pendingCount == matchData(matchId).pendingCount + 1
+        && matchAfter(matchId).joinedCount == matchData(matchId).joinedCount;
+    }
+
+    function leaveRSVP(matchId, uid) {
+      return isOwner(uid) && resource.data.isHost == false
+        && resource.data.status in ['approved', 'pending', 'waitlisted']
+        && request.resource.data.status == 'left'
+        && request.resource.data.diff(resource.data).affectedKeys().hasOnly(['status'])
+        && matchIsOpen(matchId) && matchData(matchId).hostId != uid;
+    }
+
+    function hostDecisionRSVP(matchId, uid) {
+      return isPlayer() && uid != request.auth.uid
+        && matchData(matchId).hostId == request.auth.uid
+        && resource.data.status == 'pending'
+        && request.resource.data.respondedAt == request.time
+        && request.resource.data.diff(resource.data).affectedKeys().hasOnly(['status', 'respondedAt', 'hostResponse'])
+        && (
+          (request.resource.data.status == 'approved'
+            && matchAfter(matchId).joinedCount == matchData(matchId).joinedCount + 1
+            && matchAfter(matchId).joinedCount <= matchData(matchId).playerLimit
+            && matchAfter(matchId).pendingCount == matchData(matchId).pendingCount - 1
+            && matchIsOpen(matchId))
+          || (request.resource.data.status == 'declined'
+            && matchAfter(matchId).joinedCount == matchData(matchId).joinedCount
+            && matchAfter(matchId).pendingCount == matchData(matchId).pendingCount - 1)
+        );
+    }
+
+    function openJoinCounters(matchId) {
+      return resource.data.joinType == 'open' && matchIsOpen(matchId) && resource.data.hostId != request.auth.uid
+        && request.resource.data.joinedCount == resource.data.joinedCount + 1
+        && request.resource.data.joinedCount <= request.resource.data.playerLimit
+        && request.resource.data.pendingCount == resource.data.pendingCount
+        && request.resource.data.waitlistCount == resource.data.waitlistCount
+        && request.resource.data.waitlistIds == resource.data.waitlistIds
+        && getAfter(/databases/$(database)/documents/matches/$(matchId)/rsvps/$(request.auth.uid)).data.status == 'approved';
+    }
+
+    function requestCounters(matchId) {
+      return resource.data.joinType == 'approvalRequired' && matchIsOpen(matchId)
+        && resource.data.hostId != request.auth.uid
+        && request.resource.data.pendingCount == resource.data.pendingCount + 1
+        && request.resource.data.joinedCount == resource.data.joinedCount
+        && request.resource.data.waitlistCount == resource.data.waitlistCount
+        && request.resource.data.waitlistIds == resource.data.waitlistIds
+        && request.resource.data.attendeePreview == resource.data.attendeePreview
+        && getAfter(/databases/$(database)/documents/matches/$(matchId)/rsvps/$(request.auth.uid)).data.status == 'pending';
+    }
+
+    function leaveApprovedCounters(matchId) {
+      return get(/databases/$(database)/documents/matches/$(matchId)/rsvps/$(request.auth.uid)).data.status == 'approved'
+        && getAfter(/databases/$(database)/documents/matches/$(matchId)/rsvps/$(request.auth.uid)).data.status == 'left'
+        && request.resource.data.joinedCount == resource.data.joinedCount - 1
+        && request.resource.data.pendingCount == resource.data.pendingCount
+        && request.resource.data.waitlistCount == resource.data.waitlistCount
+        && request.resource.data.waitlistIds == resource.data.waitlistIds;
+    }
+
+    function leavePendingCounters(matchId) {
+      return get(/databases/$(database)/documents/matches/$(matchId)/rsvps/$(request.auth.uid)).data.status == 'pending'
+        && getAfter(/databases/$(database)/documents/matches/$(matchId)/rsvps/$(request.auth.uid)).data.status == 'left'
+        && request.resource.data.pendingCount == resource.data.pendingCount - 1
+        && request.resource.data.joinedCount == resource.data.joinedCount
+        && request.resource.data.waitlistCount == resource.data.waitlistCount
+        && request.resource.data.waitlistIds == resource.data.waitlistIds
+        && request.resource.data.attendeePreview == resource.data.attendeePreview;
+    }
+
+    function leaveWaitlistCounters(matchId) {
+      return request.resource.data.waitlistCount == resource.data.waitlistCount - 1
+        && request.resource.data.waitlistIds == resource.data.waitlistIds.removeAll([request.auth.uid])
+        && request.resource.data.joinedCount == resource.data.joinedCount
+        && request.resource.data.pendingCount == resource.data.pendingCount
+        && request.resource.data.attendeePreview == resource.data.attendeePreview
+        && getAfter(/databases/$(database)/documents/matches/$(matchId)/rsvps/$(request.auth.uid)).data.status == 'left';
+    }
+
+    function hostApproveCounters(matchId) {
+      return resource.data.hostId == request.auth.uid && matchIsOpen(matchId)
+        && request.resource.data.joinedCount == resource.data.joinedCount + 1
+        && request.resource.data.joinedCount <= resource.data.playerLimit
+        && request.resource.data.pendingCount == resource.data.pendingCount - 1
+        && request.resource.data.waitlistCount == resource.data.waitlistCount
+        && request.resource.data.waitlistIds == resource.data.waitlistIds;
+    }
+
+    function hostDeclineCounters() {
+      return resource.data.hostId == request.auth.uid
+        && request.resource.data.pendingCount == resource.data.pendingCount - 1
+        && request.resource.data.joinedCount == resource.data.joinedCount
+        && request.resource.data.waitlistCount == resource.data.waitlistCount
+        && request.resource.data.waitlistIds == resource.data.waitlistIds
+        && request.resource.data.attendeePreview == resource.data.attendeePreview;
     }
 
     // Match chat (D39). Read and post rules come with 1.20.
     match /conversations/{matchId} {
+      // The Host and approved Players can read the preview (1.15) and, in 1.20, the chat.
+      allow read: if isPlayer() && (
+        get(/databases/$(database)/documents/matches/$(matchId)).data.hostId == request.auth.uid
+        || (exists(/databases/$(database)/documents/matches/$(matchId)/rsvps/$(request.auth.uid))
+            && get(/databases/$(database)/documents/matches/$(matchId)/rsvps/$(request.auth.uid)).data.status == 'approved')
+      );
       // W3 (1.11): created by the Host together with a new Match.
       allow create: if isPlayer()
         && !exists(/databases/$(database)/documents/matches/$(matchId))

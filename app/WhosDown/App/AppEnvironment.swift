@@ -14,12 +14,15 @@ final class AppEnvironment {
     let location: LocationService
     let weather: WeatherService
     let rsvps: RSVPRepository
+    let notifications: NotificationRepository
+    let chat: ChatRepository
 
     init(
         auth: AuthRepository, users: UserRepository, matches: MatchRepository,
         permissions: PermissionsService, reliability: ReliabilityRepository,
         venues: VenueRepository, placeSearch: PlaceSearchService, location: LocationService,
-        weather: WeatherService, rsvps: RSVPRepository
+        weather: WeatherService, rsvps: RSVPRepository,
+        notifications: NotificationRepository, chat: ChatRepository
     ) {
         self.auth = auth
         self.users = users
@@ -31,6 +34,8 @@ final class AppEnvironment {
         self.location = location
         self.weather = weather
         self.rsvps = rsvps
+        self.notifications = notifications
+        self.chat = chat
     }
 
     static func live() -> AppEnvironment {
@@ -39,7 +44,8 @@ final class AppEnvironment {
             matches: FirebaseMatchRepository(), permissions: SystemPermissionsService(),
             reliability: FirebaseReliabilityRepository(), venues: FirebaseVenueRepository(),
             placeSearch: MapKitPlaceSearchService(), location: SystemLocationService(),
-            weather: OpenMeteoWeatherService(), rsvps: FirebaseRSVPRepository()
+            weather: OpenMeteoWeatherService(), rsvps: FirebaseRSVPRepository(),
+            notifications: FirebaseNotificationRepository(), chat: FirebaseChatRepository()
         )
     }
 
@@ -49,7 +55,8 @@ final class AppEnvironment {
             matches: FakeMatchRepository(), permissions: FakePermissionsService(),
             reliability: FakeReliabilityRepository(), venues: FakeVenueRepository(),
             placeSearch: FakePlaceSearchService(), location: FakeLocationService(),
-            weather: FakeWeatherService(), rsvps: FakeRSVPRepository()
+            weather: FakeWeatherService(), rsvps: FakeRSVPRepository(),
+            notifications: FakeNotificationRepository(), chat: FakeChatRepository()
         )
     }
 }

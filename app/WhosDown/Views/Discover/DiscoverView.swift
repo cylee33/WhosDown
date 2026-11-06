@@ -48,7 +48,11 @@ struct DiscoverView: View {
             }
             .navigationDestination(for: DiscoverRoute.self) { route in
                 switch route {
-                case .match(let id): MatchDetailView(matchId: id)
+                case .match(let id):
+                    MatchDetailView(matchId: id) { sport in
+                        viewModel?.showSimilar(sport: sport)
+                        path.removeAll()
+                    }
                 case .roster(let match): RosterView(match: match)
                 case .player(let id): PlayerProfileView(userId: id)
                 }

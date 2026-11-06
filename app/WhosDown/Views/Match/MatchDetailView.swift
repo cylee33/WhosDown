@@ -4,16 +4,24 @@ import SwiftUI
 /// Phase 4 fills the action area (Join / Request to join / waitlist / Leave; "Manage Match" for the Host).
 struct MatchDetailView: View {
     let matchId: String
+    var onFindSimilar: (Sport) -> Void = { _ in }
 
     @Environment(AppEnvironment.self) private var environment
     @Environment(Session.self) private var session
     @Environment(\.dismiss) private var dismiss
     @State private var viewModel: MatchDetailViewModel?
+    @State private var joinModel: MatchJoinViewModel?
+    @State private var showManage = false
 
     var body: some View {
         Group {
             if let viewModel, let match = viewModel.match {
-                details(match, viewModel)
+                if joinModel?.action(for: match, isGuest: session.isGuest, userId: session.user?.id) == .status(.approved),
+                   !viewModel.isHost {
+                    joined(match)
+                } else {
+                    details(match, viewModel)
+                }
             } else if viewModel?.state == .missing || viewModel?.state == .failed {
                 ContentUnavailableView("This Match is no longer available", systemImage: "calendar.badge.exclamationmark")
             } else {
@@ -21,16 +29,72 @@ struct MatchDetailView: View {
             }
         }
         .background(Color.background)
-        .navigationTitle("Match details")
+        .navigationTitle(showsJoined ? "Your Match" : "Match details")
         .navigationBarTitleDisplayMode(.inline)
         .task(id: matchId) {
             let viewModel = MatchDetailViewModel(
                 matchId: matchId, userId: session.user?.id, matches: environment.matches,
                 reliability: environment.reliability, location: environment.location
             )
+            let joinModel = MatchJoinViewModel(matchId: matchId, userId: session.user?.id, rsvps: environment.rsvps)
             self.viewModel = viewModel
-            await viewModel.start()
+            self.joinModel = joinModel
+            async let matchTask: Void = viewModel.start()
+            async let joinTask: Void = joinModel.start()
+            _ = await (matchTask, joinTask)
         }
+        .navigationDestination(isPresented: $showManage) {
+            HostDashboardView(matchId: matchId)
+        }
+        .sheet(isPresented: reviewPresented) {
+            if let match = viewModel?.match, let joinModel {
+                JoinReviewSheet(
+                    match: match, note: Bindable(joinModel).note, isWorking: joinModel.isWorking,
+                    onSend: {
+                        session.requireAccount {
+                            Task { await joinModel.sendRequest(player: session.profile, match: match) }
+                        }
+                    },
+                    onClose: { joinModel.showReview = false }
+                )
+            }
+        }
+        .sheet(isPresented: leavePresented) {
+            if joinModel?.myRSVP?.status == .pending {
+                CancelRequestSheet(
+                    isWorking: joinModel?.isWorking ?? false,
+                    onCancel: { Task { await joinModel?.leave() } },
+                    onKeep: { joinModel?.showLeave = false }
+                )
+            } else {
+                LeaveSheet(
+                    isWorking: joinModel?.isWorking ?? false,
+                    onLeave: { Task { await joinModel?.leave() } },
+                    onKeep: { joinModel?.showLeave = false }
+                )
+            }
+        }
+    }
+
+    private var showsJoined: Bool {
+        guard let match = viewModel?.match, let joinModel, viewModel?.isHost == false else { return false }
+        return joinModel.action(for: match, isGuest: session.isGuest, userId: session.user?.id) == .status(.approved)
+    }
+
+    private func joined(_ match: Match) -> some View {
+        JoinedMatchView(match: match, onLeave: { joinModel?.showLeave = true }, onChat: {})
+            .sheet(isPresented: leavePresented) {
+                LeaveSheet(
+                    isWorking: joinModel?.isWorking ?? false,
+                    onLeave: { Task { await joinModel?.leave() } },
+                    onKeep: { joinModel?.showLeave = false }
+                )
+            }
+            .overlay(alignment: .bottom) {
+                if let message = joinModel?.errorMessage {
+                    Text(message).font(.footnote).foregroundStyle(Color.destructive).padding(Spacing.s)
+                }
+            }
     }
 
     private func details(_ match: Match, _ viewModel: MatchDetailViewModel) -> some View {
@@ -129,9 +193,41 @@ struct MatchDetailView: View {
                     Text("Matches move to Past Matches after they end.")
                         .font(.footnote).foregroundStyle(Color.textSecondary)
                 }
+
+                if let joinModel {
+                    MatchActionArea(
+                        match: match,
+                        action: joinModel.action(for: match, isGuest: session.isGuest, userId: session.user?.id),
+                        rsvp: joinModel.myRSVP,
+                        isWorking: joinModel.isWorking,
+                        onJoin: {
+                            session.requireAccount {
+                                Task { await joinModel.join(player: session.profile, match: match) }
+                            }
+                        },
+                        onRequest: {
+                            session.requireAccount { joinModel.showReview = true }
+                        },
+                        onLeave: { joinModel.showLeave = true },
+                        onFindSimilar: { onFindSimilar(match.sport) },
+                        onBack: { dismiss() },
+                        onManage: { showManage = true }
+                    )
+                    if let message = joinModel.errorMessage {
+                        Text(message).font(.footnote).foregroundStyle(Color.destructive)
+                    }
+                }
             }
             .padding(Spacing.m)
         }
+    }
+
+    private var reviewPresented: Binding<Bool> {
+        Binding(get: { joinModel?.showReview ?? false }, set: { joinModel?.showReview = $0 })
+    }
+
+    private var leavePresented: Binding<Bool> {
+        Binding(get: { joinModel?.showLeave ?? false }, set: { joinModel?.showLeave = $0 })
     }
 
     private func initials(of name: String) -> String {

@@ -1,6 +1,6 @@
 # WhosDown V1 Progress
 
-**Version:** 0.3 · **Last updated:** 2026-11-02 · **Status:** Phases 0–3 done; Phase 4 next
+**Version:** 0.4 · **Last updated:** 2026-11-06 · **Status:** Phases 0–4 done; Phase 5 next
 
 Where the V1 build stands, what you can see in the app today, and how to try it yourself. Update this page at the end of every phase. The [build plan](v1-build-plan.md) has the phases; each [feature brief](features/) has the details.
 
@@ -8,10 +8,10 @@ Where the V1 build stands, what you can see in the app today, and how to try it 
 
 | | |
 |---|---|
-| Features done | **13 of 28** (1.1–1.12, 1.22) |
-| Phases done | **0 Foundation, 1 Identity, 2 Hosting, 3 Discover** (of 0–8) |
-| Swift tests | **89 passing** (10 of them run the real Firebase code against the local emulator) |
-| Security-rule tests | **40 passing** (Firestore and Storage) |
+| Features done | **17 of 28** (1.1–1.16, 1.22) |
+| Phases done | **0 Foundation, 1 Identity, 2 Hosting, 3 Discover, 4 Joining** (of 0–8) |
+| Swift tests | **97 passing** (10 of them run the real Firebase code against the local emulator) |
+| Security-rule tests | **58 passing** (Firestore and Storage) |
 | Pull requests merged | #29–#39 |
 | Core loop ("V1 is done when", plan §1) | Not yet; needs Phases 2–5 |
 
@@ -23,7 +23,7 @@ Where the V1 build stands, what you can see in the app today, and how to try it 
 | 1 Identity | 1.2, 1.3, 1.4, 1.22 | ✅ Done (PRs #31–#35) |
 | 2 Hosting | 1.12, 1.11 | ✅ Done (PRs #37, #38) |
 | 3 Discover | 1.5–1.10 | ✅ Done (PR #39), approved by Chris in the simulator |
-| 4 Joining | 1.13–1.16 | Next |
+| 4 Joining | 1.13–1.16 | ✅ Done (2026-11-06) |
 | 5 Follow-through | 1.19, 1.20 | Not started (core loop done here) |
 | 6 Lifecycle | 1.17, 1.18, 1.21, 1.27, 1.28 | Not started |
 | 7 Device + safety | 1.23, 1.24, 1.25 | Not started |
@@ -52,7 +52,9 @@ Where the V1 build stands, what you can see in the app today, and how to try it 
 
 **Discover (1.5–1.10):** a map of nearby Matches (sport pins per Venue, radius circle, "Next up"), a list sorted soonest first, filters (sport, time incl. custom days and hours, distance, skill, join type), live Match details with weather, Venue facts, players and the Host, and the roster with Reliability.
 
-**Placeholders until their feature is built:** the Matches tab says "Coming in 1.19"; Match details has no Join button until Phase 4.
+**Joining (1.13–1.16):** an Open Match joins in one tap and shows H14. An Approval-required Match opens the H12 sheet, writes a pending RSVP, and turns green or red when the Host approves or declines from H20/H21. Leave and cancel-request confirm with a bottom sheet. Guests still hit H34. The Host has Manage Match and no Leave button. "Full · Join waitlist" shows on a full Match; joining the line is Phase 6. Chat and calendar buttons on H14 wait for 1.20 and 1.23.
+
+**Placeholders until their feature is built:** the Matches tab says "Coming in 1.19". Edit, transfer, check-in, and cancel on the Host dashboard wait for Phase 6.
 
 ## 4. Screens in the simulator
 
@@ -98,7 +100,8 @@ All test passwords are `whosdown123`.
 
 ## 7. Next
 
-- **Phase 4 Joining:** 1.13 Join an open Match, 1.14 Request to join, 1.15 Host approve/decline, 1.16 Leave. Done when open join, Join request, approve/decline, and leave all work across two devices.
+- **Phase 5 Follow-through:** 1.19 My Matches, 1.20 Match chat. Done when the core loop in the build plan works: find, request, approve, see it in My Matches, and message in the chat.
+- **Still to tap through:** Phase 4 across two devices (the rules tests cover the writes; two phones are a hand check).
 - **Chris, around 2026-11-04:** once the Student Developer Pack is active, turn on branch protection for `main`, then add Jaimin and Kurt (D14).
 - **Before 2026-11-24:** deploy real security rules to `whosdown-57e99` (test mode expires; 1.26).
 
@@ -109,3 +112,4 @@ All test passwords are `whosdown123`.
 | 0.1 | 2026-11-02 | Chris Lee (with Claude) | First progress report: Phases 0 and 1, screenshots, how to run, decisions made while building |
 | 0.2 | 2026-11-02 | Chris Lee (with Claude) | Phase 2 done: 1.12 and 1.11 |
 | 0.3 | 2026-11-02 | Chris Lee (with Claude) | Phase 3 done |
+| 0.4 | 2026-11-06 | Kurt Schimmel | Phase 4 done: join, request, approve/decline, leave |
