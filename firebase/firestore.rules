@@ -361,18 +361,45 @@ service cloud.firestore {
 
     // Match chat (D39). Read and post rules come with 1.20.
     match /conversations/{matchId} {
-      // The Host and approved Players can read the preview (1.15) and, in 1.20, the chat.
-      allow read: if isPlayer() && (
-        get(/databases/$(database)/documents/matches/$(matchId)).data.hostId == request.auth.uid
-        || (exists(/databases/$(database)/documents/matches/$(matchId)/rsvps/$(request.auth.uid))
-            && get(/databases/$(database)/documents/matches/$(matchId)/rsvps/$(request.auth.uid)).data.status == 'approved')
-      );
+      // The Host and approved Players can read the preview (1.15) and the chat (1.20, D39).
+      allow read: if canChat(matchId);
+      allow update: if canChat(matchId)
+        && request.resource.data.type == resource.data.type
+        && request.resource.data.title == resource.data.title
+        && request.resource.data.matchId == resource.data.matchId
+        && request.resource.data.lastMessageText is string
+        && request.resource.data.lastMessageText.size() > 0
+        && request.resource.data.lastMessageText.size() <= 1000
+        && request.resource.data.lastMessageAt == request.time;
+
+      match /messages/{messageId} {
+        allow read: if canChat(matchId);
+        allow create: if canChat(matchId)
+          && request.resource.data.keys().hasOnly(['senderId', 'senderName', 'text', 'sentAt'])
+          && request.resource.data.senderId == request.auth.uid
+          && request.resource.data.senderName is string
+          && request.resource.data.senderName.size() >= 1
+          && request.resource.data.senderName.size() <= 40
+          && request.resource.data.text is string
+          && request.resource.data.text.size() >= 1
+          && request.resource.data.text.size() <= 1000
+          && request.resource.data.sentAt == request.time;
+      }
+
       // W3 (1.11): created by the Host together with a new Match.
       allow create: if isPlayer()
         && !exists(/databases/$(database)/documents/matches/$(matchId))
         && getAfter(/databases/$(database)/documents/matches/$(matchId)).data.hostId == request.auth.uid
         && request.resource.data.type == 'match'
         && request.resource.data.matchId == matchId;
+    }
+
+    function canChat(id) {
+      return id is string && isPlayer()
+        && exists(/databases/$(database)/documents/matches/$(id))
+        && (get(/databases/$(database)/documents/matches/$(id)).data.hostId == request.auth.uid
+            || (exists(/databases/$(database)/documents/matches/$(id)/rsvps/$(request.auth.uid))
+                && get(/databases/$(database)/documents/matches/$(id)/rsvps/$(request.auth.uid)).data.status == 'approved'));
     }
 
     // Collection-group queries over RSVPs (My Matches, Reliability).

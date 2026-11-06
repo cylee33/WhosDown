@@ -12,6 +12,7 @@ struct MatchDetailView: View {
     @State private var viewModel: MatchDetailViewModel?
     @State private var joinModel: MatchJoinViewModel?
     @State private var showManage = false
+    @State private var showChat = false
 
     var body: some View {
         Group {
@@ -45,6 +46,14 @@ struct MatchDetailView: View {
         }
         .navigationDestination(isPresented: $showManage) {
             HostDashboardView(matchId: matchId)
+        }
+        .navigationDestination(isPresented: $showChat) {
+            MatchChatView(
+                matchId: matchId,
+                title: viewModel?.match?.title ?? "Match chat",
+                hostId: viewModel?.match?.hostId ?? "",
+                playerCount: viewModel?.match?.joinedCount ?? 0
+            )
         }
         .sheet(isPresented: reviewPresented) {
             if let match = viewModel?.match, let joinModel {
@@ -82,7 +91,7 @@ struct MatchDetailView: View {
     }
 
     private func joined(_ match: Match) -> some View {
-        JoinedMatchView(match: match, onLeave: { joinModel?.showLeave = true }, onChat: {})
+        JoinedMatchView(match: match, onLeave: { joinModel?.showLeave = true }, onChat: { showChat = true })
             .sheet(isPresented: leavePresented) {
                 LeaveSheet(
                     isWorking: joinModel?.isWorking ?? false,

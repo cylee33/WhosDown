@@ -36,6 +36,14 @@
       "collectionGroup": "matches",
       "queryScope": "COLLECTION",
       "fields": [
+        { "fieldPath": "hostId", "order": "ASCENDING" },
+        { "fieldPath": "status", "order": "ASCENDING" }
+      ]
+    },
+    {
+      "collectionGroup": "matches",
+      "queryScope": "COLLECTION",
+      "fields": [
         {
           "fieldPath": "status",
           "order": "ASCENDING"

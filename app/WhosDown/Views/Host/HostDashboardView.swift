@@ -49,7 +49,14 @@ struct HostDashboardView: View {
                 }
                 .buttonStyle(.plain)
 
-                row(title: "Match chat", detail: viewModel.lastMessage ?? "No messages yet")
+                NavigationLink {
+                    MatchChatView(
+                        matchId: match.id ?? matchId, title: match.title, hostId: match.hostId, playerCount: match.joinedCount
+                    )
+                } label: {
+                    row(title: "Match chat", detail: viewModel.lastMessage ?? "No messages yet")
+                }
+                .buttonStyle(.plain)
                 row(title: "Edit Match", detail: "Coming in 1.18")
                 row(title: "Transfer host", detail: "Coming in 1.28")
                 row(title: "Check in players", detail: "Coming in 1.27")

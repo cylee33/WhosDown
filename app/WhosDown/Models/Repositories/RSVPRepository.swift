@@ -2,6 +2,12 @@ import FirebaseFirestore
 import Foundation
 
 /// Why a join, request, or decision was refused. Messages are shown as-is.
+/// One RSVP plus the Match it belongs to. The Match id is the parent document, not a field.
+struct MyRSVP: Hashable, Sendable {
+    var matchId: String
+    var rsvp: RSVP
+}
+
 enum RSVPWriteError: LocalizedError, Equatable, CustomNSError {
     case spotTaken
     case closed
@@ -35,6 +41,8 @@ protocol RSVPRepository {
     func approvedChanges(matchId: String) -> AsyncThrowingStream<[RSVP], Error>
     /// R5: the Player's approved RSVPs across all Matches (1.5 "Next up", later 1.19).
     func myApprovedMatchIds(userId: String) async throws -> [String]
+    /// R5 for My Matches (1.19): every RSVP of this Player, with its Match id.
+    func myRSVPs(userId: String) async throws -> [MyRSVP]
     /// The signed-in Player's RSVP for one Match, live. Nil when they have none.
     func myRSVPChanges(matchId: String, userId: String) -> AsyncThrowingStream<RSVP?, Error>
     /// Pending Join requests, oldest first (1.15).
@@ -79,6 +87,17 @@ final class FirebaseRSVPRepository: RSVPRepository {
             .whereField("status", isEqualTo: RSVPStatus.approved.rawValue)
             .getDocuments()
         return snapshot.documents.compactMap { $0.reference.parent.parent?.documentID }
+    }
+
+    func myRSVPs(userId: String) async throws -> [MyRSVP] {
+        let snapshot = try await db.collectionGroup("rsvps")
+            .whereField("userId", isEqualTo: userId)
+            .getDocuments()
+        return snapshot.documents.compactMap { document in
+            guard let matchId = document.reference.parent.parent?.documentID,
+                  let rsvp = try? document.decoded(as: RSVP.self) else { return nil }
+            return MyRSVP(matchId: matchId, rsvp: rsvp)
+        }
     }
 
     func myRSVPChanges(matchId: String, userId: String) -> AsyncThrowingStream<RSVP?, Error> {

@@ -1,6 +1,6 @@
 # V1 feature briefs
 
-**Version:** 0.3 · **Last updated:** 2026-11-06
+**Version:** 0.4 · **Last updated:** 2026-11-06
 
 One brief per V1 feature. Each brief is the single source for that feature: status, owner, hand-off note, screens, data, rules, acceptance checklist, and files to touch. How to claim and hand off: [CONTRIBUTING.md](../../CONTRIBUTING.md). New brief: copy [`_TEMPLATE.md`](_TEMPLATE.md).
 
@@ -38,8 +38,8 @@ One brief per V1 feature. Each brief is the single source for that feature: stat
 | 1.16 | [Leave Match or cancel request](1.16-leave-or-cancel-request.md) | C Joining & Lifecycle | 4 Joining | Done | Kurt Schimmel | 2026-11-06 | `main` | — |
 | 1.17 | [Waitlist](1.17-waitlist.md) | C Joining & Lifecycle | 6 Lifecycle | Not started | — | — | — | — |
 | 1.18 | [Edit and cancel Match](1.18-edit-and-cancel-match.md) | B Discover & Hosting | 6 Lifecycle | Not started | — | — | — | — |
-| 1.19 | [My Matches](1.19-my-matches.md) | C Joining & Lifecycle | 5 Follow-through | Not started | — | — | — | — |
-| 1.20 | [Match chat](1.20-match-chat.md) | C Joining & Lifecycle | 5 Follow-through | Not started | — | — | — | — |
+| 1.19 | [My Matches](1.19-my-matches.md) | C Joining & Lifecycle | 5 Follow-through | Done | Kurt Schimmel | 2026-11-06 | `main` | — |
+| 1.20 | [Match chat](1.20-match-chat.md) | C Joining & Lifecycle | 5 Follow-through | Done | Kurt Schimmel | 2026-11-06 | `main` | — |
 | 1.21 | [In-app notifications](1.21-in-app-notifications.md) | C Joining & Lifecycle | 6 Lifecycle | Not started | — | — | — | — |
 | 1.22 | [Profile](1.22-profile.md) | A Identity & Profile | 1 Identity | Done | Chris Lee | 2026-11-02 | `feat/1.22-profile` | [#34](https://github.com/cylee33/WhosDown/pull/34) |
 | 1.23 | [Add to calendar](1.23-add-to-calendar.md) | C Joining & Lifecycle | 7 Device + safety | Not started | — | — | — | — |
@@ -55,3 +55,4 @@ One brief per V1 feature. Each brief is the single source for that feature: stat
 | 0.1 | 2026-11-02 | Chris Lee (with Claude) | All 28 briefs written (D30) |
 | 0.2 | 2026-11-02 | Chris Lee (with Claude) | Owner, Done on, Branch, PR columns; "where to look" guide |
 | 0.3 | 2026-11-06 | Kurt Schimmel | Phase 4 features 1.13–1.16 marked done |
+| 0.4 | 2026-11-06 | Kurt Schimmel | Phase 5 features 1.19 and 1.20 marked done |

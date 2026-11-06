@@ -293,6 +293,12 @@ final class FakeRSVPRepository: RSVPRepository {
         myApproved[userId] ?? []
     }
 
+    func myRSVPs(userId: String) async throws -> [MyRSVP] {
+        mine.compactMap { matchId, rsvp in
+            rsvp.userId == userId ? MyRSVP(matchId: matchId, rsvp: rsvp) : nil
+        }
+    }
+
     func myRSVPChanges(matchId: String, userId: String) -> AsyncThrowingStream<RSVP?, Error> {
         AsyncThrowingStream { continuation in
             continuation.yield(mine[matchId])
@@ -322,11 +328,30 @@ final class FakeNotificationRepository: NotificationRepository {
 }
 
 final class FakeChatRepository: ChatRepository {
+    var messages: [String: [Message]] = [:]
+
     func conversationChanges(matchId: String) -> AsyncThrowingStream<Conversation?, Error> {
         AsyncThrowingStream { continuation in
             continuation.yield(nil)
             continuation.finish()
         }
+    }
+
+    func messageChanges(matchId: String) -> AsyncThrowingStream<[Message], Error> {
+        AsyncThrowingStream { continuation in
+            continuation.yield(messages[matchId] ?? [])
+            continuation.finish()
+        }
+    }
+
+    func olderMessages(matchId: String, before: Date) async throws -> [Message] { [] }
+
+    func send(matchId: String, senderId: String, senderName: String, text: String) async throws {
+        let trimmed = text.trimmingCharacters(in: .whitespacesAndNewlines)
+        guard !trimmed.isEmpty else { return }
+        messages[matchId, default: []].append(Message(
+            id: UUID().uuidString, senderId: senderId, senderName: senderName, text: trimmed, sentAt: .now
+        ))
     }
 }
 
@@ -386,6 +411,13 @@ final class FakeMatchRepository: MatchRepository {
     func matches(ids: [String]) async throws -> [Match] {
         if let error { throw error }
         return matches.filter { ids.contains($0.id ?? "") }
+    }
+
+    func hostedChanges(hostId: String) -> AsyncThrowingStream<[Match], Error> {
+        AsyncThrowingStream { continuation in
+            continuation.yield(matches.filter { $0.hostId == hostId && $0.status == .scheduled })
+            continuation.finish()
+        }
     }
 }
 

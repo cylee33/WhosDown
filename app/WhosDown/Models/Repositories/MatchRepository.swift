@@ -12,6 +12,8 @@ protocol MatchRepository {
     func matchChanges(matchId: String) -> AsyncThrowingStream<Match?, Error>
     /// Matches by ID (1.5 "Next up", 1.19), in batches of 30.
     func matches(ids: [String]) async throws -> [Match]
+    /// R6 (1.19): Matches this Player hosts, live. Ended ones are filtered on the device.
+    func hostedChanges(hostId: String) -> AsyncThrowingStream<[Match], Error>
     /// W3 (1.11): the Match, the Host's own approved RSVP, and the Match chat, in one batch. Returns the Match ID.
     func publish(_ draft: MatchDraft, host: UserProfile) async throws -> String
 }
@@ -145,5 +147,22 @@ final class FirebaseMatchRepository: MatchRepository {
             .map { try $0.decoded(as: Match.self) }
             .filter { $0.endTime > now }
             .sorted { $0.startTime < $1.startTime }
+    }
+
+    func hostedChanges(hostId: String) -> AsyncThrowingStream<[Match], Error> {
+        AsyncThrowingStream { continuation in
+            let registration = db.collection("matches")
+                .whereField("hostId", isEqualTo: hostId)
+                .whereField("status", isEqualTo: MatchStatus.scheduled.rawValue)
+                .addSnapshotListener { snapshot, error in
+                    if let error {
+                        continuation.finish(throwing: error)
+                    } else if let snapshot {
+                        let matches = snapshot.documents.compactMap { try? $0.decoded(as: Match.self) }
+                        continuation.yield(matches.sorted { $0.startTime < $1.startTime })
+                    }
+                }
+            continuation.onTermination = { _ in registration.remove() }
+        }
     }
 }
