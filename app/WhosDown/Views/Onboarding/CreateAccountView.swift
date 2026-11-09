@@ -11,6 +11,9 @@ struct CreateAccountView: View {
         Group {
             if let viewModel {
                 form(viewModel)
+            } else {
+                // Must be a real view: an empty Group never appears, so the view model would never be made.
+                ProgressView()
             }
         }
         .background(Color.background)

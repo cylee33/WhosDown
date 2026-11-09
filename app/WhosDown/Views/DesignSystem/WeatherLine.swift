@@ -11,7 +11,9 @@ struct WeatherLine: View {
     @State private var summary: WeatherSummary?
 
     var body: some View {
-        Group {
+        // A ZStack with a placeholder is always on screen, so `.task` runs even before there's a forecast.
+        ZStack(alignment: .leading) {
+            Color.clear.frame(width: 1, height: 1)
             if isIndoor {
                 Label("Indoor", systemImage: "building.2")
             } else if let summary {
