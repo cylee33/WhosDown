@@ -16,6 +16,10 @@ Problems hit and how they were solved. Newest first. Add an entry whenever somet
 - **Separate the emulator suites.** `npm test` owns and clears/stops its emulators. Run Swift integration tests afterward against a dedicated `npm run emulators` process with seeded data.
 - **Wait for initial reminder inputs.** Do not reconcile an empty plan before both RSVP/Host queries and the relevant Match listeners have returned. Preserve existing reminders through transient load failures. Account changes explicitly clear the previous account's requests.
 
+## 2026-11-09 — Blank screens
+
+- **A view whose body can be empty never "appears".** `Group { if let viewModel { … } }.onAppear { viewModel = … }` stays blank: with no view model the Group is empty, so `onAppear`/`.task` never run and the view model is never made. Sign in and Create account opened blank, and the weather line never loaded. Always give the empty case a real view (`else { ProgressView() }`, or a ZStack with a placeholder). Unit tests of the view model can't catch this; only running the screen does.
+
 ## 2026-11-02 — Phase 3
 
 - **Fake live streams must end.** View models loop over `AsyncThrowingStream`s from Firestore listeners, which never end. Fakes that yield once and never `finish()` make tests that `await viewModel.start()` hang forever (xcodebuild just sits there). Fakes yield their value, then `finish()`.
