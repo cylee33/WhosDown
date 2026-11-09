@@ -18,7 +18,8 @@ enum ReminderDeliveryProbe {
             center.removeDeliveredNotifications(withIdentifiers: ["match-m_pickle"])
             guard var match = try await environment.matches.matches(ids: ["m_pickle"]).first else { return }
             match.title = "WhosDown delivery \(run.prefix(6))"
-            match.startTime = .now.addingTimeInterval(3615)
+            // Deliver almost immediately so the Simulator does not auto-lock while the UI test waits.
+            match.startTime = .now.addingTimeInterval(3610)
             let plan = ReminderPlanner.plan(matches: [match], approvedIds: ["m_pickle"], userId: userId)
             await environment.reminders.sync(plan)
             let pending = await center.pendingNotificationRequests()

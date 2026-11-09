@@ -121,9 +121,19 @@ final class ReminderScheduler: NSObject, UNUserNotificationCenterDelegate, Remin
         openedMatchId = id
     }
 
-    nonisolated func userNotificationCenter(_ center: UNUserNotificationCenter, didReceive response: UNNotificationResponse) async {
-        guard let id = response.notification.request.content.userInfo["matchId"] as? String else { return }
-        await MainActor.run { openMatch(from: ["matchId": id]) }
+    nonisolated func userNotificationCenter(
+        _ center: UNUserNotificationCenter,
+        didReceive response: UNNotificationResponse,
+        withCompletionHandler completionHandler: @escaping () -> Void
+    ) {
+        guard let id = response.notification.request.content.userInfo["matchId"] as? String else {
+            completionHandler()
+            return
+        }
+        DispatchQueue.main.async { [weak self] in
+            self?.openMatch(from: ["matchId": id])
+            completionHandler()
+        }
     }
 
     nonisolated func userNotificationCenter(_ center: UNUserNotificationCenter, willPresent notification: UNNotification) async -> UNNotificationPresentationOptions {

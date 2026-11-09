@@ -17,26 +17,16 @@ final class ReminderDeliveryTests: XCTestCase {
         XCTAssertTrue(app.staticTexts["delivery-probe-ready"].waitForExistence(timeout: 40))
         XCUIDevice.shared.press(.home)
         app.terminate()
-        let top = springboard.coordinate(withNormalizedOffset: CGVector(dx: 0.5, dy: 0.01))
-        top.press(forDuration: 0.1, thenDragTo: springboard.coordinate(withNormalizedOffset: CGVector(dx: 0.5, dy: 0.8)))
+        // Leave the simulator on the unlocked Home Screen. Opening Notification Center
+        // can put this simulator into its Lock Screen UI, where a tap only expands the row.
         let delivered = springboard.staticTexts["WhosDown delivery \(run.prefix(6)) starts in 1 hour"]
-        if !delivered.waitForExistence(timeout: 20) {
-            springboard.swipeUp()
-        }
         XCTAssertTrue(delivered.waitForExistence(timeout: 20), springboard.debugDescription)
         let screenshot = XCTAttachment(screenshot: springboard.screenshot())
         screenshot.name = "Actual OS-delivered local reminder with app terminated"
         screenshot.lifetime = .keepAlways
         add(screenshot)
         delivered.tap()
-        // Notification Center can first expand a grouped notification before opening it.
-        if !app.wait(for: .runningForeground, timeout: 3), delivered.exists {
-            delivered.tap()
-        }
-        if !app.wait(for: .runningForeground, timeout: 5) {
-            let bottom = springboard.coordinate(withNormalizedOffset: CGVector(dx: 0.5, dy: 0.95))
-            bottom.press(forDuration: 0.1, thenDragTo: springboard.coordinate(withNormalizedOffset: CGVector(dx: 0.5, dy: 0.25)))
-        }
+        XCTAssertTrue(app.wait(for: .runningForeground, timeout: 15), springboard.debugDescription)
         XCTAssertTrue(app.staticTexts["Pickleball Doubles"].waitForExistence(timeout: 30), app.debugDescription)
         XCTAssertTrue(app.buttons["Done"].exists)
     }
