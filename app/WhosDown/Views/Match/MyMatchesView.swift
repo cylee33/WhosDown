@@ -2,7 +2,9 @@ import SwiftUI
 
 /// H27 My Matches (1.19).
 struct MyMatchesView: View {
+    var initialSegment: MyMatchesViewModel.Segment = .upcoming
     @Environment(AppEnvironment.self) private var environment
+    @Environment(\.dynamicTypeSize) private var dynamicTypeSize
     @Environment(Session.self) private var session
     @State private var viewModel: MyMatchesViewModel?
     @State private var path: [String] = []
@@ -39,6 +41,7 @@ struct MyMatchesView: View {
         .task(id: session.user?.id) {
             guard let userId = session.user?.id else { return }
             let viewModel = MyMatchesViewModel(userId: userId, matches: environment.matches, rsvps: environment.rsvps)
+            viewModel.segment = initialSegment
             self.viewModel = viewModel
             await viewModel.start()
         }
@@ -57,12 +60,13 @@ struct MyMatchesView: View {
     private func content(_ viewModel: MyMatchesViewModel) -> some View {
         @Bindable var viewModel = viewModel
         return VStack(spacing: Spacing.s) {
-            Picker("Matches", selection: $viewModel.segment) {
-                ForEach(MyMatchesViewModel.Segment.allCases) { segment in
-                    Text(segment.rawValue).tag(segment)
+            Group {
+                if dynamicTypeSize.isAccessibilitySize {
+                    segmentPicker(viewModel).pickerStyle(.menu)
+                } else {
+                    segmentPicker(viewModel).pickerStyle(.segmented)
                 }
             }
-            .pickerStyle(.segmented)
             .padding(.horizontal, Spacing.m)
 
             ScrollView {
@@ -100,6 +104,15 @@ struct MyMatchesView: View {
                 .padding(Spacing.m)
             }
             .refreshable { await viewModel.load() }
+        }
+    }
+
+    private func segmentPicker(_ viewModel: MyMatchesViewModel) -> some View {
+        @Bindable var model = viewModel
+        return Picker("Matches", selection: $model.segment) {
+            ForEach(MyMatchesViewModel.Segment.allCases) { segment in
+                Text(segment.rawValue).tag(segment)
+            }
         }
     }
 

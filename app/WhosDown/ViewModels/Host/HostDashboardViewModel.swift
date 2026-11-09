@@ -9,6 +9,7 @@ final class HostDashboardViewModel {
     private(set) var reliability: [String: Reliability] = [:]
     private(set) var lastMessage: String?
     var errorMessage: String?
+    private(set) var isWorking = false
     var declining: RSVP?
 
     let matchId: String
@@ -41,7 +42,10 @@ final class HostDashboardViewModel {
     }
 
     func approveWaitlist(_ request: RSVP) async {
-        guard !isFull else { return }
+        guard !isFull, !isWorking else { return }
+        isWorking = true
+        errorMessage = nil
+        defer { isWorking = false }
         do {
             try await rsvps.approveFromWaitlist(matchId: matchId, userId: request.userId, hostId: hostId)
         } catch {
@@ -50,7 +54,10 @@ final class HostDashboardViewModel {
     }
 
     func approve(_ request: RSVP) async {
-        guard !isFull else { return }
+        guard !isFull, !isWorking else { return }
+        isWorking = true
+        errorMessage = nil
+        defer { isWorking = false }
         do {
             try await rsvps.approve(matchId: matchId, userId: request.userId, hostId: hostId)
         } catch {
@@ -59,6 +66,10 @@ final class HostDashboardViewModel {
     }
 
     func decline(_ request: RSVP, message: String) async {
+        guard !isWorking else { return }
+        isWorking = true
+        errorMessage = nil
+        defer { isWorking = false }
         do {
             try await rsvps.decline(matchId: matchId, userId: request.userId, hostId: hostId, message: message)
             declining = nil

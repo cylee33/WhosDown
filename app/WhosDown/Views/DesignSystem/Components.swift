@@ -7,7 +7,10 @@ struct PrimaryButtonStyle: ButtonStyle {
     func makeBody(configuration: Configuration) -> some View {
         configuration.label
             .font(.headline)
-            .foregroundStyle(.white)
+            .multilineTextAlignment(.center)
+            .padding(.horizontal, Spacing.s)
+            .padding(.vertical, Spacing.xs)
+            .foregroundStyle(Color.onBrand)
             .frame(maxWidth: .infinity, minHeight: 52)
             .background(tint.opacity(configuration.isPressed ? 0.8 : 1), in: .rect(cornerRadius: Radius.button))
     }
@@ -18,6 +21,9 @@ struct SecondaryButtonStyle: ButtonStyle {
     func makeBody(configuration: Configuration) -> some View {
         configuration.label
             .font(.headline)
+            .multilineTextAlignment(.center)
+            .padding(.horizontal, Spacing.s)
+            .padding(.vertical, Spacing.xs)
             .foregroundStyle(Color.textPrimary)
             .frame(maxWidth: .infinity, minHeight: 52)
             .background(Color.surface.opacity(configuration.isPressed ? 0.7 : 1), in: .rect(cornerRadius: Radius.button))
@@ -73,6 +79,7 @@ struct SheetContainer<Content: View>: View {
     var content: Content
     let primaryTitle: String
     var isDestructive = false
+    var primaryEnabled = true
     let primaryAction: () -> Void
     let secondaryTitle: String
     let secondaryAction: () -> Void
@@ -82,6 +89,7 @@ struct SheetContainer<Content: View>: View {
         message: String,
         primaryTitle: String,
         isDestructive: Bool = false,
+        primaryEnabled: Bool = true,
         primaryAction: @escaping () -> Void,
         secondaryTitle: String,
         secondaryAction: @escaping () -> Void,
@@ -92,25 +100,29 @@ struct SheetContainer<Content: View>: View {
         self.content = content()
         self.primaryTitle = primaryTitle
         self.isDestructive = isDestructive
+        self.primaryEnabled = primaryEnabled
         self.primaryAction = primaryAction
         self.secondaryTitle = secondaryTitle
         self.secondaryAction = secondaryAction
     }
 
+    @Environment(\.dynamicTypeSize) private var dynamicTypeSize
+
     var body: some View {
-        VStack(alignment: .leading, spacing: Spacing.s) {
-            VStack(alignment: .leading, spacing: Spacing.xxs) {
-                Text(title).font(.title2.bold()).foregroundStyle(Color.textPrimary)
-                Text(message).font(.subheadline).foregroundStyle(Color.textSecondary)
-            }
-            content
-            Button(primaryTitle, action: primaryAction)
-                .buttonStyle(isDestructive ? .destructive : .primary)
-            Button(secondaryTitle, action: secondaryAction)
-                .buttonStyle(.secondary)
+        ScrollView {
+            VStack(alignment: .leading, spacing: Spacing.s) {
+                VStack(alignment: .leading, spacing: Spacing.xxs) {
+                    Text(title).font(.title2.bold()).foregroundStyle(Color.textPrimary).fixedSize(horizontal: false, vertical: true)
+                    Text(message).font(.subheadline).foregroundStyle(Color.textSecondary).fixedSize(horizontal: false, vertical: true)
+                }
+                content.fixedSize(horizontal: false, vertical: true)
+                Button(primaryTitle, action: primaryAction)
+                    .buttonStyle(isDestructive ? .destructive : .primary)
+                    .disabled(!primaryEnabled)
+                Button(secondaryTitle, action: secondaryAction).buttonStyle(.secondary)
+            }.padding(Spacing.m)
         }
-        .padding(Spacing.m)
-        .presentationDetents([.medium])
+        .presentationDetents(dynamicTypeSize.isAccessibilitySize ? [.large] : [.medium, .large])
         .presentationDragIndicator(.visible)
     }
 }

@@ -9,6 +9,7 @@ struct CheckInView: View {
     @State private var rows: [RSVP] = []
     @State private var attended: [String: Bool] = [:]
     @State private var message: String?
+    @State private var isWorking = false
     @State private var saved = false
 
     private var open: Bool { CheckInRules.isOpen(match) }
@@ -20,6 +21,9 @@ struct CheckInView: View {
                 Text("\(match.title) · \(MatchFormatting.when(match))")
                     .font(.subheadline).foregroundStyle(Color.textSecondary)
                 Text("\(attendedCount) of \(rows.count) attended").font(.title2.bold())
+                if rows.isEmpty && message == nil {
+                    ContentUnavailableView("No Players to check in", systemImage: "person.2")
+                }
                 ForEach(rows) { row in
                     HStack {
                         VStack(alignment: .leading) {
@@ -33,6 +37,7 @@ struct CheckInView: View {
                         } else if open {
                             Toggle("Attended", isOn: binding(for: row.userId))
                                 .labelsHidden()
+                                .accessibilityLabel("\(row.displayName) attended")
                         } else {
                             Text((attended[row.userId] ?? false) ? "Attended" : "Didn't attend")
                                 .font(.footnote)
@@ -44,8 +49,9 @@ struct CheckInView: View {
                     .font(.footnote).foregroundStyle(Color.textSecondary)
                 if let message { Text(message).font(.footnote).foregroundStyle(Color.destructive) }
                 if open {
-                    Button(saved ? "Update check-in" : "Submit check-in") { Task { await submit() } }
+                    Button(isWorking ? "Saving…" : saved ? "Update check-in" : "Submit check-in") { Task { await submit() } }
                         .buttonStyle(.primary)
+                        .disabled(isWorking || rows.isEmpty)
                 }
             }
             .padding(Spacing.m)
@@ -53,7 +59,9 @@ struct CheckInView: View {
         .background(Color.background)
         .navigationTitle("Check in")
         .task {
-            let roster = CheckInRules.rows((try? await environment.rsvps.approvedOnce(matchId: match.id ?? "")) ?? [])
+            let roster: [RSVP]
+            do { roster = CheckInRules.rows(try await environment.rsvps.approvedOnce(matchId: match.id ?? "")) }
+            catch { message = "Couldn't load Players for check-in."; return }
             rows = roster
             for row in roster {
                 attended[row.userId] = row.attended ?? true
@@ -67,6 +75,10 @@ struct CheckInView: View {
     }
 
     private func submit() async {
+        guard !isWorking else { return }
+        isWorking = true
+        message = nil
+        defer { isWorking = false }
         guard let hostId = session.user?.id else { return }
         do {
             try await environment.matches.checkIn(match, attendedByPlayer: attended, hostId: hostId)

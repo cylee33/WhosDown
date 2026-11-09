@@ -21,6 +21,19 @@ struct SelectableChip: View {
     }
 }
 
+/// Segments keep the wireframe layout at normal sizes; a menu preserves full labels at accessibility sizes.
+private struct AdaptiveSegmentedPicker: ViewModifier {
+    @Environment(\.dynamicTypeSize) private var dynamicTypeSize
+    @ViewBuilder func body(content: Content) -> some View {
+        if dynamicTypeSize.isAccessibilitySize { content.pickerStyle(.menu) }
+        else { content.pickerStyle(.segmented) }
+    }
+}
+
+extension View {
+    func adaptiveSegmentedPicker() -> some View { modifier(AdaptiveSegmentedPicker()) }
+}
+
 /// A Player's photo, or their initials on a soft green circle when there's no photo (1.4 rule 4).
 struct AvatarView: View {
     let photoURL: String?
@@ -73,7 +86,7 @@ struct WrappingHStack: Layout {
         for row in arrange(subviews, width: bounds.width) {
             var x = bounds.minX
             for index in row.indices {
-                let size = subviews[index].sizeThatFits(.unspecified)
+                let size = subviews[index].sizeThatFits(ProposedViewSize(width: bounds.width, height: nil))
                 subviews[index].place(at: CGPoint(x: x, y: y), proposal: ProposedViewSize(size))
                 x += size.width + spacing
             }
@@ -90,7 +103,7 @@ struct WrappingHStack: Layout {
     private func arrange(_ subviews: Subviews, width: CGFloat) -> [Row] {
         var rows: [Row] = [Row()]
         for index in subviews.indices {
-            let size = subviews[index].sizeThatFits(.unspecified)
+            let size = subviews[index].sizeThatFits(ProposedViewSize(width: width, height: nil))
             let needed = rows[rows.count - 1].indices.isEmpty ? size.width : rows[rows.count - 1].width + spacing + size.width
             if needed > width, !rows[rows.count - 1].indices.isEmpty {
                 rows.append(Row())

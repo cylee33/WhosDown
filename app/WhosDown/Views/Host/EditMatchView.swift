@@ -16,6 +16,7 @@ struct EditMatchView: View {
     @State private var notify = true
     @State private var hostNote = ""
     @State private var message: String?
+    @State private var isWorking = false
     @State private var choosingLocation = false
 
     init(match: Match) {
@@ -42,7 +43,8 @@ struct EditMatchView: View {
             Toggle("Notify joined Players about these changes", isOn: $notify)
             TextField("Note to Players", text: $hostNote)
             if let message { Text(message).foregroundStyle(Color.destructive) }
-            Button("Save changes") { Task { await save() } }
+            Button(isWorking ? "Saving…" : "Save changes") { Task { await save() } }
+                .disabled(isWorking)
         }
         .navigationTitle("Edit Match")
         .navigationDestination(isPresented: $choosingLocation) {
@@ -51,7 +53,16 @@ struct EditMatchView: View {
     }
 
     private func save() async {
+        guard !isWorking else { return }
+        isWorking = true
+        message = nil
+        defer { isWorking = false }
         guard let hostId = session.user?.id else { return }
+        guard start > .now, end > start, end.timeIntervalSince(start) <= 6 * 3600,
+              notes.count <= 500, hostNote.count <= 300 else {
+            message = "Choose a future start and an end within 6 hours. Keep the description under 500 characters and the note under 300."
+            return
+        }
         let edits = MatchEdits(
             startTime: start, endTime: end, playerLimit: limit, joinType: joinType,
             notes: ProfileRules.trimmedOrNil(notes), venue: venue, notify: notify,
@@ -83,20 +94,28 @@ struct CancelMatchSheet: View {
     @Environment(\.dismiss) private var dismiss
     @State private var reason = ""
     @State private var message: String?
+    @State private var isWorking = false
 
     var body: some View {
-        VStack(alignment: .leading, spacing: Spacing.s) {
-            Text("Cancel this Match?").font(.title2.bold())
-            Text("Everyone will be notified immediately.").foregroundStyle(Color.textSecondary)
-            TextField("Reason", text: $reason)
+        SheetContainer(
+            title: "Cancel this Match?", message: "Everyone will be notified immediately.",
+            primaryTitle: isWorking ? "Cancelling…" : "Cancel Match", isDestructive: true,
+            primaryAction: { Task { await cancel() } }, secondaryTitle: "Keep Match", secondaryAction: { dismiss() }
+        ) {
+            TextField("Reason", text: $reason, axis: .vertical)
+                .onChange(of: reason) { _, value in reason = String(value.prefix(200)) }
             if let message { Text(message).font(.footnote).foregroundStyle(Color.destructive) }
-            Button("Cancel Match") { Task { await cancel() } }.buttonStyle(.destructive)
-            Button("Keep Match") { dismiss() }.buttonStyle(.secondary)
+            if isWorking { ProgressView() }
         }
-        .padding(Spacing.m)
+        .disabled(isWorking)
+        .interactiveDismissDisabled(isWorking)
     }
 
     private func cancel() async {
+        guard !isWorking else { return }
+        isWorking = true
+        message = nil
+        defer { isWorking = false }
         guard let hostId = session.user?.id else { return }
         let trimmed = reason.trimmingCharacters(in: .whitespacesAndNewlines)
         guard (1...200).contains(trimmed.count) else {

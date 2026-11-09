@@ -34,7 +34,7 @@ struct ChooseLocationView: View {
 
     private func content(_ viewModel: ChooseLocationViewModel) -> some View {
         @Bindable var viewModel = viewModel
-        return VStack(spacing: 0) {
+        return VStack(spacing: Spacing.none) {
             ScrollView {
                 VStack(alignment: .leading, spacing: Spacing.s) {
                     HStack(spacing: Spacing.xs) {
@@ -54,6 +54,11 @@ struct ChooseLocationView: View {
                         Text(message).font(.footnote).foregroundStyle(Color.destructive)
                     }
 
+                    if viewModel.isSearching {
+                        ProgressView("Searching places…")
+                    } else if viewModel.suggestedVenues.isEmpty && viewModel.places.isEmpty && viewModel.message == nil {
+                        ContentUnavailableView("No places found", systemImage: "mappin.slash", description: Text("Try another name or search a nearby area."))
+                    }
                     if !viewModel.suggestedVenues.isEmpty {
                         sectionTitle("SUGGESTED")
                         ForEach(viewModel.suggestedVenues) { venue in
@@ -94,7 +99,7 @@ struct ChooseLocationView: View {
             if let choice { withAnimation { camera = .region(Self.region(around: choice.location, meters: 1500)) } }
         }
         .sheet(item: $viewModel.placeNeedingFacts) { place in
-            NewVenueSheet(place: place, isWorking: viewModel.isWorking) { indoor, surface, lights in
+            NewVenueSheet(place: place, isWorking: viewModel.isWorking, errorMessage: viewModel.message) { indoor, surface, lights in
                 Task {
                     if let venue = await viewModel.saveNewVenue(isIndoor: indoor, surface: surface, hasLights: lights) {
                         onChosen(venue)
@@ -109,8 +114,11 @@ struct ChooseLocationView: View {
             UserAnnotation()
             ForEach(viewModel.suggestedVenues) { venue in
                 Annotation(venue.name, coordinate: venue.location.clLocation) {
-                    pin(selected: viewModel.choice == .venue(venue))
-                        .onTapGesture { viewModel.choose(venue) }
+                    Button { viewModel.choose(venue) } label: {
+                        pin(selected: viewModel.choice == .venue(venue))
+                    }
+                    .buttonStyle(.plain)
+                    .accessibilityLabel("Select \(venue.name)")
                 }
             }
             if case .place(let place) = viewModel.choice {
@@ -125,7 +133,7 @@ struct ChooseLocationView: View {
         Circle()
             .fill(selected ? Color.brand : Color.textPrimary)
             .frame(width: selected ? 22 : 16, height: selected ? 22 : 16)
-            .overlay(Circle().stroke(.white, lineWidth: 2))
+            .overlay(Circle().stroke(Color.onBrand, lineWidth: 2))
     }
 
     private func sectionTitle(_ text: String) -> some View {
@@ -136,7 +144,7 @@ struct ChooseLocationView: View {
         Button(action: action) {
             VStack(alignment: .leading, spacing: Spacing.xxs) {
                 Text(title).font(.body.weight(.semibold)).foregroundStyle(Color.textPrimary)
-                Text(detail).font(.footnote).foregroundStyle(Color.textSecondary).lineLimit(1)
+                Text(detail).font(.footnote).foregroundStyle(Color.textSecondary).fixedSize(horizontal: false, vertical: true)
             }
             .frame(maxWidth: .infinity, alignment: .leading)
             .padding(Spacing.s)
@@ -164,6 +172,7 @@ extension Place: Identifiable {
 struct NewVenueSheet: View {
     let place: Place
     let isWorking: Bool
+    var errorMessage: String? = nil
     let onSave: (_ isIndoor: Bool, _ surface: Surface, _ hasLights: Bool) -> Void
 
     @Environment(\.dismiss) private var dismiss
@@ -192,10 +201,13 @@ struct NewVenueSheet: View {
                     }
                 }
                 Toggle("Lights", isOn: $hasLights).tint(Color.brand)
+                if let errorMessage { Text(errorMessage).foregroundStyle(Color.destructive) }
+                if isWorking { ProgressView() }
             }
         }
         .presentationDetents([.large])
         .disabled(isWorking)
+        .interactiveDismissDisabled(isWorking)
     }
 }
 

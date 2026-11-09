@@ -4,6 +4,8 @@ import SwiftUI
 /// Player (H09 Host row, H11 roster rows). Your own ID shows your own profile instead (rule 7).
 struct PlayerProfileView: View {
     let userId: String
+    var matchId: String? = nil
+    @State private var showReport = false
 
     @Environment(AppEnvironment.self) private var environment
     @Environment(Session.self) private var session
@@ -14,7 +16,10 @@ struct PlayerProfileView: View {
             if let viewModel {
                 ProfileContent(viewModel: viewModel, showsBioAndStyles: true)
                     .padding(Spacing.m)
-                // "Safety & reporting" (H33) is added here by 1.25.
+                if userId != session.user?.id {
+                    Button("Safety & reporting") { session.requireAccount { showReport = true } }
+                        .buttonStyle(.secondary).padding(Spacing.m)
+                }
             } else {
                 ProgressView().padding(Spacing.xl)
             }
@@ -22,6 +27,9 @@ struct PlayerProfileView: View {
         .background(Color.background)
         .navigationTitle(userId == session.user?.id ? "Profile" : "Player profile")
         .navigationBarTitleDisplayMode(.inline)
+        .navigationDestination(isPresented: $showReport) {
+            ReportView(reportedUserId: userId, matchId: matchId, playerName: viewModel?.profile?.displayName)
+        }
         .task(id: userId) {
             let isOwn = userId == session.user?.id
             let viewModel = ProfileViewModel(

@@ -37,6 +37,7 @@ enum RSVPWriteError: LocalizedError, Equatable, CustomNSError {
 
 /// Reads and writes `matches/{matchId}/rsvps/{userId}`.
 protocol RSVPRepository {
+    func myRSVPListChanges(userId: String) -> AsyncThrowingStream<[MyRSVP], Error>
     /// R3 (1.10): approved RSVPs of a Match, live, Host first then in the order they joined.
     func approvedChanges(matchId: String) -> AsyncThrowingStream<[RSVP], Error>
     /// R5: the Player's approved RSVPs across all Matches (1.5 "Next up", later 1.19).
@@ -97,6 +98,25 @@ final class FirebaseRSVPRepository: RSVPRepository {
             .whereField("status", isEqualTo: RSVPStatus.approved.rawValue)
             .getDocuments()
         return snapshot.documents.compactMap { $0.reference.parent.parent?.documentID }
+    }
+
+    func myRSVPListChanges(userId: String) -> AsyncThrowingStream<[MyRSVP], Error> {
+        AsyncThrowingStream { continuation in
+            let registration = db.collectionGroup("rsvps").whereField("userId", isEqualTo: userId)
+                .addSnapshotListener { snapshot, error in
+                    if let error { continuation.finish(throwing: error) }
+                    else if let snapshot, !snapshot.metadata.isFromCache {
+                        do {
+                            let values = try snapshot.documents.compactMap { document -> MyRSVP? in
+                                guard let id = document.reference.parent.parent?.documentID else { return nil }
+                                return MyRSVP(matchId: id, rsvp: try document.decoded(as: RSVP.self))
+                            }
+                            continuation.yield(values)
+                        } catch { continuation.finish(throwing: error) }
+                    }
+                }
+            continuation.onTermination = { _ in registration.remove() }
+        }
     }
 
     func myRSVPs(userId: String) async throws -> [MyRSVP] {

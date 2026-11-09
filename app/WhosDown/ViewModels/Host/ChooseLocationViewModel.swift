@@ -31,6 +31,7 @@ final class ChooseLocationViewModel {
     /// A searched place that isn't a saved Venue yet; the three-question sheet is showing (rule 3).
     var placeNeedingFacts: Place?
     private(set) var isWorking = false
+    private(set) var isSearching = false
     private(set) var message: String?
 
     private let userId: String
@@ -80,6 +81,8 @@ final class ChooseLocationViewModel {
             places = []
             return
         }
+        isSearching = true
+        defer { isSearching = false }
         do {
             matchingVenues = try await venues.search(namePrefix: text)
             let found = try await placeSearch.search(text, near: center)
@@ -89,7 +92,7 @@ final class ChooseLocationViewModel {
             places = found.filter { VenueRules.existingVenue(for: $0, among: known) == nil }
             message = nil
         } catch {
-            message = Self.offlineMessage
+            if !Task.isCancelled { message = Self.offlineMessage }
         }
     }
 

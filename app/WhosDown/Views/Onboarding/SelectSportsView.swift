@@ -28,7 +28,10 @@ struct SelectSportsView: View {
     @State private var askingForCustomName = false
     @State private var draftCustomName = ""
 
-    private let columns = Array(repeating: GridItem(.flexible(), spacing: Spacing.s - Spacing.xxs), count: 3)
+    @Environment(\.dynamicTypeSize) private var dynamicTypeSize
+    private var columns: [GridItem] {
+        Array(repeating: GridItem(.flexible(), spacing: Spacing.s - Spacing.xxs), count: dynamicTypeSize.isAccessibilitySize ? 1 : 3)
+    }
 
     var body: some View {
         VStack(spacing: Spacing.m) {
@@ -88,7 +91,7 @@ struct SelectSportsView: View {
                     .frame(height: 32)
                 Text(title)
                     .font(.subheadline.weight(isSelected ? .semibold : .regular))
-                    .lineLimit(1)
+                    .fixedSize(horizontal: false, vertical: true)
                     .minimumScaleFactor(0.8)
             }
             .foregroundStyle(Color.textPrimary)

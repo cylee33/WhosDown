@@ -50,7 +50,7 @@ struct MatchListCard: View {
             VStack(alignment: .leading, spacing: Spacing.xxs) {
                 Text(match.title).font(.body.weight(.semibold)).foregroundStyle(Color.textPrimary)
                 Text("\(MatchFormatting.when(match)) · \(match.venueName)")
-                    .font(.footnote).foregroundStyle(Color.textSecondary).lineLimit(1)
+                    .font(.footnote).foregroundStyle(Color.textSecondary).fixedSize(horizontal: false, vertical: true)
             }
             Spacer()
             Text(badge).font(.caption2.weight(.bold)).foregroundStyle(Color.textSecondary)

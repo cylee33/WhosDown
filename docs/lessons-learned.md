@@ -2,6 +2,20 @@
 
 Problems hit and how they were solved. Newest first. Add an entry whenever something cost more than ~15 minutes.
 
+## 2026-11-08 — Phase 8 completion follow-up
+
+- **Test the system editor's current labels.** On the iOS 27 simulator, the New Event save action is labelled Done rather than Add. UI acceptance finds the system navigation action by its supported labels.
+- **Source review alone missed accessibility gaps.** Permission/completion onboarding screens still needed scrolling, segmented labels needed menus at accessibility sizes, and map gesture targets needed labelled Buttons. Keep the simulator UI target in the shared scheme.
+- **Match status must take precedence over membership.** An approved RSVP may remain after cancellation; choosing the joined layout solely from RSVP status hid the cancellation banner. The detail view now checks Match status/end time before choosing H14.
+- **Pin notification triggers to their instant.** Gregorian UTC date components keep local reminders correct when the phone's calendar or time zone changes.
+
+## 2026-11-08 — Phases 7 and 8
+
+- **Sign simulator test apps.** Running with `CODE_SIGNING_ALLOWED=NO` removes the Keychain entitlement Firebase Auth needs. Every real auth operation then fails with an internal Keychain error (`SecItemCopyMatching -34018`), even though the emulator is reachable. Normal ad-hoc simulator signing fixes it.
+- **EventKit rounds dates to whole seconds.** Calendar builder tests should use whole-second fixtures rather than compare an event against a fractional-second `Date.now`.
+- **Separate the emulator suites.** `npm test` owns and clears/stops its emulators. Run Swift integration tests afterward against a dedicated `npm run emulators` process with seeded data.
+- **Wait for initial reminder inputs.** Do not reconcile an empty plan before both RSVP/Host queries and the relevant Match listeners have returned. Preserve existing reminders through transient load failures. Account changes explicitly clear the previous account's requests.
+
 ## 2026-11-02 — Phase 3
 
 - **Fake live streams must end.** View models loop over `AsyncThrowingStream`s from Firestore listeners, which never end. Fakes that yield once and never `finish()` make tests that `await viewModel.start()` hang forever (xcodebuild just sits there). Fakes yield their value, then `finish()`.

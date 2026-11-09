@@ -20,7 +20,7 @@ struct MessageBubble: View {
                     Text("Host").font(.caption2.weight(.bold)).foregroundStyle(Color.brand)
                 }
                 Text(message.text)
-                    .foregroundStyle(isMine ? Color.white : Color.textPrimary)
+                    .foregroundStyle(isMine ? Color.onBrand : Color.textPrimary)
                     .padding(Spacing.xs)
                     .background(isMine ? Color.brand : Color.surface, in: .rect(cornerRadius: Radius.button))
                 Text(message.sentAt.formatted(date: .omitted, time: .shortened))

@@ -11,11 +11,14 @@ struct TransferHostSheet: View {
     @State private var selected: String?
     @State private var reliability: [String: String] = [:]
     @State private var message: String?
+    @State private var isWorking = false
 
     var body: some View {
-        VStack(alignment: .leading, spacing: Spacing.s) {
-            Text("Transfer host").font(.title2.bold())
-            Text("Choose a joined Player to become Host.").foregroundStyle(Color.textSecondary)
+        SheetContainer(
+            title: "Transfer host", message: "Choose a joined Player to become Host.",
+            primaryTitle: isWorking ? "Transferring…" : "Transfer host", primaryEnabled: selected != nil,
+            primaryAction: { Task { await transfer() } }, secondaryTitle: "Keep hosting", secondaryAction: { dismiss() }
+        ) {
             if players.isEmpty {
                 Text("No Players to transfer to yet. You can cancel the Match instead.")
                     .font(.subheadline).foregroundStyle(Color.textSecondary)
@@ -38,14 +41,14 @@ struct TransferHostSheet: View {
                     .font(.footnote).foregroundStyle(Color.textSecondary)
             }
             if let message { Text(message).font(.footnote).foregroundStyle(Color.destructive) }
-            Button("Transfer host") { Task { await transfer() } }
-                .buttonStyle(.primary)
-                .disabled(selected == nil)
+            if isWorking { ProgressView() }
         }
-        .padding(Spacing.m)
-        .navigationTitle("Transfer host")
+        .disabled(isWorking)
+        .interactiveDismissDisabled(isWorking)
         .task {
-            let roster = (try? await environment.rsvps.approvedOnce(matchId: match.id ?? "")) ?? []
+            let roster: [RSVP]
+            do { roster = try await environment.rsvps.approvedOnce(matchId: match.id ?? "") }
+            catch { message = "Couldn't load joined Players."; return }
             players = roster.filter { !$0.isHost }
             for player in players {
                 reliability[player.userId] = (try? await environment.reliability.reliability(userId: player.userId))?.label
@@ -54,6 +57,10 @@ struct TransferHostSheet: View {
     }
 
     private func transfer() async {
+        guard !isWorking else { return }
+        isWorking = true
+        message = nil
+        defer { isWorking = false }
         guard let hostId = session.user?.id, let player = players.first(where: { $0.userId == selected }) else { return }
         do {
             try await environment.matches.transferHost(match, to: player, hostId: hostId)

@@ -1,6 +1,6 @@
 # V1 feature briefs
 
-**Version:** 0.5 · **Last updated:** 2026-11-06
+**Version:** 0.7 · **Last updated:** 2026-11-08
 
 One brief per V1 feature. Each brief is the single source for that feature: status, owner, hand-off note, screens, data, rules, acceptance checklist, and files to touch. How to claim and hand off: [CONTRIBUTING.md](../../CONTRIBUTING.md). New brief: copy [`_TEMPLATE.md`](_TEMPLATE.md).
 
@@ -42,10 +42,10 @@ One brief per V1 feature. Each brief is the single source for that feature: stat
 | 1.20 | [Match chat](1.20-match-chat.md) | C Joining & Lifecycle | 5 Follow-through | Done | Kurt Schimmel | 2026-11-06 | `main` | — |
 | 1.21 | [In-app notifications](1.21-in-app-notifications.md) | C Joining & Lifecycle | 6 Lifecycle | Done | Kurt Schimmel | 2026-11-06 | `main` | — |
 | 1.22 | [Profile](1.22-profile.md) | A Identity & Profile | 1 Identity | Done | Chris Lee | 2026-11-02 | `feat/1.22-profile` | [#34](https://github.com/cylee33/WhosDown/pull/34) |
-| 1.23 | [Add to calendar](1.23-add-to-calendar.md) | C Joining & Lifecycle | 7 Device + safety | Not started | — | — | — | — |
-| 1.24 | [Match reminders](1.24-match-reminders.md) | C Joining & Lifecycle | 7 Device + safety | Not started | — | — | — | — |
-| 1.25 | [Report a Player or Match](1.25-report.md) | A Identity & Profile | 7 Device + safety | Not started | — | — | — | — |
-| 1.26 | [Layout and interaction pass](1.26-layout-and-interaction-pass.md) | Core | 8 Finish | Not started | — | — | — | — |
+| 1.23 | [Add to calendar](1.23-add-to-calendar.md) | C Joining & Lifecycle | 7 Device + safety | Done | Codex | 2026-11-08 | `feat/phases-7-8` | — |
+| 1.24 | [Match reminders](1.24-match-reminders.md) | C Joining & Lifecycle | 7 Device + safety | Done | Codex | 2026-11-08 | `feat/phases-7-8` | — |
+| 1.25 | [Report a Player or Match](1.25-report.md) | A Identity & Profile | 7 Device + safety | Done | Codex | 2026-11-08 | `feat/phases-7-8` | — |
+| 1.26 | [Layout and interaction pass](1.26-layout-and-interaction-pass.md) | Core | 8 Finish | Implemented; release sign-off pending | Codex | — | `feat/phases-7-8` | — |
 | 1.27 | [Host check-in](1.27-host-check-in.md) | C Joining & Lifecycle | 6 Lifecycle | Done | Kurt Schimmel | 2026-11-06 | `main` | — |
 | 1.28 | [Transfer host](1.28-transfer-host.md) | B Discover & Hosting | 6 Lifecycle | Done | Kurt Schimmel | 2026-11-06 | `main` | — |
 ## Changelog
@@ -57,3 +57,7 @@ One brief per V1 feature. Each brief is the single source for that feature: stat
 | 0.3 | 2026-11-06 | Kurt Schimmel | Phase 4 features 1.13–1.16 marked done |
 | 0.4 | 2026-11-06 | Kurt Schimmel | Phase 5 features 1.19 and 1.20 marked done |
 | 0.5 | 2026-11-06 | Kurt Schimmel | Phase 6 features 1.17, 1.18, 1.21, 1.27, and 1.28 marked done |
+
+| 0.6 | 2026-11-08 | Codex | Phase 7/8 implemented; reports verified, device acceptance and production deployment remain open |
+
+| 0.7 | 2026-11-08 | Codex | Calendar/reminder acceptance automated; all feature code complete; Phase 8 release sign-off remains separate |

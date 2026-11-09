@@ -9,6 +9,8 @@ final class MatchDetailViewModel {
     private(set) var match: Match?
     private(set) var hostReliability: Reliability?
     private(set) var distance: String?
+    private(set) var venueAddress: String?
+    private let venues: VenueRepository?
     private(set) var state: State = .loading
 
     let matchId: String
@@ -17,12 +19,13 @@ final class MatchDetailViewModel {
     private let reliability: ReliabilityRepository
     private let location: LocationService
 
-    init(matchId: String, userId: String?, matches: MatchRepository, reliability: ReliabilityRepository, location: LocationService) {
+    init(matchId: String, userId: String?, matches: MatchRepository, reliability: ReliabilityRepository, location: LocationService, venues: VenueRepository? = nil) {
         self.matchId = matchId
         self.userId = userId
         self.matches = matches
         self.reliability = reliability
         self.location = location
+        self.venues = venues
     }
 
     var isHost: Bool { match.map { $0.hostId == userId } ?? false }
@@ -47,9 +50,11 @@ final class MatchDetailViewModel {
                     state = .missing
                     continue
                 }
+                let venueChanged = match?.venueId != value.venueId
                 let hostChanged = match?.hostId != value.hostId
                 match = value
                 state = .loaded
+                if venueChanged { venueAddress = try? await venues?.venue(id: value.venueId)?.address }
                 if hostChanged { await loadExtras(for: value) }
             }
         } catch {
