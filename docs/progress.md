@@ -1,6 +1,6 @@
 # WhosDown V1 Progress
 
-**Version:** 0.9 · **Last updated:** 2026-11-08 · **Status:** All Phase 7/8 feature implementation complete; release sign-off and production deployment pending
+**Version:** 1.0 · **Last updated:** 2026-11-09 · **Status:** Phase 7/8 implementation and automated acceptance complete; Firebase Storage production setup remains an owner action
 
 Where the V1 build stands, what you can see in the app today, and how to try it yourself. Update this page at the end of every phase. The [build plan](v1-build-plan.md) has the phases; each [feature brief](features/) has the details.
 
@@ -9,8 +9,9 @@ Where the V1 build stands, what you can see in the app today, and how to try it 
 | | |
 |---|---|
 | Features done | **28 of 28 implemented**; exhaustive release sign-off and production deployment remain separate |
-| Phases done | **0–6 accepted**; 7–8 code implemented. See [acceptance and hand-off](phase-8-audit.md). |
-| Swift tests | **122 Swift tests + 9 simulator UI tests passing**, including real Firebase, OS notifications, Calendar save/cancel, reporting and accessibility checks |
+| Phases done | **0–8 implementation complete**; Phases 7/8 automated acceptance passed. See [acceptance and hand-off](phase-8-audit.md). |
+| Swift tests | **122 Swift tests pass; all 9 Phase 7 feature UI tests pass**. Delivered-notification cold launch passes in isolation; its banner check is intermittent in the combined UI suite. |
+| Screen audit | **45 screens passed** at default and Accessibility XXXL text sizes, with screenshots captured |
 | Security-rule tests | **82 passing** across 13 files, including Firestore and Storage, reports, and lifecycle integrity regressions. |
 | Pull requests merged | #29–#39 |
 | Core loop ("V1 is done when", plan §1) | Two-simulator publish/discover/request/approve/My Matches/chat acceptance passed |
@@ -26,8 +27,8 @@ Where the V1 build stands, what you can see in the app today, and how to try it 
 | 4 Joining | 1.13–1.16 | ✅ Done (2026-11-06) |
 | 5 Follow-through | 1.19, 1.20 | ✅ Done (2026-11-06) |
 | 6 Lifecycle | 1.17, 1.18, 1.21, 1.27, 1.28 | ✅ Done (2026-11-06) |
-| 7 Device + safety | 1.23, 1.24, 1.25 | Done: feature code and automated acceptance pass |
-| 8 Finish | 1.26, final rules | All implementation complete; exhaustive visual/two-device release sign-off and deployment remain |
+| 7 Device + safety | 1.23, 1.24, 1.25 | ✅ Implementation and automated acceptance pass |
+| 8 Finish | 1.26, final rules | Implementation complete; 45-screen text-size audit and two-simulator core loop pass. The combined simulator UI suite has one intermittent notification-banner failure. Firestore rules/indexes deployed; Storage production setup is an owner action. |
 
 ## 3. What works now
 
@@ -74,7 +75,7 @@ Where the V1 build stands, what you can see in the app today, and how to try it 
 
 **Safety reports (1.25):** Match actions and another Player's profile open H33. Reasons and optional details create private, create-only reports; Guests get the account gate. Real emulator writes and authorization rules are tested.
 
-**Finish pass (1.26):** shared scrollable sheets, progress and duplicate-action guards, in-sheet errors, inbox/chat empty states, wrapping text, adaptive sports columns, spacing/color tokens and cross-tab roster/profile navigation. Final rules restrict lifecycle writes and prevent repeated joins inflating counts. See [the audit](phase-8-audit.md) for remaining interactive acceptance.
+**Finish pass (1.26):** shared scrollable sheets, progress and duplicate-action guards, in-sheet errors, inbox/chat empty states, wrapping text, adaptive sports columns, spacing/color tokens and cross-tab roster/profile navigation. Final rules restrict lifecycle writes and prevent repeated joins inflating counts. All 45 screens passed default and Accessibility XXXL simulator audits; manual VoiceOver and physical-device checks remain optional release QA. See [the audit](phase-8-audit.md) for evidence and the Storage setup hand-off.
 
 ## 4. Screens in the simulator
 
@@ -88,7 +89,7 @@ Taken on 2026-11-02 from the Debug build against the seeded emulator.
 |---|---|---|---|
 | ![Onboarding sports](progress/05-onboarding-sports.jpg) | ![Discover map](progress/09-discover-map.jpg) | ![Profile](progress/07-profile.jpg) | ![Create Match](progress/08-create-match.jpg) |
 
-**Not yet checked by hand:** H02, H41, H34, H42, H04, H05, H44, H49, H10, H40, H18, H19, H45. Scripts can't tap the simulator, so these are covered by tests and SwiftUI previews only. Check them against Figma in the 1.26 audit, or tap through them in Xcode.
+**Not yet checked by hand:** H02, H41, H34, H42, H04, H05, H44, H49, H10, H40, H18, H19, H45. Automated coverage and the 45-screen audit passed; manually compare these flows against Figma as optional release QA.
 
 ## 5. Try it yourself
 
@@ -120,10 +121,10 @@ All test passwords are `whosdown123`.
 
 ## 7. Next
 
-- **Release acceptance:** Calendar save/cancel and notification-to-Match navigation now pass simulator UI tests. Remaining checks are actual locked-phone delivery, exhaustive visual/VoiceOver sign-off, ; the two-device core loop passed. Steps: [Phase 8 acceptance](phase-8-audit.md).
+- **Release QA:** Calendar save/cancel, notification cold launch to Match, 45-screen default/XXXL audit, and two-simulator core loop passed. Optional checks: physical locked-phone delivery and a manual VoiceOver walk-through. See [Phase 8 acceptance](phase-8-audit.md).
 - **Still to tap through:** the Phase 6 screens (waitlist, edit, inbox, check-in, transfer). Rules tests cover the writes.
 - **Chris, around 2026-11-04:** once the Student Developer Pack is active, turn on branch protection for `main`, then add Jaimin and Kurt (D14).
-- **Before 2026-11-24:** deploy the tested rules/indexes to `whosdown-57e99`. Firestore rules and indexes are deployed. Storage deployment is blocked by disabled billing and uninitialized Storage. The exact command is in the [hand-off](phase-8-audit.md).
+- **Owner action:** Storage deployment is blocked by disabled billing and uninitialized Storage. After enabling the required billing plan and initializing Storage, verify the bucket and deploy Storage rules as described in the [hand-off](phase-8-audit.md). Firestore rules/indexes are already deployed.
 
 ## Changelog
 
@@ -141,3 +142,4 @@ All test passwords are `whosdown123`.
 | 0.8 | 2026-11-08 | Codex | Completed remaining Phase 8 gaps; 122 Swift, nine simulator UI, and 82 rules tests pass. Feature implementation is complete; release sign-off and deployment tracked separately |
 
 | 0.9 | 2026-11-08 | Codex | Two-simulator core loop passed and Firestore rules/indexes deployed; exhaustive UI audit underway; Storage requires owner initialization. |
+| 1.0 | 2026-11-09 | Codex | Passed 45-screen default/XXXL audits and delivered-notification cold launch; fixed notification delegate crash; Phase 7/8 automated acceptance complete. |

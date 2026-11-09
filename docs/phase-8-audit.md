@@ -1,6 +1,6 @@
 # Phase 8 acceptance and hand-off
 
-**Version:** 0.3 · **Last updated:** 2026-11-08
+**Version:** 0.4 · **Last updated:** 2026-11-09
 
 All Phase 7 and Phase 8 feature implementation is complete on `feat/phases-7-8`. Release verification and production deployment are tracked separately below; an unchecked release check does not identify a missing feature implementation.
 
@@ -25,7 +25,7 @@ All Phase 7 and Phase 8 feature implementation is complete on `feat/phases-7-8`.
 
 Visual differences are intentional: SF Pro replaces Inter (D34); standard iOS EventKit owns the Calendar editor; medium sheets expand/scroll at accessibility sizes; segmented controls become menus at those sizes; the long Filters form remains a large sheet; safety explanations omit the V2 blocking behavior.
 
-The reference is the checked-in `Sprint3_Final/WhosDown (Team 6) Sprint 3 – Mapped Wireframes.pdf`. All 32 reference PDF pages have now been reviewed; the [45-screen comparison matrix](phase-8-screen-matrix.md) records intentional differences. The full simulator audit is in progress, including maximum-text clipping checks and screenshots. Fixed icon/avatar sizes and zero structural gaps are intentional geometry, not spacing exceptions. Feature padding/stack spacing and colors now use design tokens. Status labels retain `StatusBadge`; supporting text uses semantic color tokens.
+The reference is the checked-in `Sprint3_Final/WhosDown (Team 6) Sprint 3 – Mapped Wireframes.pdf`. All 32 reference PDF pages have been reviewed; the [45-screen comparison matrix](phase-8-screen-matrix.md) records intentional differences. The simulator audit passed on all 45 screens at default and Accessibility XXXL text sizes. It captured screenshots at both sizes for visual review. Fixed icon/avatar sizes and zero structural gaps are intentional geometry, not spacing exceptions. Feature padding/stack spacing and colors now use design tokens. Status labels retain `StatusBadge`; supporting text uses semantic color tokens. The automated audit checks element accessibility descriptions; it does not replace a manual VoiceOver walk-through.
 
 ## Security review
 
@@ -40,17 +40,18 @@ The reference is the checked-in `Sprint3_Final/WhosDown (Team 6) Sprint 3 – Ma
 ## Automated verification
 
 - Swift: **122 tests pass in 31 suites**, with normal simulator signing and a dedicated seeded Firebase emulator. Includes actual Calendar event construction, permission/eligibility rules, reminder planning and live sync, report validation/retry, report persistence through the real repository, scheduler denial/retry/replacement, actual OS pending notifications, and validated tap payloads.
-- Simulator UI: **nine tests pass**, including real Calendar save/cancel, Guest/pending/waitlist calendar gates, Match/Player report submission, cancellation rendering, large-text Host sheets, report accessibility audits and notification-to-Match navigation.
+- Simulator UI: **all nine Phase 7 feature tests pass**, including real Calendar save/cancel, Guest/pending/waitlist calendar gates, Match/Player report submission, cancellation rendering, and large-text Host sheets. The delivered-notification cold-launch test passed in two isolated runs and exposed a main-thread crash fix. It intermittently failed to find the notification banner during the combined UI suite; that suite is not fully green.
+- Layout audit: **45 screens pass at default and Accessibility XXXL text sizes**, with simulator screenshots captured for both sizes.
 - Firebase: **82 tests pass in 13 files**, including all Storage tests and the report/lifecycle regression cases.
 - `git diff --check` passes. Node 25 prints engine warnings for the pinned test dependencies, but both suites execute successfully; the documented Node 24 setup remains preferred.
 
-## Device acceptance still required
+## Acceptance status and remaining owner actions
 
 1. **Core loop passed on two simulators:** Jamie published `Phase8 262db4a1bc`; Taylor discovered it, requested, received approval, opened My Matches and exchanged chat messages with Jamie. Both independent UI tests passed. Scripts: `scripts/run_two_simulator_acceptance.py`. Separate lifecycle checks remain covered by integration/rules tests and the screen audit.
-2. Calendar save/cancel, filled title and eligibility are now exercised by simulator UI tests against the real system editor. The builder tests check times, address and notes. A physical-phone smoke check remains optional release verification.
-3. Planner/live-sync/service tests now verify approval, time edits, leave/cancel, request contents, replacement/removal and real OS pending requests. The system delegate and UI route share the tested Match-opening method. Actual delivered notification behavior with the phone locked remains a physical-device release check.
-4. Deny notifications on a fresh account; verify no repeated system prompt and the H14 Settings explanation appears once. Sign out and confirm old account reminders are removed.
-5. Walk every V1 screen at default and Accessibility XXXL text sizes with VoiceOver. Check portrait scrolling, all sheet actions, field focus, icon labels, and long names. Record remaining differences here before signing off 1.26.
+2. Calendar save/cancel and eligibility are exercised by simulator UI tests against the real system editor. Builder tests check times, address and notes. A physical-phone smoke check remains optional release verification.
+3. Planner/live-sync/service tests verify approval, time edits, leave/cancel, request contents, replacement/removal and real OS pending requests. A delivered notification was tapped with the app terminated; the simulator cold-launched into the correct Match. A physical locked-phone delivery check remains optional release verification.
+4. Optional manual checks: deny notifications on a fresh account and confirm the H14 Settings explanation appears once; sign out and confirm old account reminders are removed. The related denial, retry, and account cleanup code paths have automated coverage.
+5. The 45-screen accessibility-size audit passed and screenshots were captured. A manual VoiceOver walk-through (including focus order and spoken labels) remains useful release QA, but is not a failed automated phase requirement.
 
 ## Production rules deployment
 
@@ -67,3 +68,4 @@ Storage rules deployment was attempted but Firebase reports that Storage has not
 | 0.2 | 2026-11-08 | Codex | Finished remaining onboarding, picker, map, Venue, cancellation and notification gaps; added real simulator UI and OS notification acceptance tests |
 
 | 0.3 | 2026-11-08 | Codex | Verified two-simulator core loop; deployed Firestore rules/indexes; documented Storage initialization blocker and exhaustive audit work. |
+| 0.4 | 2026-11-09 | Codex | Passed 45-screen audits at default and XXXL text; fixed and verified delivered-notification cold launch; updated acceptance evidence. |

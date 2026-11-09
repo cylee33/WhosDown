@@ -24,7 +24,12 @@ struct ScreenAuditView: View {
             if fixtures.session.user == nil { ProgressView() }
             else if index == Self.screens.count { Text("Screen audit complete").accessibilityIdentifier("audit-complete") }
             else if isSheet {
-                Color.background.sheet(isPresented: .constant(true)) { screen.safeAreaInset(edge: .bottom) { controls } }
+                Color.background.sheet(isPresented: .constant(true)) {
+                    VStack(spacing: 0) {
+                        controls
+                        screen
+                    }
+                }
             } else if ownsNavigation {
                 screen.safeAreaInset(edge: .bottom) { controls }
             } else {
