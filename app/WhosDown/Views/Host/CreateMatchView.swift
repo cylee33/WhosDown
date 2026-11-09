@@ -46,12 +46,12 @@ struct CreateMatchView: View {
 }
 
 /// H17 Create Match: the essentials.
-private struct EssentialsView: View {
+struct EssentialsView: View {
     @Bindable var viewModel: CreateMatchViewModel
     @State private var askingForCustomName = false
 
     var body: some View {
-        VStack(spacing: 0) {
+        VStack(spacing: Spacing.none) {
             ScrollView {
                 VStack(alignment: .leading, spacing: Spacing.m) {
                     Text("Essentials first. Everything else is optional.")
@@ -127,7 +127,7 @@ private struct EssentialsView: View {
                             Text("Open").tag(JoinType.open)
                             Text("Approval required").tag(JoinType.approvalRequired)
                         }
-                        .pickerStyle(.segmented)
+                        .adaptiveSegmentedPicker()
                     }
 
                     field("PRICE") {
@@ -173,11 +173,11 @@ private struct EssentialsView: View {
 }
 
 /// H18 Venue & details.
-private struct VenueDetailsView: View {
+struct VenueDetailsView: View {
     @Bindable var viewModel: CreateMatchViewModel
 
     var body: some View {
-        VStack(spacing: 0) {
+        VStack(spacing: Spacing.none) {
             ScrollView {
                 VStack(alignment: .leading, spacing: Spacing.m) {
                     if let venue = viewModel.draft.venue {
@@ -231,13 +231,13 @@ private struct VenueDetailsView: View {
 }
 
 /// H19 Review & publish.
-private struct ReviewMatchView: View {
+struct ReviewMatchView: View {
     let viewModel: CreateMatchViewModel
     let host: UserProfile?
 
     var body: some View {
         let draft = viewModel.draft
-        VStack(spacing: 0) {
+        VStack(spacing: Spacing.none) {
             ScrollView {
                 VStack(alignment: .leading, spacing: Spacing.m) {
                     VStack(alignment: .leading, spacing: Spacing.xs) {
@@ -294,12 +294,13 @@ private struct ReviewMatchView: View {
 }
 
 /// H45 Match created!
-private struct MatchCreatedView: View {
+struct MatchCreatedView: View {
     let viewModel: CreateMatchViewModel
     let onBackToDiscover: () -> Void
 
     var body: some View {
         let draft = viewModel.draft
+        ScrollView {
         VStack(spacing: Spacing.m) {
             Spacer()
             Image(systemName: "checkmark")
@@ -316,18 +317,22 @@ private struct MatchCreatedView: View {
                 Text(draft.resolvedTitle).font(.headline)
                 Text(viewModel.timeText).font(.subheadline)
                 Text(draft.venue?.name ?? "").font(.subheadline).foregroundStyle(Color.textSecondary)
-                HStack {
+                WrappingHStack {
                     Chip(text: "1 / \(draft.playerLimit) joined", foreground: .info, background: .info.opacity(0.1))
                     Chip(text: draft.joinType == .open ? "Open" : "Approval ON")
                 }
             }
             .card()
             Spacer()
-            // "Manage Match" (H20) is added by 1.15.
+            if let matchId = viewModel.publishedMatchId {
+                NavigationLink("Manage Match") { HostDashboardView(matchId: matchId) }
+                    .buttonStyle(.primary)
+            }
             Button("Back to Discover", action: onBackToDiscover)
-                .buttonStyle(.primary)
+                .buttonStyle(.secondary)
         }
         .padding(Spacing.m)
+        }
         .background(Color.background)
         .navigationBarBackButtonHidden()
     }

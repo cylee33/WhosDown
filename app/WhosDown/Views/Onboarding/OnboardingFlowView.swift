@@ -43,7 +43,7 @@ struct OnboardingFlowView: View {
             if let message = viewModel.errorMessage {
                 Text(message)
                     .font(.footnote)
-                    .foregroundStyle(.white)
+                    .foregroundStyle(Color.onBrand)
                     .padding(Spacing.s)
                     .background(Color.destructive, in: .rect(cornerRadius: Radius.button))
                     .padding(Spacing.s)
@@ -146,8 +146,10 @@ struct CompleteProfileView: View {
 struct PermissionsView: View {
     @Bindable var viewModel: OnboardingViewModel
     @State private var locationAsked = false
+    @State private var requestingLocation = false
 
     var body: some View {
+        ScrollView {
         VStack(alignment: .leading, spacing: Spacing.m) {
             Image(systemName: "location")
                 .font(.title)
@@ -166,13 +168,17 @@ struct PermissionsView: View {
                     .font(.subheadline)
                     .foregroundStyle(Color.brand)
             } else {
-                Button("Allow while using app") {
+                Button(requestingLocation ? "Requesting location…" : "Allow while using app") {
+                    guard !requestingLocation else { return }
+                    requestingLocation = true
                     Task {
+                        defer { requestingLocation = false }
                         await viewModel.requestLocation()
                         locationAsked = true
                     }
                 }
                 .buttonStyle(.primary)
+                .disabled(requestingLocation)
                 Button("Not now") { locationAsked = true }
                     .font(.subheadline.weight(.semibold))
                     .frame(maxWidth: .infinity)
@@ -197,6 +203,7 @@ struct PermissionsView: View {
             }
         }
         .padding(Spacing.m)
+        }
         .background(Color.background)
     }
 }
@@ -206,6 +213,7 @@ struct OnboardingDoneView: View {
     let viewModel: OnboardingViewModel
 
     var body: some View {
+        ScrollView {
         VStack(spacing: Spacing.m) {
             Spacer()
             Image(systemName: "checkmark")
@@ -231,6 +239,7 @@ struct OnboardingDoneView: View {
             }
         }
         .padding(Spacing.m)
+        }
         .background(Color.background)
     }
 }

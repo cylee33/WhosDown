@@ -26,7 +26,7 @@ struct MatchActionArea: View {
             switch action {
             case .join:
                 Button(action: onJoin) {
-                    if isWorking { ProgressView().tint(.white) } else { Text("Join") }
+                    if isWorking { ProgressView().tint(Color.onBrand) } else { Text("Join") }
                 }
                 .buttonStyle(.primary)
                 .disabled(isWorking)

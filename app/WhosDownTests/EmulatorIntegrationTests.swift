@@ -20,6 +20,30 @@ struct EmulatorIntegrationTests {
         "test-\(UUID().uuidString.prefix(8).lowercased())@whosdown.test"
     }
 
+    @Test func reportsWriteExpectedFieldsToEmulator() async throws {
+        let user = try await auth.createAccount(email: uniqueEmail(), password: "whosdown123")
+        defer { try? auth.signOut() }
+        let matchId = "report-integration-\(UUID().uuidString)"
+        let reports = FirebaseReportRepository()
+        try await reports.submit(reporterId: user.id, reportedUserId: nil, matchId: matchId, reason: .misleading, details: "Wrong Venue")
+        try await reports.submit(reporterId: user.id, reportedUserId: "another-player", matchId: matchId, reason: .harassment, details: nil)
+        // Emulator-only admin REST read verifies persisted fields; clients deliberately cannot read reports.
+        let url = try #require(URL(string: "http://\(FirebaseSetup.emulatorHost):8080/v1/projects/demo-whosdown/databases/(default)/documents/reports?pageSize=1000"))
+        var request = URLRequest(url: url)
+        request.setValue("Bearer owner", forHTTPHeaderField: "Authorization")
+        let (data, _) = try await URLSession.shared.data(for: request)
+        let body = try #require(JSONSerialization.jsonObject(with: data) as? [String: Any])
+        let documents = try #require(body["documents"] as? [[String: Any]])
+        let fields = documents.compactMap { $0["fields"] as? [String: [String: Any]] }.filter {
+            $0["reporterId"]?["stringValue"] as? String == user.id
+        }
+        #expect(fields.count == 2)
+        #expect(fields.allSatisfy { $0["matchId"]?["stringValue"] as? String == matchId })
+        #expect(fields.allSatisfy { $0["status"]?["stringValue"] as? String == "open" })
+        #expect(fields.contains { $0["reportedUserId"]?["stringValue"] as? String == "another-player" })
+        #expect(fields.contains { $0["details"]?["stringValue"] as? String == "Wrong Venue" })
+    }
+
     @Test func createAccountWritesProfileAndSignsIn() async throws {
         let email = uniqueEmail()
         let user = try await auth.createAccount(email: email, password: "whosdown123")

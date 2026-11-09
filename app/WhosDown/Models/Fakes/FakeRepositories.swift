@@ -186,6 +186,7 @@ final class FakeReliabilityRepository: ReliabilityRepository {
 }
 
 final class FakeVenueRepository: VenueRepository {
+    func venue(id: String) async throws -> Venue? { venues.first { $0.id == id } }
     var venues: [Venue]
     private(set) var created: [Venue] = []
     var nextError: Error?
@@ -264,9 +265,21 @@ final class FakeWeatherService: WeatherService {
 }
 
 final class FakeRSVPRepository: RSVPRepository {
+    var listStream: (() -> AsyncThrowingStream<[MyRSVP], Error>)?
+    func myRSVPListChanges(userId: String) -> AsyncThrowingStream<[MyRSVP], Error> {
+        if let listStream { return listStream() }
+        return AsyncThrowingStream { continuation in
+            Task {
+                continuation.yield((try? await myRSVPs(userId: userId)) ?? [])
+                continuation.finish()
+            }
+        }
+    }
+
     var approved: [String: [RSVP]]
     var myApproved: [String: [String]]
     var mine: [String: RSVP]
+    var waitlisted: [String: [RSVP]] = [:]
     var pending: [String: [RSVP]]
 
     init(
@@ -315,7 +328,7 @@ final class FakeRSVPRepository: RSVPRepository {
 
     func waitlistedChanges(matchId: String) -> AsyncThrowingStream<[RSVP], Error> {
         AsyncThrowingStream { continuation in
-            continuation.yield([])
+            continuation.yield(waitlisted[matchId] ?? [])
             continuation.finish()
         }
     }
@@ -404,6 +417,8 @@ extension RSVP {
 }
 
 final class FakeMatchRepository: MatchRepository {
+    var matchStream: ((String) -> AsyncThrowingStream<Match?, Error>)?
+    var hostedStream: (() -> AsyncThrowingStream<[Match], Error>)?
     var matches: [Match]
     var error: Error?
 
@@ -434,7 +449,8 @@ final class FakeMatchRepository: MatchRepository {
 
     /// Yields the current value once, then ends (real listeners stay open).
     func matchChanges(matchId: String) -> AsyncThrowingStream<Match?, Error> {
-        AsyncThrowingStream { continuation in
+        if let matchStream { return matchStream(matchId) }
+        return AsyncThrowingStream { continuation in
             continuation.yield(matches.first { $0.id == matchId })
             continuation.finish()
         }
@@ -446,7 +462,8 @@ final class FakeMatchRepository: MatchRepository {
     }
 
     func hostedChanges(hostId: String) -> AsyncThrowingStream<[Match], Error> {
-        AsyncThrowingStream { continuation in
+        if let hostedStream { return hostedStream() }
+        return AsyncThrowingStream { continuation in
             continuation.yield(matches.filter { $0.hostId == hostId && $0.status == .scheduled })
             continuation.finish()
         }

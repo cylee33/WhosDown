@@ -5,14 +5,16 @@ struct JoinReviewSheet: View {
     let match: Match
     @Binding var note: String
     var isWorking: Bool
+    var errorMessage: String? = nil
     var onSend: () -> Void
     var onClose: () -> Void
 
     var body: some View {
-        VStack(alignment: .leading, spacing: Spacing.s) {
-            Text("Request to join").font(.title2.bold()).foregroundStyle(Color.textPrimary)
-            Text("\(match.title) · \(MatchFormatting.when(match)) · \(match.venueName)")
-                .font(.subheadline).foregroundStyle(Color.textSecondary)
+        SheetContainer(
+            title: "Request to join", message: "\(match.title) · \(MatchFormatting.when(match)) · \(match.venueName)",
+            primaryTitle: isWorking ? "Sending…" : "Send join request", primaryAction: onSend,
+            secondaryTitle: "Close", secondaryAction: onClose
+        ) {
             Text(match.priceCents == 0 ? "This Match is free. You won't be charged." : "Price \(MatchFormatting.price(match)). Display only.")
                 .font(.subheadline).foregroundStyle(Color.textPrimary)
             VStack(alignment: .leading, spacing: Spacing.xxs) {
@@ -34,15 +36,10 @@ struct JoinReviewSheet: View {
                 .font(.caption).foregroundStyle(Color.textSecondary)
                 .frame(maxWidth: .infinity, alignment: .trailing)
 
-            Button(action: onSend) {
-                if isWorking { ProgressView().tint(.white) } else { Text("Send join request") }
-            }
-            .buttonStyle(.primary)
-            .disabled(isWorking)
-            Button("Close", action: onClose).buttonStyle(.secondary)
+            if let errorMessage { Text(errorMessage).foregroundStyle(Color.destructive) }
+            if isWorking { ProgressView() }
         }
-        .padding(Spacing.m)
-        .presentationDetents([.medium, .large])
-        .presentationDragIndicator(.visible)
+        .disabled(isWorking)
+        .interactiveDismissDisabled(isWorking)
     }
 }

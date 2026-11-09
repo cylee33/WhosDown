@@ -66,7 +66,8 @@ service cloud.firestore {
         allow read: if isOwner(uid);
         // D38: a Player writes into another inbox only as themselves, and only with a role in that Match.
         allow create: if isPlayer() && validNotification(request.resource.data) && involvedIn(request.resource.data.matchId);
-        allow update: if isOwner(uid) && request.resource.data.diff(resource.data).affectedKeys().hasOnly(['isRead']);
+        allow update: if isOwner(uid) && request.resource.data.isRead is bool
+          && request.resource.data.diff(resource.data).affectedKeys().hasOnly(['isRead']);
         allow delete: if isOwner(uid);
       }
     }
@@ -89,6 +90,24 @@ service cloud.firestore {
         && exists(/databases/$(database)/documents/matches/$(matchId))
         && (get(/databases/$(database)/documents/matches/$(matchId)).data.hostId == request.auth.uid
             || exists(/databases/$(database)/documents/matches/$(matchId)/rsvps/$(request.auth.uid)));
+    }
+
+    // W15: create-only safety reports. Review is through the admin console.
+    match /reports/{reportId} {
+      allow create: if isPlayer()
+        && request.resource.data.keys().hasOnly(['reporterId', 'reportedUserId', 'matchId', 'reason', 'details', 'status', 'createdAt'])
+        && request.resource.data.keys().hasAll(['reporterId', 'reportedUserId', 'matchId', 'reason', 'details', 'status', 'createdAt'])
+        && request.resource.data.reporterId == request.auth.uid
+        && (request.resource.data.reportedUserId == null
+            || (request.resource.data.reportedUserId is string && request.resource.data.reportedUserId.size() > 0
+                && request.resource.data.reportedUserId != request.auth.uid))
+        && (request.resource.data.matchId == null
+            || (request.resource.data.matchId is string && request.resource.data.matchId.size() > 0))
+        && (request.resource.data.reportedUserId != null || request.resource.data.matchId != null)
+        && request.resource.data.reason in ['harassment', 'noShow', 'misleading', 'other']
+        && optionalString(request.resource.data.details, 1000)
+        && request.resource.data.status == 'open'
+        && request.resource.data.createdAt == request.time;
     }
 
     function validVenue(d) {
@@ -169,7 +188,8 @@ service cloud.firestore {
         && existsAfter(/databases/$(database)/documents/conversations/$(matchId));
 
       // Counter changes that travel with an RSVP write (1.13–1.16). Detail edits come in 1.18.
-      allow update: if isPlayer() && request.resource.data.updatedAt == request.time && (
+      allow update: if isPlayer() && request.resource.data.keys().hasOnly(matchKeys())
+        && request.resource.data.updatedAt == request.time && (
         (matchDetailsUnchanged() && (openJoinCounters(matchId) || requestCounters(matchId)
             || leaveApprovedCounters(matchId) || leavePendingCounters(matchId) || leaveWaitlistCounters(matchId)
             || hostApproveCounters(matchId) || hostDeclineCounters() || joinWaitlistCounters(matchId)
@@ -276,7 +296,15 @@ service cloud.firestore {
         && resource.data.status in ['approved', 'pending', 'waitlisted']
         && request.resource.data.status == 'left'
         && request.resource.data.diff(resource.data).affectedKeys().hasOnly(['status'])
-        && matchIsOpen(matchId) && matchData(matchId).hostId != uid;
+        && matchIsOpen(matchId) && matchData(matchId).hostId != uid
+        && (resource.data.status == 'pending'
+            ? matchAfter(matchId).pendingCount == matchData(matchId).pendingCount - 1
+            : (resource.data.status == 'waitlisted'
+                ? matchAfter(matchId).waitlistCount == matchData(matchId).waitlistCount - 1
+                : (matchAfter(matchId).joinedCount == matchData(matchId).joinedCount - 1
+                    || (matchData(matchId).joinType == 'open' && matchData(matchId).waitlistIds.size() > 0
+                        && matchAfter(matchId).joinedCount == matchData(matchId).joinedCount
+                        && matchAfter(matchId).waitlistCount == matchData(matchId).waitlistCount - 1))));
     }
 
     function hostDecisionRSVP(matchId, uid) {
@@ -297,8 +325,13 @@ service cloud.firestore {
         );
     }
 
+    function newOrLeftRSVP(matchId) {
+      return !exists(/databases/$(database)/documents/matches/$(matchId)/rsvps/$(request.auth.uid))
+        || get(/databases/$(database)/documents/matches/$(matchId)/rsvps/$(request.auth.uid)).data.status == 'left';
+    }
+
     function openJoinCounters(matchId) {
-      return resource.data.joinType == 'open' && matchIsOpen(matchId) && resource.data.hostId != request.auth.uid
+      return newOrLeftRSVP(matchId) && resource.data.joinType == 'open' && matchIsOpen(matchId) && resource.data.hostId != request.auth.uid
         && request.resource.data.joinedCount == resource.data.joinedCount + 1
         && request.resource.data.joinedCount <= request.resource.data.playerLimit
         && request.resource.data.pendingCount == resource.data.pendingCount
@@ -308,7 +341,7 @@ service cloud.firestore {
     }
 
     function requestCounters(matchId) {
-      return resource.data.joinType == 'approvalRequired' && matchIsOpen(matchId)
+      return newOrLeftRSVP(matchId) && resource.data.joinType == 'approvalRequired' && matchIsOpen(matchId)
         && resource.data.hostId != request.auth.uid
         && request.resource.data.pendingCount == resource.data.pendingCount + 1
         && request.resource.data.joinedCount == resource.data.joinedCount
@@ -338,7 +371,8 @@ service cloud.firestore {
     }
 
     function leaveWaitlistCounters(matchId) {
-      return request.resource.data.waitlistCount == resource.data.waitlistCount - 1
+      return get(/databases/$(database)/documents/matches/$(matchId)/rsvps/$(request.auth.uid)).data.status == 'waitlisted'
+        && request.resource.data.waitlistCount == resource.data.waitlistCount - 1
         && request.resource.data.waitlistIds == resource.data.waitlistIds.removeAll([request.auth.uid])
         && request.resource.data.joinedCount == resource.data.joinedCount
         && request.resource.data.pendingCount == resource.data.pendingCount
@@ -356,7 +390,7 @@ service cloud.firestore {
     }
 
     function joinWaitlistCounters(matchId) {
-      return resource.data.waitlistEnabled == true && resource.data.joinedCount >= resource.data.playerLimit
+      return newOrLeftRSVP(matchId) && resource.data.waitlistEnabled == true && resource.data.joinedCount >= resource.data.playerLimit
         && matchIsOpen(matchId) && resource.data.hostId != request.auth.uid
         && resource.data.waitlistIds.size() < 50
         && request.resource.data.waitlistIds == resource.data.waitlistIds.concat([request.auth.uid])
@@ -368,7 +402,7 @@ service cloud.firestore {
     }
 
     function promoteCounters(matchId) {
-      return resource.data.joinType == 'open' && resource.data.waitlistIds.size() > 0
+      return matchIsOpen(matchId) && resource.data.joinType == 'open' && resource.data.waitlistIds.size() > 0
         && get(/databases/$(database)/documents/matches/$(matchId)/rsvps/$(request.auth.uid)).data.status == 'approved'
         && getAfter(/databases/$(database)/documents/matches/$(matchId)/rsvps/$(request.auth.uid)).data.status == 'left'
         && request.resource.data.joinedCount == resource.data.joinedCount
@@ -379,7 +413,7 @@ service cloud.firestore {
     }
 
     function hostWaitlistApproveCounters(matchId) {
-      return resource.data.hostId == request.auth.uid
+      return resource.data.hostId == request.auth.uid && matchIsOpen(matchId)
         && resource.data.joinedCount < resource.data.playerLimit
         && request.resource.data.joinedCount == resource.data.joinedCount + 1
         && request.resource.data.waitlistCount == resource.data.waitlistCount - 1
@@ -404,7 +438,8 @@ service cloud.firestore {
     }
 
     function hostCancel() {
-      return resource.data.hostId == request.auth.uid && resource.data.status == 'scheduled'
+      return request.resource.data.diff(resource.data).affectedKeys().hasOnly(['status', 'cancelReason', 'updatedAt'])
+        && resource.data.hostId == request.auth.uid && resource.data.status == 'scheduled'
         && resource.data.startTime > request.time
         && request.resource.data.status == 'cancelled'
         && request.resource.data.cancelReason is string
@@ -419,7 +454,10 @@ service cloud.firestore {
     }
 
     function hostTransfer(matchId) {
-      return resource.data.hostId == request.auth.uid
+      return request.resource.data.diff(resource.data).affectedKeys().hasOnly(['hostId', 'hostName', 'updatedAt'])
+        && matchIsOpen(matchId)
+        && request.resource.data.hostName == get(/databases/$(database)/documents/matches/$(matchId)/rsvps/$(request.resource.data.hostId)).data.displayName
+        && resource.data.hostId == request.auth.uid
         && request.resource.data.hostId != resource.data.hostId
         && request.resource.data.joinedCount == resource.data.joinedCount
         && request.resource.data.pendingCount == resource.data.pendingCount
@@ -433,7 +471,8 @@ service cloud.firestore {
     }
 
     function hostCheckInStamp() {
-      return resource.data.hostId == request.auth.uid && resource.data.status == 'scheduled'
+      return request.resource.data.diff(resource.data).affectedKeys().hasOnly(['checkedInAt', 'updatedAt'])
+        && resource.data.hostId == request.auth.uid && resource.data.status == 'scheduled'
         && resource.data.startTime <= request.time
         && request.time <= resource.data.endTime + duration.value(48, 'h')
         && request.resource.data.checkedInAt == request.time
@@ -455,7 +494,8 @@ service cloud.firestore {
     }
 
     function promotedRSVP(matchId, uid) {
-      return uid != request.auth.uid
+      return isPlayer() && request.resource.data.diff(resource.data).affectedKeys().hasOnly(['status', 'respondedAt'])
+        && uid != request.auth.uid
         && resource.data.status == 'waitlisted'
         && request.resource.data.status == 'approved'
         && request.resource.data.respondedAt == request.time
@@ -466,21 +506,26 @@ service cloud.firestore {
     }
 
     function hostWaitlistDecision(matchId, uid) {
-      return isPlayer() && uid != request.auth.uid
+      return isPlayer() && request.resource.data.diff(resource.data).affectedKeys().hasOnly(['status', 'respondedAt'])
+        && isPlayer() && uid != request.auth.uid
         && matchData(matchId).hostId == request.auth.uid
         && resource.data.status == 'waitlisted'
         && request.resource.data.status == 'approved'
         && request.resource.data.respondedAt == request.time
+        && matchIsOpen(matchId)
         && matchData(matchId).joinedCount < matchData(matchId).playerLimit
+        && matchAfter(matchId).waitlistIds == matchData(matchId).waitlistIds.removeAll([uid])
         && matchAfter(matchId).joinedCount == matchData(matchId).joinedCount + 1
         && matchAfter(matchId).waitlistCount == matchData(matchId).waitlistCount - 1;
     }
 
     function checkInRSVP(matchId, uid) {
-      return matchData(matchId).hostId == request.auth.uid
+      return isPlayer() && request.resource.data.diff(resource.data).affectedKeys().hasOnly(['checkedIn', 'attended'])
+        && matchData(matchId).hostId == request.auth.uid
         && resource.data.status == 'approved'
         && request.resource.data.checkedIn == true
         && request.resource.data.attended is bool
+        && matchAfter(matchId).checkedInAt == request.time
         && (uid != request.auth.uid || request.resource.data.attended == true)
         && matchData(matchId).status == 'scheduled'
         && matchData(matchId).startTime <= request.time
@@ -488,7 +533,8 @@ service cloud.firestore {
     }
 
     function transferFlag(matchId, uid) {
-      return matchData(matchId).hostId == request.auth.uid
+      return isPlayer() && request.resource.data.diff(resource.data).affectedKeys().hasOnly(['isHost'])
+        && matchData(matchId).hostId == request.auth.uid
         && matchAfter(matchId).hostId != request.auth.uid
         && (
           (uid == request.auth.uid && resource.data.isHost == true && request.resource.data.isHost == false)
@@ -516,6 +562,7 @@ service cloud.firestore {
         && request.resource.data.lastMessageText is string
         && request.resource.data.lastMessageText.size() > 0
         && request.resource.data.lastMessageText.size() <= 1000
+        && request.resource.data.diff(resource.data).affectedKeys().hasOnly(['lastMessageText', 'lastMessageAt'])
         && request.resource.data.lastMessageAt == request.time;
 
       match /messages/{messageId} {

@@ -4,17 +4,41 @@ import SwiftUI
 /// until the Player finishes and the Guest gate (1.3) as a sheet. Keeping one tab bar for both means
 /// a Guest who upgrades stays where they were.
 struct RootView: View {
+    @Environment(AppEnvironment.self) private var environment
     @Environment(Session.self) private var session
 
     var body: some View {
         @Bindable var session = session
+        @Bindable var reminders = environment.reminders
         switch session.state {
         case .loading:
             ProgressView()
         case .signedOut:
             WelcomeView()
         case .active:
-            MainTabView()
+            activeContent
+                .overlay(alignment: .top) {
+                    #if DEBUG
+                    if ProcessInfo.processInfo.environment["WHOSDOWN_DELIVERY_PROBE"] != nil && environment.reminders.deliveryProbeReady {
+                        Text("Reminder probe scheduled").font(.caption).accessibilityIdentifier("delivery-probe-ready")
+                    }
+                    #endif
+                }
+                .onAppear {
+                    #if DEBUG
+                    if let id = ProcessInfo.processInfo.environment["WHOSDOWN_DEV_NOTIFICATION_MATCH_ID"] {
+                        environment.reminders.openMatch(from: ["matchId": id])
+                    }
+                    #endif
+                }
+                .sheet(isPresented: Binding(get: { reminders.openedMatchId != nil }, set: { if !$0 { reminders.openedMatchId = nil } })) {
+                    NavigationStack {
+                        if let id = reminders.openedMatchId {
+                            MatchDetailView(matchId: id)
+                                .toolbar { ToolbarItem(placement: .cancellationAction) { Button("Done") { reminders.openedMatchId = nil } } }
+                        }
+                    }
+                }
                 .sheet(item: $session.gateRoute) { _ in
                     GuestGateSheet()
                 }
@@ -23,6 +47,21 @@ struct RootView: View {
                 }
         }
     }
+    @ViewBuilder
+    private var activeContent: some View {
+        #if DEBUG
+        if ProcessInfo.processInfo.environment["WHOSDOWN_SCREEN_AUDIT"] == "1" {
+            ScreenAuditView()
+        } else if let id = ProcessInfo.processInfo.environment["WHOSDOWN_DEV_MATCH_ID"] {
+            NavigationStack { MatchDetailView(matchId: id) }
+        } else {
+            MainTabView()
+        }
+        #else
+        MainTabView()
+        #endif
+    }
+
 }
 
 extension Session.GateRoute: Identifiable {

@@ -35,7 +35,7 @@ struct WorkingButton: View {
 
     var body: some View {
         Button(action: action) {
-            if isWorking { ProgressView().tint(.white) } else { Text(title) }
+            if isWorking { ProgressView().tint(Color.onBrand) } else { Text(title) }
         }
         .buttonStyle(.primary)
         .disabled(isWorking || !isEnabled)

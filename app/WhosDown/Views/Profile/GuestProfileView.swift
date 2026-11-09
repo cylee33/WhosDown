@@ -6,6 +6,7 @@ struct GuestProfileView: View {
 
     var body: some View {
         NavigationStack {
+            ScrollView {
             VStack(spacing: Spacing.m) {
                 Spacer()
                 Image(systemName: "plus")
@@ -31,6 +32,7 @@ struct GuestProfileView: View {
                 }
             }
             .padding(Spacing.m)
+            }
             .background(Color.background)
             .navigationTitle("Profile")
         }

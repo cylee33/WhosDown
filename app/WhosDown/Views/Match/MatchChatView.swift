@@ -12,14 +12,17 @@ struct MatchChatView: View {
     @State private var viewModel: MatchChatViewModel?
 
     var body: some View {
-        VStack(spacing: 0) {
+        VStack(spacing: Spacing.none) {
             if let viewModel {
                 ScrollViewReader { proxy in
                     ScrollView {
                         LazyVStack(spacing: Spacing.s) {
                             if viewModel.visible.count >= 50 {
-                                Button("Load older") { Task { await viewModel.loadOlder() } }
-                                    .font(.footnote)
+                                Button(viewModel.isLoadingOlder ? "Loading…" : "Load older") { Task { await viewModel.loadOlder() } }
+                                    .font(.footnote).disabled(viewModel.isLoadingOlder)
+                            }
+                            if viewModel.visible.isEmpty {
+                                ContentUnavailableView("No messages yet", systemImage: "bubble.left.and.bubble.right", description: Text("Say hello to the Players in your Match."))
                             }
                             ForEach(viewModel.visible) { message in
                                 MessageBubble(
@@ -42,7 +45,7 @@ struct MatchChatView: View {
                 HStack(spacing: Spacing.xs) {
                     TextField("Message Players…", text: Bindable(viewModel).draft, axis: .vertical)
                         .lineLimit(1...4)
-                    Button("Send") { Task { await viewModel.send() } }
+                    Button(viewModel.isSending ? "Sending…" : "Send") { Task { await viewModel.send() } }
                         .disabled(viewModel.isSending)
                 }
                 .padding(Spacing.s)
@@ -55,7 +58,7 @@ struct MatchChatView: View {
         .navigationBarTitleDisplayMode(.inline)
         .toolbar {
             ToolbarItem(placement: .principal) {
-                VStack(spacing: 0) {
+                VStack(spacing: Spacing.none) {
                     Text(title).font(.headline)
                     Text("Match chat · \(playerCount) Players").font(.caption).foregroundStyle(Color.textSecondary)
                 }

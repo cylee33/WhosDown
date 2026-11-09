@@ -1,6 +1,6 @@
 # Contributing to WhosDown
 
-**Version:** 0.4 · **Last updated:** 2026-11-02
+**Version:** 0.6 · **Last updated:** 2026-11-08
 
 How to set up, pick up a feature, and hand it off. Read this before your first commit. One person can work through every lane; three people can work in parallel without blocking each other.
 
@@ -31,6 +31,14 @@ How to set up, pick up a feature, and hand it off. Read this before your first c
 - App and domain rules: Xcode ⌘U, or `xcodebuild test -project app/WhosDown.xcodeproj -scheme WhosDown -destination 'platform=iOS Simulator,name=iPhone 17'`.
 - Security rules: from `firebase/`, run `npm test` (it starts and stops its own emulator).
 - Emulator integration tests (`EmulatorIntegrationTests`) run the real Firebase repositories. They run only while `npm run emulators` is up, and skip themselves otherwise.
+
+The shared scheme now includes `WhosDownUITests`. With a seeded emulator running, the UI suite opens the real Calendar editor, exercises reporting and Guest gates, checks large-text sheets and notification navigation, and records an H33 screenshot. Use normal simulator signing; disabling signing breaks Firebase Auth Keychain access. Run full suites serially:
+
+```sh
+xcodebuild test -project app/WhosDown.xcodeproj -scheme WhosDown -destination 'platform=iOS Simulator,name=iPhone 17' -parallel-testing-enabled NO
+```
+
+Run `npm test` separately from Swift/UI integration tests: the rules runner clears and stops its emulator. DEBUG-only launch options `WHOSDOWN_UI_TEST=1`, `WHOSDOWN_DEV_MATCH_ID=<seeded Match ID>`, and `WHOSDOWN_DEV_NOTIFICATION_MATCH_ID=<seeded Match ID>` support repeatable UI acceptance. The notification option feeds the same routing method as the system notification delegate. These options are excluded from Release.
 
 ## 3. Pick up a feature
 
@@ -82,6 +90,12 @@ Also tick the acceptance boxes that now pass, and add a changelog row to the bri
 - Hit a problem that cost you time? Add it to [`docs/lessons-learned.md`](docs/lessons-learned.md).
 - Always `git pull` before editing shared docs; re-read the file before you edit it.
 
+## Exhaustive simulator acceptance
+
+After `xcodebuild build-for-testing` with normal simulator signing, run `python3 scripts/run_screen_audit.py` (default build directory `/tmp/whosdown-audit-build`). `--method testEveryScreenAtLargestTextSize` runs only the maximum-text audit; `--start`/`--end` select a screen range from the [45-screen matrix](docs/phase-8-screen-matrix.md). These tests are opt-in and use shipping views with fake data. Their screenshots are retained in the printed `.xcresult` bundle.
+
+`python3 scripts/run_two_simulator_acceptance.py` runs independent Host/Player UI sessions against the seeded demo emulator using `/tmp/whosdown-build`. Both scripts default to the locally configured simulator IDs; the screen audit accepts `--device`. See [manual sanity checks](docs/phase-7-8-simulator-checks.md) for repeatable feature checks. `ReminderDeliveryTests` is a separate real OS delivery/cold-launch check; its DEBUG probe changes no backend data.
+
 ## Changelog
 
 | Version | Date | Author | Change |
@@ -90,3 +104,7 @@ Also tick the acceptance boxes that now pass, and add a changelog row to the bri
 | 0.2 | 2026-11-02 | Chris Lee (with Claude) | Real setup steps (Java, npm scripts, demo project), MVVM folders (ADR-0009) |
 | 0.3 | 2026-11-02 | Chris Lee (with Claude) | Plist committed |
 | 0.4 | 2026-11-02 | Chris Lee (with Claude) | Clone outside iCloud; WHOSDOWN_DEV_TAB |
+
+| 0.5 | 2026-11-08 | Codex | Simulator UI acceptance target, notification integration tests and DEBUG launch options |
+
+| 0.6 | 2026-11-08 | Codex | Documented opt-in exhaustive audits, two-simulator acceptance and manual sanity checks. |

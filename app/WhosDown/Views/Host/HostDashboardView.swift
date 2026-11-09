@@ -6,12 +6,20 @@ struct HostDashboardView: View {
 
     @Environment(AppEnvironment.self) private var environment
     @Environment(Session.self) private var session
+    @State private var showTransfer = false
+    @State private var showCancel = false
     @State private var viewModel: HostDashboardViewModel?
 
     var body: some View {
         Group {
             if let viewModel, let match = viewModel.match {
-                dashboard(match, viewModel)
+                if match.hostId == session.user?.id {
+                    dashboard(match, viewModel)
+                } else {
+                    ContentUnavailableView("The Host has changed", systemImage: "person.crop.circle", description: Text("Return to Match details to see the current Host."))
+                }
+            } else if let message = viewModel?.errorMessage {
+                ContentUnavailableView("Couldn't load Match", systemImage: "exclamationmark.triangle", description: Text(message))
             } else {
                 ProgressView()
             }
@@ -19,6 +27,12 @@ struct HostDashboardView: View {
         .background(Color.background)
         .navigationTitle("Manage Match")
         .navigationBarTitleDisplayMode(.inline)
+        .sheet(isPresented: $showTransfer) {
+            if let match = viewModel?.match { TransferHostSheet(match: match) }
+        }
+        .sheet(isPresented: $showCancel) {
+            if let match = viewModel?.match { CancelMatchSheet(match: match) }
+        }
         .task {
             guard let hostId = session.user?.id else { return }
             let viewModel = HostDashboardViewModel(
@@ -57,20 +71,24 @@ struct HostDashboardView: View {
                     row(title: "Match chat", detail: viewModel.lastMessage ?? "No messages yet")
                 }
                 .buttonStyle(.plain)
+                if match.status == .scheduled && match.startTime > .now {
                 NavigationLink { EditMatchView(match: match) } label: { row(title: "Edit Match", detail: "Time, place, limit") }
                     .buttonStyle(.plain)
-                NavigationLink { TransferHostSheet(match: match) } label: { row(title: "Transfer host", detail: "Can't attend?") }
+                Button { showTransfer = true } label: { row(title: "Transfer host", detail: "Can't attend?") }
                     .buttonStyle(.plain)
+                }
                 if CheckInRules.isOpen(match) {
                     NavigationLink { CheckInView(match: match) } label: { row(title: "Check in players", detail: "Record who came") }
                         .buttonStyle(.plain)
                 }
 
-                Text("Ownership safeguard: you can't leave a Match you host. Cancel it, or transfer the Host role.")
+                Text("You can't leave a Match you host. Cancel it, or transfer the Host role.")
                     .font(.footnote).foregroundStyle(Color.textSecondary)
-                NavigationLink { CancelMatchSheet(match: match) } label: {
+                if match.status == .scheduled && match.startTime > .now {
+                Button { showCancel = true } label: {
                     Text("Cancel Match").font(.headline).foregroundStyle(Color.destructive)
-                }
+                }                }
+
             }
             .padding(Spacing.m)
         }
@@ -80,7 +98,7 @@ struct HostDashboardView: View {
         HStack {
             VStack(alignment: .leading, spacing: Spacing.xxs) {
                 Text(title).font(.body.weight(.semibold)).foregroundStyle(Color.textPrimary)
-                Text(detail).font(.footnote).foregroundStyle(Color.textSecondary).lineLimit(1)
+                Text(detail).font(.footnote).foregroundStyle(Color.textSecondary).fixedSize(horizontal: false, vertical: true)
             }
             Spacer()
             Image(systemName: "chevron.right").foregroundStyle(Color.textSecondary)

@@ -8,10 +8,11 @@ struct WelcomeView: View {
 
     var body: some View {
         NavigationStack(path: $path) {
+            ScrollView {
             VStack(alignment: .leading, spacing: Spacing.m) {
                 VStack(alignment: .leading, spacing: Spacing.xs) {
                     Text("WhosDown").font(.largeTitle.bold()).foregroundStyle(Color.textPrimary)
-                    Text("Find people. Play your game.").font(.title3.weight(.semibold)).foregroundStyle(Color.brand)
+                    Text("Find people. Play a Match.").font(.title3.weight(.semibold)).foregroundStyle(Color.brand)
                 }
                 .padding(.top, Spacing.xl)
 
@@ -29,6 +30,7 @@ struct WelcomeView: View {
                         .buttonStyle(.primary)
                     Button("Sign in") { path.append(.signIn) }
                         .buttonStyle(.secondary)
+                    if viewModel?.isWorking == true { ProgressView() }
                     Button("Explore as guest") { Task { await viewModel?.exploreAsGuest() } }
                         .font(.subheadline.weight(.semibold))
                         .disabled(viewModel?.isWorking ?? true)
@@ -46,6 +48,7 @@ struct WelcomeView: View {
                 }
             }
             .padding(Spacing.m)
+            }
             .background(Color.background)
             .navigationDestination(for: Session.GateRoute.self) { route in
                 AccountFormView(route: route, onSwitch: { path = [$0] })

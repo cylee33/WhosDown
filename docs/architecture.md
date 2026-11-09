@@ -1,6 +1,6 @@
 # WhosDown Architecture
 
-**Version:** 0.9 · **Last updated:** 2026-11-02 · **Status:** draft
+**Version:** 0.11 · **Last updated:** 2026-11-08 · **Status:** draft
 
 Blueprint for building the app. Sections marked _open_ are still being decided in the [build plan](v1-build-plan.md).
 
@@ -75,6 +75,8 @@ Endpoints: reads R1–R19 and writes W1–W19, listed in Sprint 3 §8.2 and on t
 | UserNotifications (local) | Game reminders | V1 |
 | Push messaging | Push for approvals, changes, messages | V2 |
 
+Calendar export uses `CalendarEventBuilder` and the system event editor, without requesting full Calendar access. `ReminderSyncModel` runs above the tabs, listens to the signed-in Player's RSVPs/hosted Matches and individual Match updates, and passes a complete plan to `ReminderScheduler`. It restarts on foreground/account changes; the notification delegate routes a tapped reminder to Match details. Onboarding owns the single permission prompt. Reminder triggers use UTC/Gregorian components to preserve their absolute time through time-zone/calendar changes. The notification service boundary permits denial/retry/replacement tests plus an actual OS pending-request test. Reports use a create-only `ReportRepository`; review remains in the Firebase console.
+
 ## 4. Repository layout
 
 Strict MVVM in three top-level folders; see [ADR-0009](adr/0009-mvvm-three-top-level-folders.md) (replaces ADR-0005).
@@ -138,3 +140,7 @@ Lives in `app/WhosDown/Views/DesignSystem/`. The Figma hi-fi page "03 — Hi-Fi 
 | 0.7 | 2026-11-02 | Chris Lee (with Claude) | Waitlist without spot offers (ADR-0008): `waitlistIds`, `spotOpened` |
 | 0.8 | 2026-11-02 | Chris Lee (with Claude) | Layout changed to strict MVVM folders (ADR-0009) |
 | 0.9 | 2026-11-02 | Chris Lee (with Claude) | Swift settings recorded; geohash helper replaces GeoFireUtils (D50); Firebase switch |
+
+| 0.10 | 2026-11-08 | Codex | Calendar editor, live local reminder reconciliation/routing and report repository implemented |
+
+| 0.11 | 2026-11-08 | Codex | Notification service boundary, UTC triggers, and simulator UI acceptance target |

@@ -209,7 +209,7 @@ struct SettingsRow: View {
             VStack(alignment: .leading, spacing: Spacing.xxs) {
                 Text(title).font(.body.weight(.semibold)).foregroundStyle(Color.textPrimary)
                 if !detail.isEmpty {
-                    Text(detail).font(.footnote).foregroundStyle(Color.textSecondary).lineLimit(1)
+                    Text(detail).font(.footnote).foregroundStyle(Color.textSecondary).fixedSize(horizontal: false, vertical: true)
                 }
             }
             Spacer()
@@ -227,7 +227,7 @@ struct ErrorBanner: View {
         if let message {
             Text(message)
                 .font(.footnote)
-                .foregroundStyle(.white)
+                .foregroundStyle(Color.onBrand)
                 .padding(Spacing.s)
                 .background(Color.destructive, in: .rect(cornerRadius: Radius.button))
                 .padding(Spacing.s)

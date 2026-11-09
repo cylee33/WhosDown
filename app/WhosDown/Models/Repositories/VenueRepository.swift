@@ -20,6 +20,7 @@ nonisolated enum Surface: String, CaseIterable, Identifiable, Sendable {
 
 /// R11 and W18: `venues/{venueId}`.
 protocol VenueRepository {
+    func venue(id: String) async throws -> Venue?
     /// Saved Venues within `radiusMeters` of the center, nearest first (geohash ranges, then exact distance).
     func nearby(center: Coordinate, radiusMeters: Double) async throws -> [Venue]
     /// Saved Venues whose name starts with the text (case-insensitive), up to 10.
@@ -30,6 +31,11 @@ protocol VenueRepository {
 
 final class FirebaseVenueRepository: VenueRepository {
     private let db = Firestore.firestore()
+
+    func venue(id: String) async throws -> Venue? {
+        let snapshot = try await db.document("venues/\(id)").getDocument()
+        return snapshot.exists ? try snapshot.decoded(as: Venue.self) : nil
+    }
 
     func nearby(center: Coordinate, radiusMeters: Double) async throws -> [Venue] {
         let bounds = Geohash.queryBounds(latitude: center.latitude, longitude: center.longitude, radius: radiusMeters)

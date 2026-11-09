@@ -4,6 +4,7 @@ import SwiftUI
 /// Light mode only in V1; V2 adds dark values here without touching screens.
 /// Values approximate the Figma hi-fi page "03 — Hi-Fi Full Marks"; 1.26 audits them.
 extension Color {
+    static let onBrand = Color.white
     static let brand = Color.accentColor
     static let brandSoft = Color(red: 0.89, green: 0.97, blue: 0.91)
     static let surface = Color.white
@@ -27,6 +28,7 @@ extension Color {
 
 /// Spacing on the shared 8-point grid (1.26 rule 1). No raw numbers in views.
 enum Spacing {
+    static let none: CGFloat = 0
     static let xxs: CGFloat = 4
     static let xs: CGFloat = 8
     static let s: CGFloat = 16

@@ -8,6 +8,7 @@ final class MatchChatViewModel {
     var draft = ""
     var errorMessage: String?
     private(set) var isSending = false
+    private(set) var isLoadingOlder = false
 
     let matchId: String
     let senderId: String
@@ -34,7 +35,9 @@ final class MatchChatViewModel {
     }
 
     func loadOlder() async {
-        guard let earliest = visible.first?.sentAt else { return }
+        guard !isLoadingOlder, let earliest = visible.first?.sentAt else { return }
+        isLoadingOlder = true
+        defer { isLoadingOlder = false }
         do {
             let page = try await chat.olderMessages(matchId: matchId, before: earliest)
             let known = Set(visible.compactMap(\.id))
@@ -45,6 +48,7 @@ final class MatchChatViewModel {
     }
 
     func send() async {
+        guard !isSending else { return }
         let text = draft
         guard !text.trimmingCharacters(in: .whitespacesAndNewlines).isEmpty else { return }
         isSending = true

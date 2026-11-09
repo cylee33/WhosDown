@@ -15,6 +15,8 @@ final class AppEnvironment {
     let weather: WeatherService
     let rsvps: RSVPRepository
     let notifications: NotificationRepository
+    let reports: ReportRepository
+    let reminders = ReminderScheduler()
     let chat: ChatRepository
 
     init(
@@ -22,7 +24,7 @@ final class AppEnvironment {
         permissions: PermissionsService, reliability: ReliabilityRepository,
         venues: VenueRepository, placeSearch: PlaceSearchService, location: LocationService,
         weather: WeatherService, rsvps: RSVPRepository,
-        notifications: NotificationRepository, chat: ChatRepository
+        notifications: NotificationRepository, chat: ChatRepository, reports: ReportRepository
     ) {
         self.auth = auth
         self.users = users
@@ -36,6 +38,7 @@ final class AppEnvironment {
         self.rsvps = rsvps
         self.notifications = notifications
         self.chat = chat
+        self.reports = reports
     }
 
     static func live() -> AppEnvironment {
@@ -45,7 +48,7 @@ final class AppEnvironment {
             reliability: FirebaseReliabilityRepository(), venues: FirebaseVenueRepository(),
             placeSearch: MapKitPlaceSearchService(), location: SystemLocationService(),
             weather: OpenMeteoWeatherService(), rsvps: FirebaseRSVPRepository(),
-            notifications: FirebaseNotificationRepository(), chat: FirebaseChatRepository()
+            notifications: FirebaseNotificationRepository(), chat: FirebaseChatRepository(), reports: FirebaseReportRepository()
         )
     }
 
@@ -56,7 +59,7 @@ final class AppEnvironment {
             reliability: FakeReliabilityRepository(), venues: FakeVenueRepository(),
             placeSearch: FakePlaceSearchService(), location: FakeLocationService(),
             weather: FakeWeatherService(), rsvps: FakeRSVPRepository(),
-            notifications: FakeNotificationRepository(), chat: FakeChatRepository()
+            notifications: FakeNotificationRepository(), chat: FakeChatRepository(), reports: FakeReportRepository()
         )
     }
 }

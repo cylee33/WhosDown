@@ -3,12 +3,14 @@ import SwiftUI
 /// H34 Guest join gate (1.3): opens over whatever the Guest was looking at, and closes itself
 /// once they have an account, leaving them on the same screen.
 struct GuestGateSheet: View {
+    @Environment(\.dynamicTypeSize) private var dynamicTypeSize
     @Environment(Session.self) private var session
     @State private var path: [Session.GateRoute] = []
     @State private var detent: PresentationDetent = .medium
 
     var body: some View {
         NavigationStack(path: $path) {
+            ScrollView {
             VStack(alignment: .leading, spacing: Spacing.s) {
                 VStack(alignment: .leading, spacing: Spacing.xxs) {
                     Text("Sign in to join").font(.title2.bold()).foregroundStyle(Color.textPrimary)
@@ -26,7 +28,7 @@ struct GuestGateSheet: View {
                     .frame(maxWidth: .infinity)
             }
             .padding(Spacing.m)
-            .frame(maxHeight: .infinity, alignment: .top)
+            }
             .background(Color.background)
             .navigationDestination(for: Session.GateRoute.self) { route in
                 AccountFormView(route: route, onSwitch: { path = [$0] })
@@ -34,8 +36,9 @@ struct GuestGateSheet: View {
         }
         .presentationDetents([.medium, .large], selection: $detent)
         .presentationDragIndicator(.visible)
-        .onChange(of: path) { _, newPath in detent = newPath.isEmpty ? .medium : .large }
+        .onChange(of: path) { _, newPath in detent = newPath.isEmpty && !dynamicTypeSize.isAccessibilitySize ? .medium : .large }
         .onAppear {
+            if dynamicTypeSize.isAccessibilitySize { detent = .large }
             if let route = session.gateRoute, route != .choose { path = [route] }
         }
     }

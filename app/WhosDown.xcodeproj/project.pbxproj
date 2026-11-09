@@ -20,11 +20,13 @@
 			remoteGlobalIDString = A10000000000000000000401;
 			remoteInfo = WhosDown;
 		};
+        A20000000000000000000301 = {isa = PBXContainerItemProxy; containerPortal = A10000000000000000000001; proxyType = 1; remoteGlobalIDString = A10000000000000000000401; remoteInfo = WhosDown; };
 /* End PBXContainerItemProxy section */
 
 /* Begin PBXFileReference section */
 		A10000000000000000000501 /* WhosDown.app */ = {isa = PBXFileReference; explicitFileType = wrapper.application; includeInIndex = 0; path = WhosDown.app; sourceTree = BUILT_PRODUCTS_DIR; };
 		A10000000000000000000502 /* WhosDownTests.xctest */ = {isa = PBXFileReference; explicitFileType = wrapper.cfbundle; includeInIndex = 0; path = WhosDownTests.xctest; sourceTree = BUILT_PRODUCTS_DIR; };
+        A20000000000000000000501 = {isa = PBXFileReference; explicitFileType = wrapper.cfbundle; includeInIndex = 0; path = WhosDownUITests.xctest; sourceTree = BUILT_PRODUCTS_DIR; };
 /* End PBXFileReference section */
 
 /* Begin PBXFileSystemSynchronizedRootGroup section */
@@ -38,6 +40,7 @@
 			path = WhosDownTests;
 			sourceTree = "<group>";
 		};
+        A20000000000000000000601 = {isa = PBXFileSystemSynchronizedRootGroup; path = WhosDownUITests; sourceTree = "<group>"; };
 /* End PBXFileSystemSynchronizedRootGroup section */
 
 /* Begin PBXFrameworksBuildPhase section */
@@ -58,6 +61,7 @@
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};
+        A20000000000000000000701 = {isa = PBXFrameworksBuildPhase; buildActionMask = 2147483647; files = (); runOnlyForDeploymentPostprocessing = 0; };
 /* End PBXFrameworksBuildPhase section */
 
 /* Begin PBXGroup section */
@@ -66,6 +70,7 @@
 			children = (
 				A10000000000000000000601 /* WhosDown */,
 				A10000000000000000000602 /* WhosDownTests */,
+                A20000000000000000000601,
 				A10000000000000000000802 /* Products */,
 			);
 			sourceTree = "<group>";
@@ -75,6 +80,7 @@
 			children = (
 				A10000000000000000000501 /* WhosDown.app */,
 				A10000000000000000000502 /* WhosDownTests.xctest */,
+                A20000000000000000000501,
 			);
 			name = Products;
 			sourceTree = "<group>";
@@ -130,6 +136,19 @@
 			productReference = A10000000000000000000502 /* WhosDownTests.xctest */;
 			productType = "com.apple.product-type.bundle.unit-test";
 		};
+        A20000000000000000000401 = {
+            isa = PBXNativeTarget;
+            buildConfigurationList = A20000000000000000000B01;
+            buildPhases = (A20000000000000000000901, A20000000000000000000701, A20000000000000000000A01);
+            buildRules = ();
+            dependencies = (A20000000000000000000C01);
+            fileSystemSynchronizedGroups = (A20000000000000000000601);
+            name = WhosDownUITests;
+            packageProductDependencies = ();
+            productName = WhosDownUITests;
+            productReference = A20000000000000000000501;
+            productType = "com.apple.product-type.bundle.ui-testing";
+        };
 /* End PBXNativeTarget section */
 
 /* Begin PBXProject section */
@@ -168,6 +187,7 @@
 			targets = (
 				A10000000000000000000401 /* WhosDown */,
 				A10000000000000000000402 /* WhosDownTests */,
+                A20000000000000000000401,
 			);
 		};
 /* End PBXProject section */
@@ -187,6 +207,7 @@
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};
+        A20000000000000000000A01 = {isa = PBXResourcesBuildPhase; buildActionMask = 2147483647; files = (); runOnlyForDeploymentPostprocessing = 0; };
 /* End PBXResourcesBuildPhase section */
 
 /* Begin PBXSourcesBuildPhase section */
@@ -204,6 +225,7 @@
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};
+        A20000000000000000000901 = {isa = PBXSourcesBuildPhase; buildActionMask = 2147483647; files = (); runOnlyForDeploymentPostprocessing = 0; };
 /* End PBXSourcesBuildPhase section */
 
 /* Begin PBXTargetDependency section */
@@ -212,6 +234,7 @@
 			target = A10000000000000000000401 /* WhosDown */;
 			targetProxy = A10000000000000000000301 /* PBXContainerItemProxy */;
 		};
+        A20000000000000000000C01 = {isa = PBXTargetDependency; target = A10000000000000000000401; targetProxy = A20000000000000000000301; };
 /* End PBXTargetDependency section */
 
 /* Begin XCBuildConfiguration section */
@@ -434,6 +457,32 @@
 			};
 			name = Release;
 		};
+        A20000000000000000000E01 = {
+            isa = XCBuildConfiguration;
+            buildSettings = {
+                CODE_SIGN_STYLE = Automatic;
+                GENERATE_INFOPLIST_FILE = YES;
+                PRODUCT_BUNDLE_IDENTIFIER = edu.cmu.whosdown.uitests;
+                PRODUCT_NAME = "$(TARGET_NAME)";
+                SWIFT_EMIT_LOC_STRINGS = NO;
+                TARGETED_DEVICE_FAMILY = 1;
+                TEST_TARGET_NAME = WhosDown;
+            };
+            name = Debug;
+        };
+        A20000000000000000000E02 = {
+            isa = XCBuildConfiguration;
+            buildSettings = {
+                CODE_SIGN_STYLE = Automatic;
+                GENERATE_INFOPLIST_FILE = YES;
+                PRODUCT_BUNDLE_IDENTIFIER = edu.cmu.whosdown.uitests;
+                PRODUCT_NAME = "$(TARGET_NAME)";
+                SWIFT_EMIT_LOC_STRINGS = NO;
+                TARGETED_DEVICE_FAMILY = 1;
+                TEST_TARGET_NAME = WhosDown;
+            };
+            name = Release;
+        };
 /* End XCBuildConfiguration section */
 
 /* Begin XCConfigurationList section */
@@ -464,6 +513,7 @@
 			defaultConfigurationIsVisible = 0;
 			defaultConfigurationName = Release;
 		};
+        A20000000000000000000B01 = {isa = XCConfigurationList; buildConfigurations = (A20000000000000000000E01, A20000000000000000000E02); defaultConfigurationIsVisible = 0; defaultConfigurationName = Release; };
 /* End XCConfigurationList section */
 
 /* Begin XCRemoteSwiftPackageReference section */

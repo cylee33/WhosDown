@@ -13,12 +13,14 @@ struct MatchDetailView: View {
     @State private var joinModel: MatchJoinViewModel?
     @State private var showManage = false
     @State private var showChat = false
+    @State private var showCalendar = false
+    @State private var showReport = false
 
     var body: some View {
         Group {
             if let viewModel, let match = viewModel.match {
                 if joinModel?.action(for: match, isGuest: session.isGuest, userId: session.user?.id) == .status(.approved),
-                   !viewModel.isHost {
+                   !viewModel.isHost, match.status == .scheduled, match.endTime > .now {
                     joined(match)
                 } else {
                     details(match, viewModel)
@@ -32,10 +34,31 @@ struct MatchDetailView: View {
         .background(Color.background)
         .navigationTitle(showsJoined ? "Your Match" : "Match details")
         .navigationBarTitleDisplayMode(.inline)
+        .toolbar {
+            ToolbarItem(placement: .topBarTrailing) {
+                Menu {
+                    if let match = viewModel?.match {
+                        if canAddCalendar(match) {
+                            Button("Add to calendar", systemImage: "calendar.badge.plus") { showCalendar = true }
+                        }
+                        Button("Report Match", systemImage: "flag") {
+                            session.requireAccount { showReport = true }
+                        }
+                    }
+                } label: { Image(systemName: "ellipsis.circle") }
+                .accessibilityLabel("Match actions")
+            }
+        }
+        .sheet(isPresented: $showCalendar) {
+            if let match = viewModel?.match, canAddCalendar(match) {
+                CalendarSheet(match: match, address: viewModel?.venueAddress)
+            }
+        }
+        .navigationDestination(isPresented: $showReport) { ReportView(matchId: matchId) }
         .task(id: matchId) {
             let viewModel = MatchDetailViewModel(
                 matchId: matchId, userId: session.user?.id, matches: environment.matches,
-                reliability: environment.reliability, location: environment.location
+                reliability: environment.reliability, location: environment.location, venues: environment.venues
             )
             let joinModel = MatchJoinViewModel(matchId: matchId, userId: session.user?.id, rsvps: environment.rsvps)
             self.viewModel = viewModel
@@ -58,7 +81,7 @@ struct MatchDetailView: View {
         .sheet(isPresented: reviewPresented) {
             if let match = viewModel?.match, let joinModel {
                 JoinReviewSheet(
-                    match: match, note: Bindable(joinModel).note, isWorking: joinModel.isWorking,
+                    match: match, note: Bindable(joinModel).note, isWorking: joinModel.isWorking, errorMessage: joinModel.errorMessage,
                     onSend: {
                         session.requireAccount {
                             Task { await joinModel.sendRequest(player: session.profile, match: match) }
@@ -71,13 +94,13 @@ struct MatchDetailView: View {
         .sheet(isPresented: leavePresented) {
             if joinModel?.myRSVP?.status == .pending {
                 CancelRequestSheet(
-                    isWorking: joinModel?.isWorking ?? false,
+                    isWorking: joinModel?.isWorking ?? false, errorMessage: joinModel?.errorMessage,
                     onCancel: { Task { await joinModel?.leave() } },
                     onKeep: { joinModel?.showLeave = false }
                 )
             } else {
                 LeaveSheet(
-                    isWorking: joinModel?.isWorking ?? false,
+                    isWorking: joinModel?.isWorking ?? false, errorMessage: joinModel?.errorMessage,
                     onLeave: { Task { await joinModel?.leave() } },
                     onKeep: { joinModel?.showLeave = false }
                 )
@@ -85,20 +108,18 @@ struct MatchDetailView: View {
         }
     }
 
+    private func canAddCalendar(_ match: Match) -> Bool {
+        !session.isGuest && CalendarEventBuilder.canAdd(match, userId: session.user?.id, approved: joinModel?.myRSVP?.status == .approved)
+    }
+
     private var showsJoined: Bool {
         guard let match = viewModel?.match, let joinModel, viewModel?.isHost == false else { return false }
+        guard match.status == .scheduled, match.endTime > .now else { return false }
         return joinModel.action(for: match, isGuest: session.isGuest, userId: session.user?.id) == .status(.approved)
     }
 
     private func joined(_ match: Match) -> some View {
-        JoinedMatchView(match: match, onLeave: { joinModel?.showLeave = true }, onChat: { showChat = true })
-            .sheet(isPresented: leavePresented) {
-                LeaveSheet(
-                    isWorking: joinModel?.isWorking ?? false,
-                    onLeave: { Task { await joinModel?.leave() } },
-                    onKeep: { joinModel?.showLeave = false }
-                )
-            }
+        JoinedMatchView(match: match, onLeave: { joinModel?.showLeave = true }, onChat: { showChat = true }, onCalendar: { showCalendar = true })
             .overlay(alignment: .bottom) {
                 if let message = joinModel?.errorMessage {
                     Text(message).font(.footnote).foregroundStyle(Color.destructive).padding(Spacing.s)
@@ -152,7 +173,7 @@ struct MatchDetailView: View {
                 }
                 .card()
 
-                NavigationLink(value: DiscoverRoute.roster(match)) {
+                NavigationLink { RosterView(match: match) } label: {
                     VStack(alignment: .leading, spacing: Spacing.xs) {
                         HStack {
                             Text("PLAYERS").font(.caption.weight(.semibold)).foregroundStyle(Color.textSecondary)
@@ -181,7 +202,7 @@ struct MatchDetailView: View {
                 }
                 .buttonStyle(.plain)
 
-                NavigationLink(value: DiscoverRoute.player(match.hostId)) {
+                NavigationLink { PlayerProfileView(userId: match.hostId, matchId: match.id) } label: {
                     HStack(spacing: Spacing.s) {
                         AvatarView(photoURL: nil, initials: initials(of: match.hostName), size: 44)
                         VStack(alignment: .leading, spacing: Spacing.xxs) {
@@ -262,8 +283,11 @@ struct RosterView: View {
                 VStack(alignment: .leading, spacing: Spacing.s) {
                     Text(viewModel.subtitle).font(.subheadline).foregroundStyle(Color.textSecondary)
                     Text(viewModel.joinedText).font(.title2.bold()).foregroundStyle(Color.textPrimary)
+                    if viewModel.players.isEmpty && viewModel.errorMessage == nil {
+                        ContentUnavailableView("No Players to show", systemImage: "person.2")
+                    }
                     ForEach(viewModel.players) { rsvp in
-                        NavigationLink(value: DiscoverRoute.player(rsvp.userId)) {
+                        NavigationLink { PlayerProfileView(userId: rsvp.userId, matchId: match.id) } label: {
                             PlayerRow(name: rsvp.displayName, detail: viewModel.detail(for: rsvp))
                         }
                         .buttonStyle(.plain)

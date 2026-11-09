@@ -8,6 +8,7 @@ How the team's documentation is organized, and how it is versioned.
 | [`adr/`](adr/) | Architecture Decision Records: one file per hard-to-reverse decision, with the reason. | **Append-only.** Never rewrite an accepted ADR. To change a decision, write a new ADR and mark the old one `superseded by ADR-NNNN`. |
 | [`v1-build-plan.md`](v1-build-plan.md) | V1 goal, feature list, build order, phases, timeline, open questions. | Living. Bump the version and add a changelog row on every change. |
 | [`architecture.md`](architecture.md) | Blueprint: layers, modules, data flow, repo layout. | Living. Bump the version and add a changelog row on every change. |
+| [`phase-8-audit.md`](phase-8-audit.md) | Final source audit, device acceptance steps, production deployment hand-off. | Living; update as remaining acceptance is verified. |
 | [`progress.md`](progress.md) | Where the build stands: features and phases done, screenshots, how to run it, decisions made while building. | Living. Update at the end of every phase; bump the version and add a changelog row. Screenshots live in `progress/`. |
 | [`features/`](features/) | One brief per V1 feature (1.1–1.28): status, owner, hand-off note, screens, data, rules, acceptance checklist, files. Start from [`_TEMPLATE.md`](features/_TEMPLATE.md). | Living. Update the hand-off note, status, and changelog in every PR that touches the feature. |
 | [`../CONTRIBUTING.md`](../CONTRIBUTING.md) | Setup, claiming a feature, building, hand-off, pull requests. | Living. Bump the version and add a changelog row on every change. |

@@ -5,6 +5,7 @@ struct FiltersSheet: View {
     let viewModel: DiscoverViewModel
 
     @Environment(\.dismiss) private var dismiss
+    @State private var isWorking = false
     @State private var draft = MatchFilter()
     @State private var radiusText = ""
     @State private var customFirstDay = Date.now
@@ -79,7 +80,7 @@ struct FiltersSheet: View {
                             Text("Open").tag(JoinType?.some(.open))
                             Text("Approval").tag(JoinType?.some(.approvalRequired))
                         }
-                        .pickerStyle(.segmented)
+                        .adaptiveSegmentedPicker()
                     }
                 }
                 .padding(Spacing.m)
@@ -87,13 +88,17 @@ struct FiltersSheet: View {
             .safeAreaInset(edge: .bottom) {
                 let count = viewModel.count(with: draft, radiusMiles: radius ?? viewModel.radiusMiles)
                 Button("Show \(count) \(count == 1 ? "Match" : "Matches")") {
+                    guard !isWorking else { return }
+                    isWorking = true
                     Task {
+                        defer { isWorking = false }
                         await viewModel.apply(draft, radiusMiles: radius ?? viewModel.radiusMiles)
                         dismiss()
                     }
                 }
                 .buttonStyle(.primary)
-                .disabled(radiusError != nil)
+                .disabled(radiusError != nil || isWorking)
+                .overlay { if isWorking { ProgressView() } }
                 .padding(Spacing.m)
                 .background(Color.background)
             }
@@ -106,6 +111,8 @@ struct FiltersSheet: View {
             }
         }
         .presentationDetents([.large])
+        .presentationDragIndicator(.visible)
+        .interactiveDismissDisabled(isWorking)
         .onAppear {
             draft = viewModel.filter
             radiusText = String(format: "%g", viewModel.radiusMiles)

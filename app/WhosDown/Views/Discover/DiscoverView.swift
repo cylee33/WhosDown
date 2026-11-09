@@ -12,6 +12,7 @@ enum DiscoverRoute: Hashable {
 struct DiscoverView: View {
     /// H06's empty state offers to host a Match (1.5 rule 9).
     var onCreateMatch: () -> Void = {}
+    var initialMode: DiscoverViewModel.Mode = .map
 
     @Environment(AppEnvironment.self) private var environment
     @Environment(Session.self) private var session
@@ -44,9 +45,9 @@ struct DiscoverView: View {
                             .overlay(alignment: .topTrailing) {
                                 if let count = viewModel?.filter.activeCount, count > 0 {
                                     Text("\(count)")
-                                        .font(.caption2.bold()).foregroundStyle(.white)
-                                        .padding(4).background(Color.brand, in: .circle)
-                                        .offset(x: 8, y: -8)
+                                        .font(.caption2.bold()).foregroundStyle(Color.onBrand)
+                                        .padding(Spacing.xxs).background(Color.brand, in: .circle)
+                                        .offset(x: Spacing.xs, y: -Spacing.xs)
                                 }
                             }
                     }
@@ -74,6 +75,7 @@ struct DiscoverView: View {
                 userId: session.user?.id, isGuest: session.isGuest, matches: environment.matches,
                 rsvps: environment.rsvps, users: environment.users, location: environment.location
             )
+            viewModel.mode = initialMode
             self.viewModel = viewModel
             await viewModel.load()
         }
@@ -100,7 +102,7 @@ struct DiscoverView: View {
                 Text("Map").tag(DiscoverViewModel.Mode.map)
                 Text("List").tag(DiscoverViewModel.Mode.list)
             }
-            .pickerStyle(.segmented)
+            .adaptiveSegmentedPicker()
             .padding(.horizontal, Spacing.m)
 
             if case .failed(let message) = viewModel.state {
@@ -123,20 +125,24 @@ struct NextUpCard: View {
     let match: Match
     let onOpen: () -> Void
 
+    @Environment(\.dynamicTypeSize) private var dynamicTypeSize
+    private var columns: AnyLayout { dynamicTypeSize.isAccessibilitySize ? AnyLayout(VStackLayout(alignment: .leading, spacing: Spacing.xs)) : AnyLayout(HStackLayout(spacing: Spacing.s)) }
+
     var body: some View {
         Button(action: onOpen) {
-            HStack(spacing: Spacing.s) {
+            columns {
                 VStack(alignment: .leading, spacing: Spacing.xxs) {
                     Text("NEXT UP").font(.caption2.weight(.bold)).foregroundStyle(Color.brand)
                     Text("\(match.title) · \(MatchFormatting.when(match))")
-                        .font(.subheadline.weight(.semibold)).foregroundStyle(Color.textPrimary).lineLimit(1)
+                        .font(.subheadline.weight(.semibold)).foregroundStyle(Color.textPrimary).fixedSize(horizontal: false, vertical: true)
                 }
-                Spacer()
-                VStack(alignment: .trailing, spacing: Spacing.xxs) {
-                    Text(match.venueName).font(.caption).foregroundStyle(Color.textSecondary).lineLimit(1)
+                if !dynamicTypeSize.isAccessibilitySize { Spacer() }
+                VStack(alignment: dynamicTypeSize.isAccessibilitySize ? .leading : .trailing, spacing: Spacing.xxs) {
+                    Text(match.venueName).font(.caption).foregroundStyle(Color.textSecondary).fixedSize(horizontal: false, vertical: true)
                     Text("Approved ✓").font(.caption.weight(.semibold)).foregroundStyle(Color.statusApproved)
                 }
             }
+            .fixedSize(horizontal: false, vertical: true)
             .padding(Spacing.s)
             .background(Color.surface, in: .rect(cornerRadius: Radius.button))
             .overlay(RoundedRectangle(cornerRadius: Radius.button).stroke(Color.border))
@@ -153,6 +159,7 @@ struct DiscoverMapView: View {
     @State private var camera: MapCameraPosition = .automatic
     @State private var selectedPin: VenuePin?
     @State private var settledCenter: Coordinate?
+    @State private var recentering = false
 
     var body: some View {
         ZStack(alignment: .bottom) {
@@ -163,8 +170,9 @@ struct DiscoverMapView: View {
                     .stroke(Color.brand.opacity(0.5), lineWidth: 1)
                 ForEach(viewModel.pins) { pin in
                     Annotation(pin.matches[0].venueName, coordinate: pin.location.clLocation) {
-                        SportPin(pin: pin, isSelected: selectedPin?.id == pin.id)
-                            .onTapGesture { selectedPin = pin }
+                        Button { selectedPin = pin } label: {
+                            SportPin(pin: pin, isSelected: selectedPin?.id == pin.id)
+                        }.buttonStyle(.plain)
                     }
                 }
             }
@@ -188,7 +196,10 @@ struct DiscoverMapView: View {
                     }
                     Spacer()
                     Button {
+                        guard !recentering else { return }
+                        recentering = true
                         Task {
+                            defer { recentering = false }
                             await viewModel.recenter()
                             camera = .region(region(around: viewModel.center))
                         }
@@ -196,6 +207,8 @@ struct DiscoverMapView: View {
                         Image(systemName: "location.fill").padding(Spacing.s).background(Color.surface, in: .circle)
                     }
                     .accessibilityLabel("Back to my location")
+                    .disabled(recentering)
+                    .overlay { if recentering { ProgressView() } }
                 }
                 if let pin = selectedPin {
                     ForEach(pin.matches.prefix(3)) { match in
@@ -230,17 +243,17 @@ struct SportPin: View {
     var body: some View {
         Image(systemName: pin.sport.symbolName)
             .font(.system(size: 14, weight: .semibold))
-            .foregroundStyle(.white)
+            .foregroundStyle(Color.onBrand)
             .frame(width: isSelected ? 38 : 32, height: isSelected ? 38 : 32)
             .background(pin.isFull ? Color.textSecondary : (isSelected ? Color.brand : Color.textPrimary), in: .circle)
-            .overlay(Circle().stroke(.white, lineWidth: 2))
+            .overlay(Circle().stroke(Color.onBrand, lineWidth: 2))
             .overlay(alignment: .topTrailing) {
                 if pin.matches.count > 1 {
                     Text("\(pin.matches.count)")
-                        .font(.caption2.bold()).foregroundStyle(.white)
+                        .font(.caption2.bold()).foregroundStyle(Color.onBrand)
                         .frame(minWidth: 16, minHeight: 16)
                         .background(Color.brand, in: .circle)
-                        .offset(x: 6, y: -6)
+                        .offset(x: Spacing.xs, y: -Spacing.xs)
                 }
             }
             .accessibilityLabel("\(pin.matches.count) Matches at \(pin.matches[0].venueName)")

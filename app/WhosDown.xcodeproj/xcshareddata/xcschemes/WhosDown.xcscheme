@@ -40,6 +40,9 @@
                ReferencedContainer = "container:WhosDown.xcodeproj">
             </BuildableReference>
          </TestableReference>
+         <TestableReference skipped="NO" parallelizable="NO">
+            <BuildableReference BuildableIdentifier="primary" BlueprintIdentifier="A20000000000000000000401" BuildableName="WhosDownUITests.xctest" BlueprintName="WhosDownUITests" ReferencedContainer="container:WhosDown.xcodeproj" />
+         </TestableReference>
       </Testables>
    </TestAction>
    <LaunchAction
