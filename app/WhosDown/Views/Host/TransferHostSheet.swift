@@ -33,6 +33,8 @@ struct TransferHostSheet: View {
                         Spacer()
                         Image(systemName: selected == player.userId ? "largecircle.fill.circle" : "circle")
                     }
+                    // Without this, taps on the empty middle of the row (the Spacer) do nothing.
+                    .contentShape(Rectangle())
                 }
                 .buttonStyle(.plain)
             }

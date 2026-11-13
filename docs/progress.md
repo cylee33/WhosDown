@@ -36,7 +36,7 @@ Where the V1 build stands, what you can see in the app today, and how to try it 
 
 - Xcode project in strict MVVM folders: `Models/`, `Views/`, `ViewModels/` (ADR-0009). Firebase 13.1.1, iOS 26, Xcode 27's default Swift settings.
 - Debug builds run against the local Firebase emulator as `demo-whosdown`; Release builds use the real `whosdown-57e99`.
-- Seed data: 6 test Players, 5 Pittsburgh Venues, 10 Matches covering every case ([firebase/seed/README.md](../firebase/seed/README.md)).
+- Seed data: 6 test Players, 5 Pittsburgh Venues, 11 Matches covering every case ([firebase/seed/README.md](../firebase/seed/README.md)).
 - GitHub: issues #1–#28, [project board](https://github.com/users/cylee33/projects/2), PR template.
 
 **Account and sign-in (1.2):** create account, sign in, password reset, sign out. Errors are plain sentences, and the app stays signed in between launches.
@@ -122,9 +122,8 @@ All test passwords are `whosdown123`.
 ## 7. Next
 
 - **Release QA:** Calendar save/cancel, notification cold launch to Match, 45-screen default/XXXL audit, and two-simulator core loop passed. Optional checks: physical locked-phone delivery and a manual VoiceOver walk-through. See [Phase 8 acceptance](phase-8-audit.md).
-- **Still to tap through:** the Phase 6 screens (waitlist, edit, inbox, check-in, transfer). Rules tests cover the writes.
-- **Chris, around 2026-11-04:** once the Student Developer Pack is active, turn on branch protection for `main`, then add Jaimin and Kurt (D14).
-- **Owner action:** Storage deployment is blocked by disabled billing and uninitialized Storage. After enabling the required billing plan and initializing Storage, verify the bucket and deploy Storage rules as described in the [hand-off](phase-8-audit.md). Firestore rules/indexes are already deployed.
+- **V1 walkthrough:** `V1WalkthroughTests` taps through every visible feature against the seeded emulator (opt-in; see the file header). It found and fixed a blank Edit profile screen.
+- **Deployed:** Firestore rules/indexes (2026-11-08) and Storage rules (2026-11-13) are live on `whosdown-57e99`.
 
 ## Changelog
 
@@ -143,3 +142,5 @@ All test passwords are `whosdown123`.
 
 | 0.9 | 2026-11-08 | Codex | Two-simulator core loop passed and Firestore rules/indexes deployed; exhaustive UI audit underway; Storage requires owner initialization. |
 | 1.0 | 2026-11-09 | Codex | Passed 45-screen default/XXXL audits and delivered-notification cold launch; fixed notification delegate crash; Phase 7/8 automated acceptance complete. |
+
+| 1.0 | 2026-11-13 | Chris Lee (with Claude) | Storage deployed; branch protection on; V1 walkthrough added; Edit profile blank-screen fix; seed clears the emulator |

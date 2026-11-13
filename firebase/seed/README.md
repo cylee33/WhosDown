@@ -8,15 +8,15 @@ Password for all: `whosdown123`
 
 | Email | Name | Notes |
 |---|---|---|
-| alex@whosdown.test | Alex Morgan | Joined Pickup Soccer and 7v7; declined from Basketball Run; hosts Sunday Tennis and Pickleball |
+| alex@whosdown.test | Alex Morgan | Joined Pickup Soccer and 7v7; declined from Basketball Run; hosts Sunday Tennis, Pickleball, and Recent Hoops (needs Check-in) |
 | jamie@whosdown.test | Jamie Morales | Hosts Pickup Soccer (1 Join request), 7v7 (Full, 1 waitlisted), and the past Sunday 7v7 (checked in) |
 | mina@whosdown.test | Mina Kim | Hosts Beginner Kickabout and Indoor Volleyball; marked not attended in the past Sunday 7v7 |
 | taylor@whosdown.test | Taylor Ross | Pending on Pickup Soccer; waitlisted on 7v7; hosts Ultimate and the cancelled Spikeball |
 | sam@whosdown.test | Sam Lee | Hosts Basketball Run (Approval required, $5) |
 | newbie@whosdown.test | Nova Newbie | Has an account but hasn't finished onboarding: signing in opens onboarding (1.4). Running the seed again resets it |
 
-## What the 10 Matches cover
+## What the 11 Matches cover
 
-Open and Approval required; free and paid; Full with a waitlist; a pending Join request; a declined RSVP with a Host message; a past Match with Check-in; a cancelled Match with a custom sport; indoor and outdoor; times from a few hours ago to four days out (relative to when you seed).
+Open and Approval required; free and paid; Full with a waitlist; a pending Join request; a declined RSVP with a Host message; a past Match with Check-in; a Match that ended 1.5 hours ago and still needs Check-in (Alex hosts); a cancelled Match with a custom sport; indoor and outdoor; times from a few hours ago to four days out (relative to when you seed).
 
-Running the seed again resets the same documents and moves the times relative to now.
+Running the seed again first **clears the whole emulator Firestore database**, then writes the same documents with times moved relative to now. Anything you or the tests added (Matches, RSVPs, chat) is removed. Accounts are kept.

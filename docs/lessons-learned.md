@@ -2,6 +2,12 @@
 
 Problems hit and how they were solved. Newest first. Add an entry whenever something cost more than ~15 minutes.
 
+## 2026-11-13 — V1 walkthrough
+
+- **A `navigationDestination` can read a stale optional `@State`.** Profile set `editViewModel` and pushed the route in the same tap, but the destination still saw `nil` and showed nothing, so Edit profile opened blank. Pushing on the next main-actor turn didn't help. Keeping the view model in an `@Observable` holder (`@State private var editor = Editor()`) fixed it. Give the `nil` case a real view too.
+- **Re-seeding must clear the database.** Writing the same documents doesn't remove RSVPs, chat, or Matches that people or tests added, so later runs started from the wrong state. `seed.js` now clears the Firestore emulator first.
+- **A sheet's confirm button can share its label with a hidden button underneath.** Picking by position in the element tree is unreliable; pick the hittable one.
+
 ## 2026-11-08 — Phase 8 completion follow-up
 
 - **Test the system editor's current labels.** On the iOS 27 simulator, the New Event save action is labelled Done rather than Add. UI acceptance finds the system navigation action by its supported labels.

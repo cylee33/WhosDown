@@ -1,7 +1,7 @@
 // Seeds the local Firebase emulator with Pittsburgh sample data (D41).
 // Run with the emulator up:  npm run seed   (from firebase/)
 // It only ever talks to the emulator; it refuses to run against a real project.
-// Running it again resets the same documents, with times moved relative to now.
+// Running it again clears the emulator database first, then writes the same documents with times moved relative to now.
 import { initializeApp } from 'firebase-admin/app';
 import { getAuth } from 'firebase-admin/auth';
 import { getFirestore, Timestamp } from 'firebase-admin/firestore';
@@ -65,6 +65,9 @@ const matches = {
     rsvps: { seed_alex: 'approved', seed_sam: 'approved' } },
   m_past_7v7: { title: 'Sunday 7v7', sport: 'soccer', venue: 'v_schenley_oval', start: -72, length: 1.5, host: 'seed_jamie', joinType: 'open', skillLevel: 'intermediate', playerLimit: 14, priceCents: 0, notes: '',
     rsvps: { seed_jamie: 'approved', seed_alex: 'approved', seed_mina: 'approved' }, attended: { seed_jamie: true, seed_alex: true, seed_mina: false } },
+  // Ended 1.5 hours ago and not checked in yet, so Check-in (1.27) is open for its Host, Alex.
+  m_recent_hoops: { title: 'Recent Hoops', sport: 'basketball', venue: 'v_cmu_gym', start: -3, length: 1.5, host: 'seed_alex', joinType: 'open', skillLevel: 'allLevels', playerLimit: 10, priceCents: 0, notes: '',
+    rsvps: { seed_alex: 'approved', seed_mina: 'approved', seed_sam: 'approved' } },
   m_cancelled: { title: 'Spikeball on the Cut', sport: 'other', customSportName: 'Spikeball', venue: 'v_cmu_soccer', start: 30, length: 1, host: 'seed_taylor', joinType: 'open', skillLevel: 'allLevels', playerLimit: 8, priceCents: 0, notes: '',
     status: 'cancelled', cancelReason: 'Rain all afternoon. Next week instead!', rsvps: { seed_taylor: 'approved', seed_sam: 'approved' } },
 };
@@ -219,6 +222,14 @@ async function seedMatches() {
   await db.doc('conversations/m_soccer_tonight').update({ lastMessageText: 'I can bring one 👍', lastMessageAt: at(-1.5) });
 }
 
+// Start from an empty database, so RSVPs, chat messages, and Matches added by people or tests don't pile up.
+async function clearFirestore() {
+  const url = `http://${process.env.FIRESTORE_EMULATOR_HOST}/emulator/v1/projects/demo-whosdown/databases/(default)/documents`;
+  const response = await fetch(url, { method: 'DELETE' });
+  if (!response.ok) throw new Error(`Clearing the Firestore emulator failed: ${response.status}`);
+}
+
+await clearFirestore();
 await seedPlayers();
 await seedNewPlayer();
 await seedVenues();
