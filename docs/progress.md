@@ -36,7 +36,7 @@ Where the V1 build stands, what you can see in the app today, and how to try it 
 
 - Xcode project in strict MVVM folders: `Models/`, `Views/`, `ViewModels/` (ADR-0009). Firebase 13.1.1, iOS 26, Xcode 27's default Swift settings.
 - Debug builds run against the local Firebase emulator as `demo-whosdown`; Release builds use the real `whosdown-57e99`.
-- Seed data: 6 test Players, 5 Pittsburgh Venues, 10 Matches covering every case ([firebase/seed/README.md](../firebase/seed/README.md)).
+- Seed data: 6 test Players, 5 Pittsburgh Venues, 11 Matches covering every case ([firebase/seed/README.md](../firebase/seed/README.md)).
 - GitHub: issues #1–#28, [project board](https://github.com/users/cylee33/projects/2), PR template.
 
 **Account and sign-in (1.2):** create account, sign in, password reset, sign out. Errors are plain sentences, and the app stays signed in between launches.
