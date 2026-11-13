@@ -19,4 +19,4 @@ Password for all: `whosdown123`
 
 Open and Approval required; free and paid; Full with a waitlist; a pending Join request; a declined RSVP with a Host message; a past Match with Check-in; a Match that ended 1.5 hours ago and still needs Check-in (Alex hosts); a cancelled Match with a custom sport; indoor and outdoor; times from a few hours ago to four days out (relative to when you seed).
 
-Running the seed again resets the same documents and moves the times relative to now. It does not remove documents you or the tests added; restart the emulators for a clean database.
+Running the seed again first **clears the whole emulator Firestore database**, then writes the same documents with times moved relative to now. Anything you or the tests added (Matches, RSVPs, chat) is removed. Accounts are kept.

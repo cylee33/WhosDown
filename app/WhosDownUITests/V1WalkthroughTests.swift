@@ -57,10 +57,16 @@ final class V1WalkthroughTests: XCTestCase {
         element.tap()
     }
 
-    /// The button in a sheet: the last one with exactly this label (the one underneath may be hidden).
+    /// The button in a sheet: the hittable one with exactly this label. The page underneath has a button
+    /// with the same label, and its order in the element tree isn't reliable.
     private func sheetButton(_ label: String, in app: XCUIApplication) -> XCUIElement {
         let matches = app.buttons.matching(NSPredicate(format: "label == %@", label))
-        return matches.element(boundBy: max(matches.count - 1, 0))
+        _ = matches.firstMatch.waitForExistence(timeout: 10)
+        for _ in 0..<10 {
+            if let hittable = matches.allElementsBoundByIndex.first(where: { $0.isHittable }) { return hittable }
+            usleep(500_000)
+        }
+        return matches.firstMatch
     }
 
     private func type(_ value: String, into field: XCUIElement, in app: XCUIApplication) {

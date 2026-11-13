@@ -1,7 +1,7 @@
 // Seeds the local Firebase emulator with Pittsburgh sample data (D41).
 // Run with the emulator up:  npm run seed   (from firebase/)
 // It only ever talks to the emulator; it refuses to run against a real project.
-// Running it again resets the same documents, with times moved relative to now.
+// Running it again clears the emulator database first, then writes the same documents with times moved relative to now.
 import { initializeApp } from 'firebase-admin/app';
 import { getAuth } from 'firebase-admin/auth';
 import { getFirestore, Timestamp } from 'firebase-admin/firestore';
@@ -222,6 +222,14 @@ async function seedMatches() {
   await db.doc('conversations/m_soccer_tonight').update({ lastMessageText: 'I can bring one 👍', lastMessageAt: at(-1.5) });
 }
 
+// Start from an empty database, so RSVPs, chat messages, and Matches added by people or tests don't pile up.
+async function clearFirestore() {
+  const url = `http://${process.env.FIRESTORE_EMULATOR_HOST}/emulator/v1/projects/demo-whosdown/databases/(default)/documents`;
+  const response = await fetch(url, { method: 'DELETE' });
+  if (!response.ok) throw new Error(`Clearing the Firestore emulator failed: ${response.status}`);
+}
+
+await clearFirestore();
 await seedPlayers();
 await seedNewPlayer();
 await seedVenues();

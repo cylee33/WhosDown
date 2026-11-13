@@ -13,7 +13,9 @@ struct ProfileView: View {
     @Environment(AppEnvironment.self) private var environment
     @Environment(Session.self) private var session
     @State private var viewModel: ProfileViewModel?
-    @State private var editViewModel: EditProfileViewModel?
+    /// Held in a reference so the navigation destination reads the current value. A plain optional
+    /// @State was still nil inside navigationDestination, which left Edit profile blank.
+    @State private var editor = Editor()
     @State private var path: [Route] = []
 
     var body: some View {
@@ -76,13 +78,13 @@ struct ProfileView: View {
 
     private func startEditing(_ route: Route) {
         guard let userId = session.user?.id, let profile = session.profile else { return }
-        editViewModel = EditProfileViewModel(userId: userId, profile: profile, users: environment.users)
+        editor.viewModel = EditProfileViewModel(userId: userId, profile: profile, users: environment.users)
         path = [route]
     }
 
     @ViewBuilder
     private func destination(_ route: Route) -> some View {
-        if let editViewModel {
+        if let editViewModel = editor.viewModel {
             @Bindable var edit = editViewModel
             switch route {
             case .edit:
@@ -118,8 +120,15 @@ struct ProfileView: View {
                 .navigationTitle("Set skill levels")
                 .overlay(alignment: .top) { ErrorBanner(message: edit.errorMessage) }
             }
+        } else {
+            ProgressView()
         }
     }
+}
+
+@Observable
+private final class Editor {
+    var viewModel: EditProfileViewModel?
 }
 
 /// The body of a profile, shared by H36 (own) and H10 (another Player).

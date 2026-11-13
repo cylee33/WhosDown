@@ -172,7 +172,7 @@ Feature names keep their Sprint 3 numbers; wording follows the glossary (Match, 
 
 ### Later
 
-- [ ] ~2026-11-04: Student Pack active → enable branch protection on `main` → add Jaimin and Kurt as collaborators (D14)
+- [x] 2026-11-13: branch protection on `main` (PR + 1 approval; not enforced for admins); Jaimin and Kurt are collaborators (D14)
 
 ## 9. V2 objectives already decided
 
@@ -216,3 +216,4 @@ Recorded here so they are not lost while V1 is built. The full V2 list is featur
 | 0.25 | 2026-11-08 | Codex | Phase 7/8 code implemented with tests; final device acceptance and deployment tracked separately |
 
 | 0.26 | 2026-11-08 | Codex | Finished remaining implementation gaps with Swift/OS notification/simulator UI acceptance; release sign-off and Firebase deployment access tracked separately |
+| 0.27 | 2026-11-13 | Chris Lee (with Claude) | Branch protection on; Storage deployed |

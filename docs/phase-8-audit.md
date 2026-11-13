@@ -57,7 +57,7 @@ The reference is the checked-in `Sprint3_Final/WhosDown (Team 6) Sprint 3 – Ma
 
 Firestore rules and indexes were deployed successfully to `whosdown-57e99` on 2026-11-08 using the authorized Firebase account. The CLI confirmed compilation, upload, and release.
 
-Storage rules deployment was attempted but Firebase reports that Storage has not been initialized. The project has billing disabled; the owner must enable the required billing plan and initialize Storage in the Firebase console before these tested rules can be deployed. Billing has not been changed. After initialization, verify the actual default bucket against the app configuration and deploy only Storage rules. Never seed production.
+Storage rules were deployed to `whosdown-57e99` on 2026-11-13. The owner enabled the Blaze plan with a $2 budget alert and created the default bucket `gs://whosdown-57e99.firebasestorage.app` (US-EAST1, production mode), which matches the app configuration. A signed-out read is refused (HTTP 403). Never seed production.
 
 ## Changelog
 
@@ -69,3 +69,4 @@ Storage rules deployment was attempted but Firebase reports that Storage has not
 
 | 0.3 | 2026-11-08 | Codex | Verified two-simulator core loop; deployed Firestore rules/indexes; documented Storage initialization blocker and exhaustive audit work. |
 | 0.4 | 2026-11-09 | Codex | Passed 45-screen audits at default and XXXL text; fixed and verified delivered-notification cold launch; updated acceptance evidence. |
+| 0.5 | 2026-11-13 | Chris Lee (with Claude) | Storage initialized and rules deployed |
